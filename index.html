@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stringman from Neufangled Robotics</title>
+    <style>
+        /* --- RESET & TYPOGRAPHY --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* --- UTILITY NAVBAR --- */
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        /* --- HERO SECTION (VIDEO BG) --- */
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+        .hero-content h1 {
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+        }
+
+        .hero-content p {
+            font-size: 1.5rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        /* --- FEATURE SECTIONS --- */
+        .feature-section {
+            display: flex;
+            min-height: 90vh;
+            padding: 40px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-content {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .feature-text p {
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .feature-image {
+            flex: 1;
+        }
+
+        .feature-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        /* Subtle hover effect for feature images */
+        .feature-image img:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- ALTERNATING LAYOUT LOGIC --- */
+        /* Even numbered sections reverse the row direction */
+        .feature-section:nth-of-type(even) .feature-content {
+            flex-direction: row-reverse;
+        }
+
+        /* --- CTA / ORDER SECTION --- */
+        .cta-section {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        .cta-image-container {
+            max-width: 800px;
+            width: 100%;
+            margin-bottom: 60px;
+        }
+
+        .cta-image-container img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .order-button {
+            display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 25px 80px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .order-button:hover {
+            transform: translateY(-2px) scale(1.02);
+            background-color: #222;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 900px) {
+            .hero-content h1 { font-size: 3.5rem; }
+            .feature-content { 
+                flex-direction: column !important; /* Forces stack on mobile regardless of even/odd */
+                gap: 40px; 
+                text-align: center;
+            }
+            .feature-section { padding: 60px 20px; height: auto; min-height: auto; }
+            .feature-text h2 { font-size: 2rem; }
+            .navbar { justify-content: center; padding: 20px; }
+            .navbar a { margin: 0 10px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
+        <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
+        <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
+        <a href="company.html">Company</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <!-- TODO REPLACE SRC with video asset -->
+        <video class="hero-video" autoplay muted loop playsinline poster="https://via.placeholder.com/1920x1080/333/fff?text=Loading+Video...">
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <h1>Stringman</h1>
+            <p>Cable-driven room-scale organization robot</p>
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="https://via.placeholder.com/600x400/eee/aaa?text=Precision+Cable+System" alt="Motor System">
+            </div>
+            <div class="feature-text">
+                <h2>Room-Scale Reach</h2>
+                <p>Stringman is hanging gripper that can reach the entire volume of your room. It picks up objects such as laundry and takes them to marked drop points such as the laundry hamper using AI fine tuned for this task. Designed for rooms ranging from 10ft to 35ft on a side.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="https://via.placeholder.com/600x400/eee/aaa?text=Computer+Vision+Nodes" alt="Vision Sensors">
+            </div>
+            <div class="feature-text">
+                <h2>Automated Workflow</h2>
+                <p>Designed to operate while you're out, Stringman can perform a cleaning cycle in about 30 minutes so you can return to clear floors or schedule your robotic vacuum to follow up. As soon as it's done, it parks itself out of reach.</p>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="https://via.placeholder.com/600x400/eee/aaa?text=Computer+Vision+Nodes" alt="Vision Sensors">
+            </div>
+            <div class="feature-text">
+                <h2>Remote Property Management</h2>
+                <p>Ever needed to reach through your security camera, grab something and put it somewhere? That capability is now within reach. Either select targets and drop points, or drive it manually through the web interface.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="https://via.placeholder.com/600x400/eee/aaa?text=Room-Scale+Reach" alt="Room Scale Coverage">
+            </div>
+            <div class="feature-text">
+                <h2>Constantly Improving</h2>
+                <p>Model updates are offered regularly for recognizing a greater variety of targets and obstacles and handling edge cases in new enviroments. If you're up for it, you can program your own behaviors or fine tune our models on your household data. No matter how advanced the AI gets, our belief is that tension is all you need.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-image-container">
+            <img src="https://via.placeholder.com/1000x600/333/fff?text=Stringman+Product+Shot" alt="Stringman Full Product">
+        </div>
+        
+        <a href="stringman-pilot.html" class="order-button">Order Stringman</a>
+    </section>
+
+</body>
+</html>
