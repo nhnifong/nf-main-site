@@ -3,3 +3,4 @@ node_modules/
 .env
 .venv
 venv
+control_plane/app/__pycache__/
