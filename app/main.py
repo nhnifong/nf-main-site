@@ -26,6 +26,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- STATIC FILE SERVING ---
+
+# Dynamic path resolution (Robust)
+# This finds the directory where main.py lives, then looks for 'public' inside it
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+
+app.mount("/assets", StaticFiles(directory=os.path.join(PUBLIC_DIR, "assets")), name="assets")
+
+@app.get("/")
+async def read_index():
+    return FileResponse(os.path.join(PUBLIC_DIR, "index.html"))
+
+@app.get("/company")
+async def read_company():
+    return FileResponse(os.path.join(PUBLIC_DIR, "company.html"))
+
+@app.get("/playroom")
+async def read_playroom():
+    return FileResponse(os.path.join(PUBLIC_DIR, "playroom.html"))
+
+@app.get("/product_detail")
+async def read_product():
+    return FileResponse(os.path.join(PUBLIC_DIR, "product_detail.html"))
+
 # --- Data Models for API Requests ---
 
 class StreamAuthRequest(BaseModel):
