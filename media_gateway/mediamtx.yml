@@ -1,0 +1,33 @@
+# configuration for MediaMTX server to forward video for Stringman Robots
+
+# We use http authentication to delegate permissions to the conrol_plane
+authMethod: http
+# REPLACE THIS with your actual Cloud Run URL
+externalAuthenticationURL: https://nf-site-monolith-690802609278.us-central1.run.app/internal/auth
+
+# Paths (Routing Logic)
+paths:
+  # 1. Private Robot Streams (Default)
+  # Any path starting with 'robot_' will use this config.
+  # e.g., rtmp://server/robot_99
+  robot_*:
+    # Just a straight pipe. No transcoding.
+    # WebRTC is enabled by default in MediaMTX.
+    runOnReady: ""
+
+  # 2. The Playroom (Public Broadcast)
+  # This specific path triggers HLS transcoding for the spectators.
+  playroom:
+    # When a robot publishes to 'playroom', start ffmpeg to chop it into HLS segments
+    # We output to /hls_storage which will be a mounted volume
+    runOnReady: >
+      ffmpeg -i rtsp://localhost:$RTSP_PORT/$G1
+      -c:v copy -c:a copy
+      -f hls
+      -hls_time 4
+      -hls_list_size 5
+      -hls_flags delete_segments
+      /hls_storage/stream.m3u8
+    
+    # Clean up when the robot disconnects
+    runOnReadRestart: yes

@@ -4,14 +4,14 @@ To be run in repo root in cloud shell
 ## Build and push monolithic site
 
 ```
-gcloud builds submit --tag gcr.io/${GOOGLE_CLOUD_PROJECT}/nf-site-monolith:1.0.0 .
+gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.0.0 .
 ```
 
 Deploy
 
 ```
 gcloud run deploy nf-site-monolith \
-  --image gcr.io/${GOOGLE_CLOUD_PROJECT}/nf-site-monolith:1.0.0 \
+  --image gcr.io/nf-web-480214/nf-site-monolith:1.0.0 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \

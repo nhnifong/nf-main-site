@@ -1,3 +1,5 @@
+# MAJOR COMPONENTS
+
 1. The "Media Gateway" Cluster (MediaMTX)
    - Software: MediaMTX (Multi-tenant configuration).
    - Scaling: One server can handle N robots. Scale horizontally (add more servers) as customer base grows.
@@ -33,9 +35,7 @@
      - Control: Connects WebSocket to `wss://api-server/control/robot_{id}`
    - "Watchdog" script ensures these processes restart on failure.
 
-================================================================================
-REQUIRED ARTIFACTS (Implementation Checklist)
-================================================================================
+# REQUIRED ARTIFACTS
 
 1. Cloud - Media Gateway
    - mediamtx.yml: The config file defining the paths (/robot_*, /playroom), enabling external auth, and setting up the HLS runOnReady hooks.
