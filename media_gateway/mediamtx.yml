@@ -1,16 +1,17 @@
 # configuration for MediaMTX server to forward video for Stringman Robots
 
-# We use http authentication to delegate permissions to the conrol_plane
+# Authentication
+# We use http authentication to delegate permissions to the control_plane
+# This sends a POST request to the configured URL with the stream credentials
 authMethod: http
-# REPLACE THIS with your actual Cloud Run URL
-externalAuthenticationURL: https://nf-site-monolith-690802609278.us-central1.run.app/internal/auth
+authHTTPAddress: http://172.17.0.1:8080/internal/auth
 
 # Paths (Routing Logic)
 paths:
   # 1. Private Robot Streams (Default)
-  # Any path starting with 'robot_' will use this config.
+  # Uses regex (~) to match any path starting with 'robot_'
   # e.g., rtmp://server/robot_99
-  robot_*:
+  ~^robot_.*:
     # Just a straight pipe. No transcoding.
     # WebRTC is enabled by default in MediaMTX.
     runOnReady: ""
