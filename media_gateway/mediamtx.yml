@@ -1,15 +1,22 @@
 # configuration for MediaMTX server to forward video for Stringman Robots
 
+###############################################
+# General
+###############################################
+
 # Authentication
 # We use http authentication to delegate permissions to the control_plane
 # This sends a POST request to the configured URL with the stream credentials
 authMethod: http
-authHTTPAddress: http://172.17.0.1:8080/internal/auth
+# We use a template variable here. The Dockerfile will fill this in at runtime.
+authHTTPAddress: ${CONTROL_PLANE_API_URL}/internal/auth
 
+###############################################
 # Paths (Routing Logic)
+###############################################
 paths:
   # 1. Private Robot Streams (Default)
-  # Uses regex (~) to match any path starting with 'robot_'
+  # Uses regex tilde (~) to match any path starting with 'robot_'
   # e.g., rtmp://server/robot_99
   ~^robot_.*:
     # Just a straight pipe. No transcoding.
@@ -20,7 +27,7 @@ paths:
   # This specific path triggers HLS transcoding for the spectators.
   playroom:
     # When a robot publishes to 'playroom', start ffmpeg to chop it into HLS segments
-    # We output to /hls_storage which will be a mounted volume
+    # Note: $RTSP_PORT and $G1 are internal MediaMTX variables, do not touch them.
     runOnReady: >
       ffmpeg -i rtsp://localhost:$RTSP_PORT/$G1
       -c:v copy -c:a copy
