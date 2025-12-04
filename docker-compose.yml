@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # The Backend + Frontend Container
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # In Docker Compose, hostnames are service names.
+      # We tell the app to talk to the 'redis' service defined below.
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      # This maps your local folder to the container. 
+      # Changes you make to python files or HTML happen instantly without rebuilding!
+      - .:/app
+    depends_on:
+      - redis
+
+  # The Redis Container
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"

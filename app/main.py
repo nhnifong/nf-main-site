@@ -76,8 +76,9 @@ class DatasetUploadRequest(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     # Initialize Redis connections in the managers
-    await socket_manager.connect()
-    await queue_manager.connect()
+    # await socket_manager.connect()
+    # await queue_manager.connect()
+    pass
 
 @app.post("/internal/auth")
 async def media_server_auth(req: StreamAuthRequest):

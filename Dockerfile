@@ -14,9 +14,14 @@ ENV PYTHONUNBUFFERED 1
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Copy the Application Code
+# Copy the Application Code
 # This copies the local 'app' folder
 COPY app ./app
+
+# list what is in the docker filesystem to aid in debugging.
+RUN echo "=== FILE LISTING START ===" && \
+    find . -maxdepth 4 -not -path '*/.*' && \
+    echo "=== FILE LISTING END ==="
 
 # Expose the port
 EXPOSE 8080
