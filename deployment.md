@@ -31,3 +31,16 @@ gcloud redis instances create nf-redis \
   --region=us-central1 \
   --tier=basic
 ```
+
+## Set up firewall rule for media server
+
+```
+gcloud compute firewall-rules create allow-media-ports \
+    --direction=INGRESS \
+    --priority=1000 \
+    --network=default \
+    --action=ALLOW \
+    --rules=tcp:1935,tcp:8888,tcp:8889,tcp:8554,udp:8189 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=media-server
+```
