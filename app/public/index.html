@@ -20,6 +20,11 @@
             overflow-x: hidden; /* Prevent horizontal scroll */
         }
 
+        .light-link {
+          color: #7cdbfb;
+          text-decoration: none; /* Removes underline */
+        }
+
         /* --- UTILITY NAVBAR --- */
         .navbar {
             position: absolute;
@@ -172,10 +177,11 @@
             box-shadow: 0 30px 60px rgba(0,0,0,0.15);
         }
 
-        .order-button {
+        .order-button, 
+        .order-button:visited {
             display: inline-block;
-            background-color: #000;
-            color: #fff;
+            background-color: #7cdbfb;
+            color: #000;
             padding: 25px 80px;
             font-size: 1.5rem;
             font-weight: 600;
@@ -187,11 +193,11 @@
 
         .order-button:hover {
             transform: translateY(-2px) scale(1.02);
-            background-color: #222;
+            background-color: #EEE;
             box-shadow: 0 15px 30px rgba(0,0,0,0.3);
         }
 
-        /* --- RESPONSIVE ADJUSTMENTS --- */
+        /* --- adaptations for mobile --- */
         @media (max-width: 900px) {
             .hero-content h1 { font-size: 3.5rem; }
             .feature-content { 
@@ -213,7 +219,7 @@
         <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
         <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
         <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
-        <a href="company.html">Company</a>
+        <a href="company">Company</a>
         <a href="#">Future</a>
     </nav>
 
@@ -221,7 +227,7 @@
     <section class="hero">
         <!-- TODO REPLACE SRC with video asset -->
         <video class="hero-video" autoplay muted loop playsinline>
-            <source src="assets/background-no-audio.mp4" type="video/mp4">
+            <source src="https://storage.googleapis.com/nf-site-assets/assets/background-no-audio.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         
@@ -236,11 +242,11 @@
     <section class="feature-section">
         <div class="feature-content">
             <div class="feature-image">
-                <img src="assets/render.png">
+                <img src="https://storage.googleapis.com/nf-site-assets/assets/render.png">
             </div>
             <div class="feature-text">
                 <h2>Room-Scale Reach</h2>
-                <p>Stringman is hanging gripper that can reach the entire volume of your room. It picks up objects such as laundry and takes them to marked drop points such as the laundry hamper using AI fine tuned for this task. Designed for rooms ranging from 10ft to 35ft on a side.</p>
+                <p>Stringman is hanging gripper that can reach the entire volume of your room. It identifies objects on the floor such as laundry and takes them to marked drop points such as the laundry hamper. Designed for rooms ranging from 10ft to 35ft on a side.</p>
             </div>
         </div>
     </section>
@@ -248,23 +254,35 @@
     <section class="feature-section">
         <div class="feature-content">
             <div class="feature-image">
-                <img src="https://via.placeholder.com/600x400/eee/aaa?text=Computer+Vision+Nodes" alt="Vision Sensors">
+                <img src="https://storage.googleapis.com/nf-site-assets/assets/topview.png">
             </div>
             <div class="feature-text">
-                <h2>Autonomous Pickup</h2>
+                <h2>Autonomous Operation</h2>
                 <p>Designed to operate while you're out, Stringman can perform a cleaning cycle in about 30 minutes so you can return to clear floors or schedule your robotic vacuum to follow up. As soon as it's done, it parks itself out of reach.</p>
             </div>
         </div>
     </section>
 
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="https://storage.googleapis.com/nf-site-assets/assets/fingers.png">
+            </div>
+            <div class="feature-text">
+                <h2>Open Source</h2>
+                <p>Stringman is completely open source and <a href="https://certification.oshwa.org/us002788.html" class="light-link">certified by OSHWA</a>. And complete <a href="https://nhnifong.github.io/neufangled-site-2/" class="light-link">visual guides</a> are available if you want to print and build your own.</p>
+            </div>
+        </div>
+    </section>
+
 
     <section class="feature-section">
         <div class="feature-content">
             <div class="feature-image">
-                <img src="assets/passport.png">
+                <img src="https://storage.googleapis.com/nf-site-assets/assets/passport.png">
             </div>
             <div class="feature-text">
-                <h2>Remote Property Management</h2>
+                <h2>Remote Management</h2>
                 <p>Ever needed to reach through your security camera, grab something and put it somewhere? That capability is now within reach. Either select targets and drop points, or drive it manually through the web interface.</p>
             </div>
         </div>
@@ -273,10 +291,10 @@
     <section class="feature-section">
         <div class="feature-content">
             <div class="feature-image">
-                <img src="assets/heatmap.png">
+                <img src="https://storage.googleapis.com/nf-site-assets/assets/heatmap.png">
             </div>
             <div class="feature-text">
-                <h2>Constantly Improving</h2>
+                <h2>Constantly Improving Models</h2>
                 <p>Model updates are offered regularly for recognizing a greater variety of targets and obstacles and handling edge cases in new enviroments. If you're up for it, you can program your own behaviors or fine tune our models on your household data. No matter how advanced the AI gets, our belief is that tension is all you need.</p>
             </div>
         </div>
@@ -285,10 +303,10 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-image-container">
-            <img src="assets/product_pilot.png" alt="Stringman Pilot">
+            <img src="https://storage.googleapis.com/nf-site-assets/assets/product_pilot.png" alt="Stringman Pilot">
         </div>
         
-        <a href="stringman-pilot.html" class="order-button">Order Stringman</a>
+        <a href="stringman-pilot" class="order-button">Order Stringman</a>
     </section>
 
 </body>

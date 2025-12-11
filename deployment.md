@@ -4,20 +4,24 @@ To be run in repo root in cloud shell
 ## Build and push monolithic site
 
 ```
-gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.0.0 .
+gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.1.0 .
 ```
 
 Deploy
 
 ```
 gcloud run deploy nf-site-monolith \
-  --image gcr.io/nf-web-480214/nf-site-monolith:1.0.0 \
+  --image gcr.io/nf-web-480214/nf-site-monolith:1.1.0 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
   --vpc-connector redis-connector \
   --set-env-vars REDIS_URL=redis://10.12.90.11:6379
 ```
+
+Push images
+
+    gsutil -m rsync -r app/public/assets gs://nf-site-assets/assets
 
 ## Set up redis
 

@@ -49,9 +49,9 @@ async def read_company():
 async def read_playroom():
     return FileResponse(os.path.join(PUBLIC_DIR, "playroom.html"))
 
-@app.get("/product_detail")
+@app.get("/stringman-pilot")
 async def read_product():
-    return FileResponse(os.path.join(PUBLIC_DIR, "product_detail.html"))
+    return FileResponse(os.path.join(PUBLIC_DIR, "stringman-pilot.html"))
 
 # --- Data Models for API Requests ---
 
