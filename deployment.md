@@ -3,11 +3,10 @@ To be run in repo root in cloud shell
 
 ## Build and push monolithic site
 
-```
-gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.1.0 .
-```
+    gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.1.0 .
 
-Deploy
+
+Deploy site monolith to cloud run
 
 ```
 gcloud run deploy nf-site-monolith \
@@ -19,9 +18,19 @@ gcloud run deploy nf-site-monolith \
   --set-env-vars REDIS_URL=redis://10.12.90.11:6379
 ```
 
-Push images
+Push images to bucket
 
     gsutil -m rsync -r app/public/assets gs://nf-site-assets/assets
+
+## Build and push media gateway vm
+
+    gcloud builds submit --tag gcr.io/nf-web-480214/media-gateway:1.1.0 media_gateway/
+
+    gcloud compute instances update-container media-gateway-vm \
+    --container-image gcr.io/nf-web-480214/media-gateway:1.1.0 \
+    --zone=us-central1-a
+
+
 
 ## Set up redis
 

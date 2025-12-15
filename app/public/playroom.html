@@ -2,442 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Playroom - Live Control</title>
+    <title>Robot Telemetry Visualizer</title>
     <style>
-        /* --- RESET & TYPOGRAPHY --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #333;
-            background-color: #111; /* Dark theme for "Console" feel */
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* App-like feel */
-        }
-
-        /* --- UTILITY NAVBAR (Dark Mode) --- */
-        .navbar {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            background-color: #000;
-            border-bottom: 1px solid #333;
-        }
-
-        .brand {
-            color: #fff;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-
-        .nav-links a {
-            color: #999;
-            text-decoration: none;
-            margin-left: 30px;
-            font-weight: 500;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #fff;
-        }
-
-        /* --- MAIN LAYOUT --- */
-        .playroom-container {
-            flex: 1;
-            display: flex;
-            height: calc(100vh - 60px);
-        }
-
-        /* LEFT: VIDEO FEED */
-        .feed-section {
-            flex: 3;
-            position: relative;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .video-placeholder {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            opacity: 0.8;
-        }
-
-        .live-badge {
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; }
+        #info {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: red;
+            top: 10px;
+            left: 10px;
             color: white;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            border-radius: 4px;
-            text-transform: uppercase;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .overlay-message {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
             font-family: monospace;
-            border: 1px solid #444;
-        }
-
-        /* RIGHT: CONTROL PANEL */
-        .control-panel {
-            flex: 1;
-            min-width: 350px;
-            background: #1a1a1a;
-            border-left: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        /* QUEUE STATUS */
-        .queue-card {
-            background: #222;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-        }
-
-        .queue-status-text {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .queue-count {
-            font-size: 2.5rem;
-            color: #fff;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .join-btn {
-            background: #fff;
-            color: #000;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            font-weight: 700;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: background 0.2s;
-        }
-
-        .join-btn:hover {
-            background: #ddd;
-        }
-
-        /* CONTROLS (Initially Disabled) */
-        .controls-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.3; /* Disabled look */
-            pointer-events: none; /* Prevent clicks until active */
-            transition: opacity 0.3s;
-        }
-
-        .controls-wrapper.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .d-pad {
-            display: grid;
-            grid-template-columns: 60px 60px 60px;
-            grid-template-rows: 60px 60px 60px;
-            gap: 10px;
-            margin-bottom: 40px;
-        }
-
-        .control-btn {
-            background: #333;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #000;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        .control-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #000;
-        }
-
-        .btn-up { grid-column: 2; grid-row: 1; }
-        .btn-left { grid-column: 1; grid-row: 2; }
-        .btn-right { grid-column: 3; grid-row: 2; }
-        .btn-down { grid-column: 2; grid-row: 3; }
-        
-        .z-controls {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .action-btn {
-            background: #444;
-            color: white;
-            border: none;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #222;
-        }
-
-        .action-btn.grab {
-            background: #d32f2f; /* Red button */
-        }
-        
-        .action-btn:active {
-            transform: translateY(4px);
-            box-shadow: none;
-        }
-
-        /* TIMER BAR */
-        .timer-bar {
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: auto;
-        }
-
-        .timer-fill {
-            height: 100%;
-            width: 0%;
-            background: #fff;
-            transition: width 1s linear;
-        }
-
-        /* CTA */
-        .buy-cta {
-            margin-top: 20px;
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-        }
-        
-        .buy-cta p {
-            color: #666;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-        }
-
-        .buy-cta a {
-            color: #fff;
-            text-decoration: underline;
-            font-size: 0.9rem;
-        }
-
-        /* Mobile Responsive */
-        @media (max-width: 900px) {
-            .playroom-container {
-                flex-direction: column;
-                height: auto;
-            }
-            .feed-section {
-                height: 50vh;
-            }
-            .control-panel {
-                height: 50vh;
-            }
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            pointer-events: none;
         }
     </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="//cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.min.js"></script>
 </head>
 <body>
+    <div id="info">Waiting for Telemetry...</div>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    <nav class="navbar">
-        <a href="index.html" class="brand">Neufangled // Playroom</a>
-        <div class="nav-links">
-            <a href="index.html">Exit to Home</a>
-        </div>
-    </nav>
+        // --- 1. Scene Setup ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x222222);
 
-    <div class="playroom-container">
-        <!-- Video Feed -->
-        <div class="feed-section">
-            <div class="live-badge">LIVE • NC LAB</div>
-            
-            <!-- Placeholder for WebRTC Stream -->
-            <!-- In production, this would be a <video> element connected to the HLS/WebRTC stream -->
-            <img src="https://via.placeholder.com/1280x720/000/333?text=Awaiting+Stream+Connection..." class="video-placeholder" alt="Live Feed">
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
+        // Position camera to look into the room from slightly above/outside
+        camera.position.set(2, 2, 5);
 
-            <div class="overlay-message" id="overlayMsg">Spectator Mode</div>
-        </div>
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        <!-- Right Control Panel -->
-        <div class="control-panel">
-            
-            <!-- Queue System -->
-            <div class="queue-card">
-                <div id="queue-ui-waiting">
-                    <p class="queue-status-text">Users in line</p>
-                    <div class="queue-count">14</div>
-                    <button class="join-btn" onclick="joinQueue()">Join Queue</button>
-                </div>
-                
-                <div id="queue-ui-active" style="display: none;">
-                    <p class="queue-status-text">Your Turn Ends In</p>
-                    <div class="queue-count" id="timer-display">2:00</div>
-                    <div class="timer-bar">
-                        <div class="timer-fill" id="timer-fill"></div>
-                    </div>
-                </div>
-            </div>
+        // Orbit Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1.5, 0); // Look at center of room volume
+        controls.update();
 
-            <!-- D-Pad and Actions -->
-            <div class="controls-wrapper" id="robot-controls">
-                
-                <div class="d-pad">
-                    <button class="control-btn btn-up" onmousedown="sendCommand('N')" onmouseup="stopCommand()">&#9650;</button>
-                    <button class="control-btn btn-left" onmousedown="sendCommand('W')" onmouseup="stopCommand()">&#9664;</button>
-                    <button class="control-btn btn-right" onmousedown="sendCommand('E')" onmouseup="stopCommand()">&#9654;</button>
-                    <button class="control-btn btn-down" onmousedown="sendCommand('S')" onmouseup="stopCommand()">&#9660;</button>
-                </div>
-
-                <div class="z-controls">
-                    <button class="action-btn" onmousedown="sendCommand('U')" onmouseup="stopCommand()">UP</button>
-                    <button class="action-btn" onmousedown="sendCommand('D')" onmouseup="stopCommand()">DOWN</button>
-                    <button class="action-btn grab" onclick="triggerGrab()">GRAB</button>
-                </div>
-
-                <p style="color: #555; font-size: 0.8rem; text-align: center;">WASD to Move • Space to Grab</p>
-            </div>
-
-            <div class="buy-cta">
-                <p>This is a real robot running on Stringman architecture.</p>
-                <a href="product_detail.html">Order your Kit &rarr;</a>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Mock Logic for Demo Purposes
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft white light
+        scene.add(ambientLight);
         
-        function joinQueue() {
-            const btn = document.querySelector('.join-btn');
-            btn.innerText = "Joining...";
-            btn.disabled = true;
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(2, 5, 2);
+        scene.add(dirLight);
 
-            setTimeout(() => {
-                // Simulate becoming the driver
-                document.getElementById('queue-ui-waiting').style.display = 'none';
-                document.getElementById('queue-ui-active').style.display = 'block';
-                
-                // Activate controls
-                document.getElementById('robot-controls').classList.add('active');
-                document.getElementById('overlayMsg').innerText = "YOU HAVE CONTROL";
-                document.getElementById('overlayMsg').style.color = "#4caf50";
-                document.getElementById('overlayMsg').style.borderColor = "#4caf50";
+        // --- 2. Geometry ---
+        
+        // The Cube (Robot) - 10cm = 0.1m
+        const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+        const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        // Initial position (center of floor)
+        cube.position.set(0, 0.05, 0); 
+        scene.add(cube);
 
-                startTimer();
-            }, 1500);
-        }
-
-        function startTimer() {
-            let timeLeft = 120; // 2 minutes
-            const display = document.getElementById('timer-display');
-            const fill = document.getElementById('timer-fill');
-            fill.style.width = '100%';
-
-            const interval = setInterval(() => {
-                timeLeft--;
-                
-                // Format time
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                display.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-                // Update bar
-                const percent = (timeLeft / 120) * 100;
-                fill.style.width = `${percent}%`;
-
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    alert("Time's up!");
-                    location.reload();
-                }
-            }, 1000);
-        }
-
-        function sendCommand(cmd) {
-            console.log("Sending command:", cmd);
-            // In production: socket.emit('cmd', { direction: cmd });
-        }
-
-        function stopCommand() {
-            console.log("Stopping");
-            // In production: socket.emit('cmd', { direction: 'STOP' });
-        }
-
-        function triggerGrab() {
-            console.log("Triggering Grab Sequence");
-            // In production: socket.emit('action', { type: 'GRAB' });
-        }
-
-        // Keyboard listeners for desktop play
-        document.addEventListener('keydown', (e) => {
-            if (!document.getElementById('robot-controls').classList.contains('active')) return;
-            
-            switch(e.key) {
-                case 'w': sendCommand('N'); break;
-                case 'a': sendCommand('W'); break;
-                case 's': sendCommand('S'); break;
-                case 'd': sendCommand('E'); break;
-                case 'ArrowUp': sendCommand('U'); break;
-                case 'ArrowDown': sendCommand('D'); break;
-                case ' ': triggerGrab(); break;
-            }
+        // The Room - 5m x 5m x 3m (height arbitrary, usually rooms are ~2.5-3m)
+        // We use BackSide so we see the interior when outside, but walls disappear if we go "behind" them
+        const roomSize = 5;
+        const roomHeight = 3;
+        const roomGeometry = new THREE.BoxGeometry(roomSize, roomHeight, roomSize);
+        const roomMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x888888, 
+            side: THREE.BackSide, // Only render inside faces
+            wireframe: false
         });
+        const room = new THREE.Mesh(roomGeometry, roomMaterial);
+        // Shift room up so floor is at y=0
+        room.position.set(0, roomHeight / 2, 0);
+        scene.add(room);
 
-        document.addEventListener('keyup', (e) => {
-            if (!document.getElementById('robot-controls').classList.contains('active')) return;
-            stopCommand();
+        // Grid Helper for context
+        const gridHelper = new THREE.GridHelper(5, 10);
+        scene.add(gridHelper);
+
+        // --- 3. ProtoBuf & Websocket Setup ---
+
+        // Define the Proto schema inline for simplicity. 
+        // In a real app, you might load this from a .proto file.
+        const protoDefinition = `
+            syntax = "proto3";
+
+            message Vector3 {
+                float x = 1;
+                float y = 2;
+                float z = 3;
+            }
+
+            message PositionEstimate {
+                Vector3 gantry_position = 1;
+                // other fields ignored...
+            }
+
+            message TelemetryBatchUpdate {
+                PositionEstimate position_estimate = 1;
+                // other fields like motor_status, etc. ignored...
+            }
+        `;
+
+        // Parse schema
+        const root = protobuf.parse(protoDefinition).root;
+        const TelemetryBatchUpdate = root.lookupType("TelemetryBatchUpdate");
+
+        // Websocket Connection
+        const wsUrl = 'ws://localhost:8080/telemetry/53a7d9d4-30a2-4410-8601-55274076dffa';
+        let socket;
+        const infoDiv = document.getElementById('info');
+
+        function connect() {
+            socket = new WebSocket(wsUrl);
+            socket.binaryType = 'arraybuffer'; // Important for Protobuf
+
+            socket.onopen = () => {
+                console.log('Connected to ' + wsUrl);
+                infoDiv.innerText = 'Connected via Websocket';
+                infoDiv.style.color = '#00ff00';
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    // event.data is an ArrayBuffer
+                    const buffer = new Uint8Array(event.data);
+                    
+                    // Decode message
+                    const message = TelemetryBatchUpdate.decode(buffer);
+                    
+                    // Check if PositionEstimate exists
+                    if (message.positionEstimate && message.positionEstimate.gantryPosition) {
+                        const pos = message.positionEstimate.gantryPosition;
+                        
+                        // Update Cube Position
+                        // Ensure we map coordinates correctly (Robot coord system -> ThreeJS coord system)
+                        // Assuming standard: Z-up in robotics? Y-up in ThreeJS?
+                        // Common Robotics: X=Forward, Y=Left, Z=Up
+                        // ThreeJS: X=Right, Y=Up, Z=Backward (Right-hand rule)
+                        
+                        // For this example, I will map directly: x->x, y->y, z->z
+                        // Adjust lines below if your coordinate systems differ.
+                        cube.position.set(pos.x || 0, pos.y || 0, pos.z || 0);
+                    }
+                } catch (err) {
+                    console.error('Error decoding message:', err);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log('Disconnected. Retrying in 2s...');
+                infoDiv.innerText = 'Disconnected. Retrying...';
+                infoDiv.style.color = 'orange';
+                setTimeout(connect, 2000);
+            };
+
+            socket.onerror = (err) => {
+                console.error('Socket error:', err);
+            };
+        }
+
+        connect();
+
+        // --- 4. Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
     </script>

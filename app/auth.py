@@ -20,6 +20,23 @@ async def validate_stream_auth(req) -> bool:
     """
     Validates MediaMTX webhook requests.
     req.action is either 'publish' (Robot) or 'read' (User)
+
+    test endpoint with curl
+
+curl -X POST http://localhost:8080/internal/auth \
+  -H "Content-Type: application/json" \
+  -d '{
+  "user": "user",
+  "password": "password",
+  "token": "token",
+  "ip": "ip",
+  "action": "publish",
+  "path": "path",
+  "protocol": "rtsp",
+  "id": "id",
+  "query": "query"
+}'
+
     """
     if req.action == 'publish':
         # Robot is trying to stream. Check if ID exists and password matches stream key.

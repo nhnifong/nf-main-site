@@ -23,7 +23,7 @@ build
 docker build -t media-gateway ./media_gateway
 ```
 
-run mead gateway pointing to local control plane (replace 172.17.0.1 with your Docker Bridge IP if needed)
+run media gateway pointing to local control plane (replace 172.17.0.1 with your Docker Bridge IP if needed)
 ```
 docker run --rm -it \
   -p 8554:8554 \
