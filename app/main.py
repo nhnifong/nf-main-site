@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Neufangled Control Plane")
 
+# TODO explain what the hell this is.
 # CORS is vital for the frontend to communicate with this backend from a browser
 app.add_middleware(
     CORSMiddleware,
@@ -30,28 +31,29 @@ app.add_middleware(
 
 # --- STATIC FILE SERVING ---
 
-# Dynamic path resolution (Robust)
-# This finds the directory where main.py lives, then looks for 'public' inside it
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(BASE_DIR, "public")
+# Define where the static files live in the container
+FRONTEND_DIST = "nf-viz/dist"
 
-app.mount("/assets", StaticFiles(directory=os.path.join(PUBLIC_DIR, "assets")), name="assets")
+# Mount the assets folder
+if os.path.exists(FRONTEND_DIST):
+    app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
 
+# Serve the HTML files
 @app.get("/")
 async def read_index():
-    return FileResponse(os.path.join(PUBLIC_DIR, "index.html"))
-
-@app.get("/company")
-async def read_company():
-    return FileResponse(os.path.join(PUBLIC_DIR, "company.html"))
+    return FileResponse(f"{FRONTEND_DIST}/index.html")
 
 @app.get("/playroom")
 async def read_playroom():
-    return FileResponse(os.path.join(PUBLIC_DIR, "playroom.html"))
+    return FileResponse(f"{FRONTEND_DIST}/playroom.html")
 
 @app.get("/stringman-pilot")
-async def read_product():
-    return FileResponse(os.path.join(PUBLIC_DIR, "stringman-pilot.html"))
+async def read_playroom():
+    return FileResponse(f"{FRONTEND_DIST}/stringman-pilot.html")
+
+@app.get("/company")
+async def read_playroom():
+    return FileResponse(f"{FRONTEND_DIST}/company.html")
 
 # --- Data Models for API Requests ---
 
@@ -65,11 +67,6 @@ class StreamAuthRequest(BaseModel):
     id: str
     action: str
     query: str
-
-class DatasetUploadRequest(BaseModel):
-    robot_id: str
-    episode_id: str
-    duration_seconds: float
 
 # --- HTTP Endpoints ---
 

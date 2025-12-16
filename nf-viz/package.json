@@ -1,0 +1,22 @@
+{
+  "name": "nf-viz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "build": "npm run proto && tsc && vite build",
+    "proto": "mkdir -p src/generated && pbjs -t static-module -w es6 -p ../protos -o src/generated/proto_bundle.js ../protos/*.proto && pbts -o src/generated/proto_bundle.d.ts src/generated/proto_bundle.js"
+  },
+  "devDependencies": {
+    "@types/three": "^0.182.0",
+    "protobufjs-cli": "^1.1.3",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "protobufjs": "^7.5.4",
+    "three": "^0.182.0"
+  }
+}
