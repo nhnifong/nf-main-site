@@ -2,12 +2,26 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Import the generated protobuf classes
 import { nf } from './generated/proto_bundle.js';
+import { Gripper } from './objects/gripper.ts';
 
-// Scene Setup ---
+/*
+
+Wishlist for web based UI
+
+Similar functionality to Ursina UI, but better aesthetics
+Overall look:
+    light beige walls, well lit.
+    Warm colored rug on the floor with company logo
+    simple window on one wall with white emissive material in place of glass
+    small shelf on opposite wall with plant
+
+*/
+
+// Scene Setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x222222);
+scene.background = new THREE.Color(0xffffff);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 100);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 100);
 camera.position.set(2, 2, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -19,25 +33,25 @@ controls.target.set(0, 1.5, 0);
 controls.update();
 
 // Lights
-const ambientLight = new THREE.AmbientLight(0x404040, 2);
+const ambientLight = new THREE.AmbientLight(0x808080, 2);
 scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+const dirLight = new THREE.DirectionalLight(0xffffff, 3);
 dirLight.position.set(2, 5, 2);
 scene.add(dirLight);
 
-// Geometry ---
+// Geometry
 
 // Robot Cube
 const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
 const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-cube.position.set(0, 0.05, 0);
+cube.position.set(0, 1.05, 0);
 scene.add(cube);
 
 // Room (One-sided walls)
 const roomGeometry = new THREE.BoxGeometry(5, 3, 5);
 const roomMaterial = new THREE.MeshStandardMaterial({
-  color: 0x888888,
+  color: 0xEEEEEE0,
   side: THREE.BackSide // Key for "looking in" effect
 });
 const room = new THREE.Mesh(roomGeometry, roomMaterial);
@@ -47,7 +61,11 @@ scene.add(room);
 const gridHelper = new THREE.GridHelper(5, 10);
 scene.add(gridHelper);
 
-// Telemetry Handler ---
+// Assets
+
+const gripper = new Gripper(scene);
+
+// Telemetry Handler
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const wsUrl = `${protocol}//${window.location.host}/telemetry/robot_0`;

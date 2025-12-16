@@ -1,5 +1,11 @@
 # Stringman web UI
 
+### Setup for frontend
+
+    cd nf-viz
+    npm install
+    npm build
+
 ### Run locally
 
 The frontend server can be run in isolation but stil forwards requests for API endpoints to the control_plane
@@ -8,7 +14,7 @@ from this directory
 
     npm run dev
 
-### Compile Typescript
+### Generate protos and Compile Typescript
 
     npm run build
 
