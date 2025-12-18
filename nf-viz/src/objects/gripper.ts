@@ -9,8 +9,8 @@ export class Gripper {
     // References to moving parts
     private leftFinger: THREE.Object3D | null = null;
     private rightFinger: THREE.Object3D | null = null;
-    private leftLinkage: THREE.Object3D | null = null;
-    private rightLinkage: THREE.Object3D | null = null;
+    // private leftLinkage: THREE.Object3D | null = null;
+    // private rightLinkage: THREE.Object3D | null = null;
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
@@ -25,16 +25,16 @@ export class Gripper {
         
         try {
             // Path relative to the 'public' folder
-            const gltf = await loader.loadAsync('/assets/gripper.glb');
+            const gltf = await loader.loadAsync('/assets/models/flowerpot.glb');
             
             // Adjust scale if blender units were meters vs millimeters
-            // gltf.scene.scale.set(1, 1, 1); 
+            gltf.scene.scale.set(0.1, 0.1, 0.1); 
 
             // Find specific moving parts by name defined in Blender
             this.leftFinger = gltf.scene.getObjectByName('FingerLeft') || null;
             this.rightFinger = gltf.scene.getObjectByName('FingerRight') || null;
-            this.leftLinkage = gltf.scene.getObjectByName('LinkageLeft') || null;
-            this.rightLinkage = gltf.scene.getObjectByName('LinkageRight') || null;
+            // this.leftLinkage = gltf.scene.getObjectByName('LinkageLeft') || null;
+            // this.rightLinkage = gltf.scene.getObjectByName('LinkageRight') || null;
 
             if (!this.leftFinger) console.warn('Could not find FingerLeft in model');
 

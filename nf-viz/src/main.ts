@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Import the generated protobuf classes
 import { nf } from './generated/proto_bundle.js';
-import { Gripper } from './objects/gripper.ts';
+// import { Gripper } from './objects/gripper.ts';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 /*
 
@@ -63,7 +64,19 @@ scene.add(gridHelper);
 
 // Assets
 
-const gripper = new Gripper(scene);
+// const gripper = new Gripper(scene);
+// gripper.setPosition(2,0,2);
+
+const loader = new GLTFLoader();
+
+const flowerpot = await loader.loadAsync('/assets/models/flowerpot.glb');
+flowerpot.scene.scale.set(0.1, 0.1, 0.1);
+scene.add(flowerpot.scene);
+flowerpot.scene.position.set(2,0,2);
+
+const rug = await loader.loadAsync('/assets/models/rug.glb');
+rug.scene.scale.set(0.2, 0.2, 0.2);
+scene.add(rug.scene);
 
 // Telemetry Handler
 
