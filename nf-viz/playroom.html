@@ -4,9 +4,201 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>nf-viz</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* The UI Layer sits on top of the Three.js canvas. */
+      #ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 10;
+        padding: 20px;
+        box-sizing: border-box;
+        pointer-events: none; 
+
+        display: grid;
+        grid-template-columns: 300px 1fr 320px; 
+        grid-template-rows: minmax(0, 1fr) auto; 
+        grid-template-areas: 
+          "left center right"
+          "footer footer footer";
+        gap: 20px;
+      }
+
+      /* Common styles for all panels */
+      .panel {
+        background: rgba(155, 155, 145, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        pointer-events: auto; 
+        display: flex;
+        flex-direction: column;
+      
+        /* left and right panels can scroll if needed */
+        overflow-y: auto; 
+        max-height: 100%;
+      }
+
+      /* Hide scrollbar for Chrome/Safari/Opera */
+      .panel::-webkit-scrollbar {
+        display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .panel {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+
+      /* Left Panel: Tasks */
+      #panel-left {
+        grid-area: left;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        color: #444;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+      }
+
+      .task-item {
+        background: rgba(255, 255, 255, 0.6);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+
+      .task-item.active {
+        border-left: 4px solid #4CAF50;
+        background: rgba(255, 255, 255, 0.9);
+        font-weight: bold;
+      }
+
+      /* Right Panel: Video Feeds */
+      #panel-right {
+        grid-area: right;
+        gap: 15px;
+        background: transparent; 
+        box-shadow: none;
+        border: none;
+        backdrop-filter: none;
+        padding: 0;
+        /* Re-enable overflow for the container of feeds */
+        overflow-y: auto; 
+      }
+
+      .video-feed {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        border: 2px solid #333;
+        flex-shrink: 0; /* Prevent videos from squishing */
+      }
+
+      .feed-16-9 {
+        aspect-ratio: 16 / 9;
+      }
+      
+      .feed-1-1 {
+        aspect-ratio: 1 / 1;
+      }
+
+      .feed-label {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+      }
+
+      /* Footer */
+      #panel-footer {
+        grid-area: footer;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        
+        /* Footer shouldn't scroll */
+        overflow: hidden; 
+      }
+
+      .status-dot {
+        height: 12px;
+        width: 12px;
+        background-color: #4CAF50; /* Green */
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+      }
+
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <!-- The 3D Canvas will be appended here by main.ts (z-index auto/0) -->
+
+    <!-- UI Overlay Layer (z-index 10) -->
+    <div id="ui-layer">
+      
+      <!-- Left Panel: Task & Targets -->
+      <aside id="panel-left" class="panel">
+        <h2>Active Task</h2>
+        <div class="task-item active">
+          Pick up Object A
+        </div>
+        
+        <h2>Targets</h2>
+        <div id="target-list">
+          <div class="task-item">Target Alpha (0.5, 0.2)</div>
+          <div class="task-item">Target Beta (-0.5, 0.2)</div>
+          <div class="task-item">Drop Zone</div>
+        </div>
+      </aside>
+
+      <!-- Right Panel: Video Feeds -->
+      <aside id="panel-right" class="panel">
+        <div class="video-feed feed-16-9">
+          <div class="feed-label">ANCHOR 01</div>
+        </div>
+        <div class="video-feed feed-16-9">
+          <div class="feed-label">ANCHOR 02</div>
+        </div>
+        <div class="video-feed feed-1-1">
+          <div class="feed-label">GRIPPER - STABILIZED</div>
+        </div>
+      </aside>
+
+      <!-- Footer Panel -->
+      <footer id="panel-footer" class="panel">
+        <div>
+          <span class="status-dot"></span> System Online
+        </div>
+        <div>
+          <strong>Robot_0</strong> | Telemetry: <span id="telemetry-hz">60</span> Hz
+        </div>
+      </footer>
+
+    </div>
+
+    <!-- Main Logic -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
