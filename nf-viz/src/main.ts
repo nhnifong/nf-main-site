@@ -69,14 +69,8 @@ scene.add(gridHelper);
 
 const loader = new GLTFLoader();
 
-const flowerpot = await loader.loadAsync('/assets/models/flowerpot.glb');
-flowerpot.scene.scale.set(0.1, 0.1, 0.1);
-scene.add(flowerpot.scene);
-flowerpot.scene.position.set(2,0,2);
-
-const rug = await loader.loadAsync('/assets/models/rug.glb');
-rug.scene.scale.set(0.2, 0.2, 0.2);
-scene.add(rug.scene);
+const decor = await loader.loadAsync('/assets/models/decor.glb');
+scene.add(decor.scene);
 
 // Telemetry Handler
 
