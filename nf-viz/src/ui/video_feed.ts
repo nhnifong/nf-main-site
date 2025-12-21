@@ -9,8 +9,6 @@ export class VideoFeed {
     
     // State
     private pose: nf.common.Pose | null = null;
-    private cameraMatrix: THREE.Matrix4 = new THREE.Matrix4();
-    private projectionMatrix: THREE.Matrix4 = new THREE.Matrix4();
     
     // Helper for 3D projection
     private virtualCamera: THREE.PerspectiveCamera;
@@ -84,35 +82,37 @@ export class VideoFeed {
     }
 
     public setPose(pose: nf.common.Pose) {
-        this.pose = pose;
+        if (pose.position && pose.rotation) {
+            this.pose = pose;
 
-        // Convert Proto Pose to Three.js Camera Transform
-        // Position
-        this.virtualCamera.position.set(
-            pose.position.x ?? 0,
-            pose.position.y ?? 0,
-            pose.position.z ?? 0
-        );
+            // Convert Proto Pose to Three.js Camera Transform
+            // Position
+            this.virtualCamera.position.set(
+                pose.position.x ?? 0,
+                pose.position.y ?? 0,
+                pose.position.z ?? 0
+            );
 
-        // Rotation (Rodrigues Vector)
-        // Direction is axis, magnitude is angle in radians
-        const rx = pose.rotation.x ?? 0;
-        const ry = pose.rotation.y ?? 0;
-        const rz = pose.rotation.z ?? 0;
-        
-        // Calculate magnitude (angle)
-        const theta = Math.sqrt(rx * rx + ry * ry + rz * rz);
+            // Rotation (Rodrigues Vector)
+            // Direction is axis, magnitude is angle in radians
+            const rx = pose.rotation.x ?? 0;
+            const ry = pose.rotation.y ?? 0;
+            const rz = pose.rotation.z ?? 0;
+            
+            // Calculate magnitude (angle)
+            const theta = Math.sqrt(rx * rx + ry * ry + rz * rz);
 
-        if (theta < 1e-6) {
-            // Identity rotation if vector is effectively zero
-            this.virtualCamera.quaternion.set(0, 0, 0, 1);
-        } else {
-            // Normalize vector to get axis
-            const axis = new THREE.Vector3(rx / theta, ry / theta, rz / theta);
-            this.virtualCamera.quaternion.setFromAxisAngle(axis, theta);
+            if (theta < 1e-6) {
+                // Identity rotation if vector is effectively zero
+                this.virtualCamera.quaternion.set(0, 0, 0, 1);
+            } else {
+                // Normalize vector to get axis
+                const axis = new THREE.Vector3(rx / theta, ry / theta, rz / theta);
+                this.virtualCamera.quaternion.setFromAxisAngle(axis, theta);
+            }
+
+            this.virtualCamera.updateMatrixWorld();
         }
-
-        this.virtualCamera.updateMatrixWorld();
     }
 
     public renderTargetsOverlay(targets: nf.telemetry.TargetList) {
