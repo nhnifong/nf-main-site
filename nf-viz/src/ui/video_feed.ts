@@ -6,6 +6,7 @@ export class VideoFeed {
     private video: HTMLVideoElement;
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    public anchorNum: number | null = null;
     
     // State
     private pose: nf.common.Pose | null = null;
@@ -48,6 +49,13 @@ export class VideoFeed {
         // Defaulting to 60deg FOV, can be tuned later
         this.virtualCamera = new THREE.PerspectiveCamera(60, 16/9, 0.1, 100);
         this.virtualCamera.updateMatrixWorld(); // Ensure matrix is ready
+
+        this.anchorNum;
+    }
+
+    // associate this feed with a particular anchor number
+    public assign(anchorNum: number) {
+        this.anchorNum = anchorNum;
     }
 
     private resize() {

@@ -24,7 +24,7 @@
         pointer-events: none; 
 
         display: grid;
-        grid-template-columns: 300px 1fr 320px; 
+        grid-template-columns: 300px 1fr 420px; 
         grid-template-rows: minmax(0, 1fr) auto; 
         grid-template-areas: 
           "left center right"
@@ -87,6 +87,31 @@
         font-weight: bold;
       }
 
+      /* Base Item Style */
+      .task-item {
+          padding: 8px 12px;
+          margin-bottom: 4px;
+          background: rgba(0, 0, 0, 0.2); /* distinct background */
+          border-left: 4px solid transparent; /* space for status color */
+          font-family: monospace;
+      }
+
+      /* Status Colors */
+      .status-seen {
+          border-left-color: #ffffff; /* White */
+          color: #eeeeee;
+      }
+
+      .status-selected {
+          border-left-color: #007fff; /* Blue */
+          background: rgba(0, 127, 255, 0.1); /* Highlight selected */
+      }
+
+      .status-picked-up {
+          border-left-color: #ffd700; /* Gold */
+          color: #ffd700;
+      }
+
       /* Right Panel: Video Feeds */
       #panel-right {
         grid-area: right;
@@ -132,22 +157,232 @@
       /* Footer */
       #panel-footer {
         grid-area: footer;
-        height: 60px;
+        height: auto;
+        min-height: 90px;
         display: flex;
+        flex-direction: row;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start; /* Start from left, we'll use auto-margins if needed */
+        gap: 0; /* Gap handled by sections */
         
         /* Footer shouldn't scroll */
-        overflow: hidden; 
+        overflow: visible; /* popup menu from run button must be visible even if outside of footer */ 
+        padding: 10px 20px;
+      }
+
+      /* --- RUN MENU STYLES --- */
+      .run-menu-container {
+        position: relative;
+        display: inline-block;
+      }
+
+      .run-button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 28px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .run-button:hover {
+        background-color: #43a047;
+      }
+
+      /* Drop-up Content */
+      .run-menu-content {
+        display: none;
+        position: absolute;
+        bottom: 120%; /* Position above the button */
+        left: 0;
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        min-width: 240px;
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+        z-index: 100;
+        border-radius: 12px;
+        padding: 8px 0;
+        border: 1px solid rgba(0,0,0,0.1);
+        
+        /* Animation */
+        transform-origin: bottom left;
+        animation: popUp 0.1s ease-out;
+      }
+
+      @keyframes popUp {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      .run-menu-content.show {
+        display: block;
+      }
+
+      .menu-item {
+        color: #333;
+        padding: 12px 20px;
+        text-decoration: none;
+        display: block;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background-color 0.1s;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+      }
+      
+      .menu-item:last-child {
+        border-bottom: none;
+      }
+
+      .menu-item:hover:not(.disabled) {
+        background-color: #e8f5e9; /* Light green tint */
+        color: #2e7d32;
+      }
+
+      /* Disabled state */
+      .menu-item.disabled {
+        color: #aaa;
+        cursor: not-allowed;
+        background-color: transparent;
+      }
+
+      /* --- END RUN MENU --- */
+
+      .footer-section {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      
+      /* Vertical stacking for diagnostics */
+      .footer-stats-group {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 4px;
+        font-size: 0.85rem;
+      }
+
+      .stat-line {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .footer-divider {
+        width: 1px;
+        height: 40px;
+        background-color: rgba(0,0,0,0.15);
+        margin: 0 20px;
+      }
+
+      /* Push the last section (Telemetry) to the far right */
+      .footer-spacer {
+        flex-grow: 1;
       }
 
       .status-dot {
-        height: 12px;
-        width: 12px;
+        height: 10px;
+        width: 10px;
         background-color: #4CAF50; /* Green */
         border-radius: 50%;
         display: inline-block;
-        margin-right: 8px;
+        box-shadow: 0 0 5px #4CAF50;
+      }
+      
+      .status-offline {
+        background-color: #f44336;
+        box-shadow: 0 0 5px #f44336;
+      }
+
+      .label-muted {
+        color: #444;
+        margin-right: 4px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .stop-button {
+        background-color: #d32f2f;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 24px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin-left: 20px;
+      }
+
+      .stop-button:hover {
+        background-color: #b71c1c;
+      }
+
+      .stop-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+      .hidden {
+          display: none !important;
+      }
+
+      #popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7); /* Dimmed background */
+          z-index: 9999; /* On top of everything */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
+      .popup-box {
+          background: #2a2a2a;
+          border: 1px solid #444;
+          padding: 20px 30px;
+          border-radius: 8px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+          text-align: center;
+          min-width: 300px;
+      }
+
+      #popup-message {
+          color: #fff;
+          font-size: 1.1em;
+          margin-bottom: 20px;
+          white-space: pre-wrap; /* Preserve line breaks */
+      }
+
+      #popup-ok {
+          background: #007fff;
+          color: white;
+          border: none;
+          padding: 8px 24px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 1em;
+          transition: background 0.2s;
+      }
+
+      #popup-ok:hover {
+          background: #0066cc;
       }
 
     </style>
@@ -167,35 +402,99 @@
         
         <h2>Targets</h2>
         <div id="target-list">
-          <div class="task-item">Target Alpha (0.5, 0.2)</div>
-          <div class="task-item">Target Beta (-0.5, 0.2)</div>
-          <div class="task-item">Drop Zone</div>
+          <div class="task-item status-seen">Target One (0.5, 0.2)</div>
+          <div class="task-item status-selected">Target Two (-0.5, 0.2)</div>
+          <div class="task-item status-picked-up">Target Three (-0.5, 0.2)</div>
         </div>
       </aside>
 
       <!-- Right Panel: Video Feeds -->
       <aside id="panel-right" class="panel">
         <div class="video-feed feed-16-9">
-          <div class="feed-label">ANCHOR 01</div>
+          <div class="feed-label" id="firstOverhead">ANCHOR 01</div>
         </div>
         <div class="video-feed feed-16-9">
-          <div class="feed-label">ANCHOR 02</div>
+          <div class="feed-label" id="secondOverhead">ANCHOR 02</div>
         </div>
         <div class="video-feed feed-1-1">
-          <div class="feed-label">GRIPPER - STABILIZED</div>
+          <div class="feed-label" id="gripper">GRIPPER - STABILIZED</div>
         </div>
       </aside>
 
       <!-- Footer Panel -->
       <footer id="panel-footer" class="panel">
-        <div>
-          <span class="status-dot"></span> System Online
+
+        <!-- Run Menu -->
+        <div class="run-menu-container">
+          <button id="run-btn" class="run-button">
+            <span>RUN</span>
+            <span style="font-size: 0.8em">▲</span>
+          </button>
+          <div id="run-menu" class="run-menu-content">
+            <!-- Menu Items hooked up in main.ts -->
+            <div id="action-pick-drop" class="menu-item">Pick and drop targets</div>
+            <div id="action-tension" class="menu-item">Tension all lines (D-up)</div>
+            <div id="action-full-cal" class="menu-item">Full Calibration</div>
+            <div id="action-half-cal" class="menu-item">Quick Calibration (D-left)</div>
+            <div id="action-zero-winch" class="menu-item">Zero Gripper Winch Line</div>
+            <div id="action-horiz-check" class="menu-item">Horizontal Move Test</div>
+            <div id="action-collect-images" class="menu-item">Collect Gripper Images</div>
+            <div id="action-park" class="menu-item">Park</div>
+            <div id="action-unpark" class="menu-item">UnPark</div>
+          </div>
         </div>
-        <div>
-          <strong>Robot_0</strong> | Telemetry: <span id="telemetry-hz">60</span> Hz
+
+        <div class="footer-divider"></div>
+
+        <!-- System Status -->
+        <div class="footer-stats-group">
+           <div class="stat-line">
+            <span class="status-dot"></span> 
+            <strong>System Online</strong>
+           </div>
+           <div class="stat-line">
+             <span class="label-muted">Robot ID</span>
+             <strong>Robot_0</strong>
+           </div>
+           <div class="stat-line">
+             <span class="label-muted">Mode</span>
+             <strong>IDLE</strong>
+           </div>
         </div>
+
+        <!-- Spacer pushes next items to the right -->
+        <div class="footer-spacer"></div>
+
+        <!-- Diagnostics -->
+        <div class="footer-stats-group">
+           <div class="stat-line">
+             <span class="label-muted">Detections/sec</span>
+             <span id='detectionsPerSecond'>101.2</span>
+           </div>
+           <div class="videoLatency">
+             <span class="label-muted">Video latency</span>
+             <span>0.22 s</span>
+           </div>
+           <div class="avgFramerate">
+             <span class="label-muted">Avg framerate</span>
+             <span>29.2 fps</span>
+           </div>
+        </div>
+
+        <div class="footer-divider"></div>
+
+        <button id="stop-btn" class="stop-button">STOP</button>
       </footer>
 
+    </div>
+
+    </div>
+
+    <div id="popup-overlay" class="hidden">
+      <div class="popup-box">
+        <p id="popup-message">Default Message</p>
+        <button id="popup-ok">OK</button>
+      </div>
     </div>
 
     <!-- Main Logic -->

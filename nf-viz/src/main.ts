@@ -2,8 +2,19 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Import the generated protobuf classes
 import { nf } from './generated/proto_bundle.js';
-// import { Gripper } from './objects/gripper.ts';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Gripper } from './objects/gripper.ts';
+import { Anchor } from './objects/anchor.ts';
+import { Gantry } from './objects/gantry.ts';
+import { Cable } from './objects/cable.ts';
+import { DynamicRoom } from './objects/dynamic_room.ts'
+import { SightingsManager } from './objects/sightings_manager.ts'
+import { VideoFeed } from './ui/video_feed.ts'
+import { GamepadController } from './ui/gamepad.ts'
+
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 /*
 
@@ -20,12 +31,30 @@ Overall look:
 
 // Scene Setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+scene.background = new THREE.Color(0x444444);
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 100);
 camera.position.set(2, 2, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+// Initialize Composer
+const composer = new EffectComposer(renderer);
+
+// Render Pass: Draws the scene normally first
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
+
+// GTAO Pass: Adds the shading
+const gtaoPass = new GTAOPass(scene, camera, window.innerWidth, window.innerHeight);
+gtaoPass.setSize(window.innerWidth, window.innerHeight);
+composer.addPass(gtaoPass);
+
+// Output Pass: Tone mapping and sRGB conversion
+const outputPass = new OutputPass();
+composer.addPass(outputPass);
+
+composer.setSize(window.innerWidth, window.innerHeight);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -42,40 +71,74 @@ scene.add(dirLight);
 
 // Geometry
 
-// Robot Cube
-const cubeGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-cube.position.set(0, 1.05, 0);
-scene.add(cube);
+const room = new DynamicRoom(scene);
 
-// Room (One-sided walls)
-const roomGeometry = new THREE.BoxGeometry(5, 3, 5);
-const roomMaterial = new THREE.MeshStandardMaterial({
-  color: 0xEEEEEE0,
-  side: THREE.BackSide // Key for "looking in" effect
+// Anchors
+// default poses for four anchors. nf.common.Pose in specified in Z up coordinate system
+const acoords = [
+  { x: 2.5,  y: -2.5, rotZ: -Math.PI / 4 },
+  { x: 2.5,  y: 2.5,  rotZ: -3 * Math.PI / 4 },
+  { x: -2.5, y: 2.5,  rotZ: 3 * Math.PI / 4 },
+  { x: -2.5, y: -2.5, rotZ: Math.PI / 4 },
+];
+
+const anchors: Anchor[] = acoords.map((ac) => {
+  const anchor = new Anchor(scene, room);
+  anchor.setPose(nf.common.Pose.create({
+    position: { x: ac.x, y: ac.y, z: 3 },
+    rotation: { x: 0, y: 0, z: ac.rotZ }
+  }));
+  return anchor; 
 });
-const room = new THREE.Mesh(roomGeometry, roomMaterial);
-room.position.set(0, 1.5, 0);
-scene.add(room);
 
-const gridHelper = new THREE.GridHelper(5, 10);
-scene.add(gridHelper);
+// Gantry
+const gantry = new Gantry(scene);
 
-// Assets
+// Gripper
+const gripper = new Gripper(scene);
 
-// const gripper = new Gripper(scene);
-// gripper.setPosition(2,0,2);
+// Anchor-Gantry Cables
+const cables: Cable[] = [0, 1, 2, 3].map((i) => {
+  const cable = new Cable(scene);
+  cable.update(anchors[i].grommet_pos, gantry.position, 0.0)
+  return cable; 
+});
 
-const loader = new GLTFLoader();
+// Gantry-Gripper cable
+const winchCable = new Cable(scene);
+winchCable.update(gantry.position, gripper.grommet_pos, 0.0)
 
-const decor = await loader.loadAsync('/assets/models/decor.glb');
-scene.add(decor.scene);
+// Visual gantry factor
+const gantryVisualCube = new THREE.Mesh(
+  new THREE.BoxGeometry(0.1, 0.1, 0.1),
+  new THREE.MeshStandardMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 }));
+gantryVisualCube.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 4 );
+gantryVisualCube.position.set(-0.2, 1.5, 0);
+scene.add(gantryVisualCube);
 
-// Telemetry Handler
+// Visual hang factor
+const gantryHangCube = new THREE.Mesh(
+  new THREE.BoxGeometry(0.1, 0.1, 0.1),
+  new THREE.MeshStandardMaterial({ color: 0x0099ff, transparent: true, opacity: 0.5 }));
+gantryHangCube.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 4 );
+gantryHangCube.position.set(0.2, 1.5, 0);
+scene.add(gantryHangCube);
 
+// gantry sightings manager
+const sightingsManager = new SightingsManager(scene);
+
+// Input handler
+const gamepad = new GamepadController();
+
+// Video feed managers
+const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!);
+const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!);
+const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
+let assignNext = 0;
+
+// Connection to backend
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}/telemetry/robot_0`;
+const wsUrl = `${protocol}//${window.location.host}/control/0`;
 let socket: WebSocket;
 
 function connect() {
@@ -93,18 +156,41 @@ function connect() {
       const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
 
       for (const update of batch.updates) {
-        // Check for PositionEstimate
-        // Note: Protobuf optional fields are nullable in the generated types
-        if (update.posEstimate && update.posEstimate.gantryPosition) {
-          const pos = update.posEstimate.gantryPosition; // a nf.common.Vec3
-          
-          // gently update position of companion cube
-          cube.position.set(
-            pos.x ?? 0, 
-            pos.y ?? 0, 
-            pos.z ?? 0
-          );
+        if (update.newAnchorPoses) {
+          handleNewAnchorPoses(update.newAnchorPoses);
         }
+        else if (update.posEstimate) {
+          handlePosEstimate(update.posEstimate);
+        }
+        else if (update.posFactorsDebug) {
+          handlePosFactorsDebug(update.posFactorsDebug);
+        }
+        else if (update.lastCommandedVel) {
+          handleLastCommandedVel(update.lastCommandedVel);
+        }
+        else if (update.vidStats) {
+          handleVidStats(update.vidStats);
+        }
+        // else if (update.componentConnStatus) {
+        //   handleComponentConnStatus(update.componentConnStatus);
+        // }
+        else if (update.targetList) {
+          handleTargetList(update.targetList);
+        }
+        else if (update.gantrySightings) {
+          sightingsManager.handleSightings(update.gantrySightings);
+        }
+        else if (update.popMessage) {
+          showPopup(update.popMessage);
+        }
+        else if (update.namedPosition) {
+          handleNamedPosition(update.namedPosition);
+        }
+        else if (update.videoReady) {
+          handleVideoReady(update.videoReady);
+        }
+
+
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -119,12 +205,22 @@ function connect() {
 
 connect();
 
-// --- 4. Render Loop ---
+function sendGamepad() {
+  const items = gamepad.checkInputsAndCreateControlItems();
+  if (items.length > 0) {
+    sendControl(items);
+  }
+}
+
+// --- Render Loop ---
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  renderer.render(scene, camera);
+  sightingsManager.update();
+  composer.render();
+  sendGamepad();
 }
+
 animate();
 
 // Resize Handler
@@ -133,3 +229,281 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+//  ===== telemetry update handlers =====
+
+// Reposition anchors
+function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
+  if (data.poses && data.poses.length == 4) {
+    data.poses.forEach((apose, i) => {
+      // When the anchor poses telemetry message is sent, a pose is sent for each of four anchors
+      // in order of their anchor number
+      anchors[i].setPose(apose)
+    });
+  }
+}
+
+function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
+  if (data.gantryPosition) {
+    gantry.setPosition(data.gantryPosition);
+    // redraw cables
+    cables.forEach((cable, i) => {
+      cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0)
+    });
+  }
+
+  if (data.gripperPose) {
+    // Draw velocity indicator
+    gripper.setPose(data.gripperPose);
+  }
+}
+
+function handlePosFactorsDebug(data: nf.telemetry.IPositionFactors) {
+  if (data.visualPos) {
+    gantryVisualCube.position.set(data.visualPos.x!, data.visualPos.z!, -data.visualPos.y!);
+  }
+  if (data.hangingPos) {
+    gantryHangCube.position.set(data.hangingPos.x!, data.hangingPos.z!, -data.hangingPos.y!);
+  }
+}
+
+function handleLastCommandedVel(data: nf.telemetry.ICommandedVelocity) {
+  if (data.velocity) {
+    // Draw commanded velocity indicator
+    gantry.setVelocity(data.velocity);
+  }
+}
+
+function handleVidStats(data: nf.telemetry.IVidStats) {
+  // Get Elements
+  const dpsEl = document.getElementById('detectionsPerSecond');
+  const latEl = document.getElementById('videoLatency');
+  const fpsEl = document.getElementById('avgFramerate');
+
+  // Format & Update elements
+  if (dpsEl) {
+    dpsEl.textContent = (data.detectionRate ?? 0).toFixed(1);
+  }
+  if (latEl) {
+    latEl.textContent = (data.videoLatency ?? 0).toFixed(2) + ' s';
+  }
+  if (fpsEl) {
+    fpsEl.textContent = (data.videoFramerate ?? 0).toFixed(1) + ' fps';
+  }
+}
+
+// function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
+//   // tells us the status of the connection between observer and indibidual robot components.
+// }
+
+// Helper to format coordinates to 1 decimal place: (0.5, 0.2)
+function formatPos(pos?: nf.common.IVec3 | null): string {
+    if (!pos) return '';
+    const x = (pos.x ?? 0).toFixed(1);
+    const y = (pos.y ?? 0).toFixed(1);
+    // Ignoring Z for the 2D UI list
+    return `(${x}, ${y})`;
+}
+
+function handleTargetList(data: nf.telemetry.ITargetList) {
+    const container = document.getElementById('target-list');
+    if (!container) return;
+
+    // Clear the current list
+    container.innerHTML = '';
+
+    const targets = data.targets ?? [];
+
+    targets.forEach(target => {
+        const div = document.createElement('div');
+        div.className = 'task-item';
+
+        // Map Proto Status to CSS Class
+        switch (target.status) {
+            case nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED:
+                div.classList.add('status-selected'); // Azure
+                break;
+            case nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP:
+                div.classList.add('status-picked-up'); // Gold
+                break;
+            case nf.telemetry.TargetStatus.TARGETSTATUS_SEEN:
+            default:
+                div.classList.add('status-seen');     // White
+                break;
+        }
+
+        // Construct Text: "Target Alpha (0.5, 0.2)"
+        const rawId = target.id ?? 'Unknown';
+        const name = rawId.substring(0, 8);
+        const source = target.source ?? '';
+        const coords = formatPos(target.position);
+        
+        div.textContent = `(${source}) ${name} ${coords}`;
+
+        container.appendChild(div);
+    });
+}
+
+function showPopup(data: nf.telemetry.IPopup) {
+    const overlay = document.getElementById('popup-overlay');
+    const msgEl = document.getElementById('popup-message');
+
+    if (overlay && msgEl && data.message) {
+        msgEl.textContent = data.message;
+        overlay.classList.remove('hidden');
+    }
+}
+
+function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
+  if (data.name) {
+    if (data.position) {
+      // moved the named object
+      if (data.name == 'hamper') {
+        room.setHamper(data.position);
+      }
+      else if (data.name == 'gamepad') {
+        room.setUserPerspective(data.position);
+      }
+      // else if (data.name == 'gantry_goal_marker') {
+        
+      // }
+    } else {
+      // hide the named object
+    }
+  }
+}
+
+function handleVideoReady(data: nf.telemetry.IVideoReady) {
+  if (data.localUri) {
+    if (data.isGripper) {
+      console.log(data.localUri);
+      gripperVideo.connect(data.localUri)
+    } else if (data.anchorNum) {
+      // one of the anchor cams.
+      console.log(data.localUri);
+
+      // The observer has two preferred overhead cameras.
+      // We have two slots to display ovehead video, which we will assign alternately.
+      if (firstOverheadVideo.anchorNum == data.anchorNum) {
+        firstOverheadVideo.connect(data.localUri);
+      } else if (secondOverheadVideo.anchorNum == data.anchorNum) {
+        secondOverheadVideo.connect(data.localUri);
+      } else {
+        // assign one
+        if (assignNext == 0) {
+          firstOverheadVideo.assign(data.anchorNum);
+          firstOverheadVideo.connect(data.localUri);
+          assignNext++;
+        } else if (assignNext == 1) {
+          secondOverheadVideo.assign(data.anchorNum);
+          secondOverheadVideo.connect(data.localUri);
+          assignNext = 0;
+        }
+      }
+    }
+  }
+}
+
+window.addEventListener('resize', () => {
+    // Update Composer
+    composer.setSize(window.innerWidth, window.innerHeight);
+    // Update GTAO specific size
+    gtaoPass.setSize(window.innerWidth, window.innerHeight);
+});
+
+// One-time setup to bind the button in the popup window
+function initPopup() {
+    const overlay = document.getElementById('popup-overlay');
+    const btn = document.getElementById('popup-ok');
+
+    if (overlay && btn) {
+        btn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+    }
+}
+
+initPopup();
+
+// Send a list of ControlItems immediately
+function sendControl(items: Array<nf.control.ControlItem>) {
+  const batchData = nf.control.ControlBatchUpdate.create({
+    robotId: "0",
+    updates: items
+  });
+
+  // protobufjs method of serialization
+  const writer = nf.control.ControlBatchUpdate.encode(batchData);
+  const serializedBinaryData = writer.finish();
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(serializedBinaryData);
+    // if the socket exists but has disconnected, this is a nop
+  }
+}
+
+// Send a single command to the robot.
+function simpleCommand(cmdEnum: nf.control.Command) {
+    sendControl([nf.control.ControlItem.create({
+      command: {name: cmdEnum}
+    })]);
+}
+
+// --- Run menu ---
+function initRunMenu() {
+    const runBtn = document.getElementById('run-btn');
+    const runMenu = document.getElementById('run-menu');
+    const stopBtn = document.getElementById('stop-btn');
+
+    // Toggle Menu
+    if (runBtn && runMenu) {
+        runBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from immediately closing it
+            runMenu.classList.toggle('show');
+        });
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', () => {
+        if (runMenu && runMenu.classList.contains('show')) {
+            runMenu.classList.remove('show');
+        }
+    });
+
+    // Helper to bind menu items to simpleCommand
+    const bindCommand = (elementId: string, cmdEnum: nf.control.Command) => {
+        const el = document.getElementById(elementId);
+        if (el) {
+            el.addEventListener('click', () => {
+                if (!el.classList.contains('disabled')) {
+                    simpleCommand(cmdEnum);
+                    // close menu after selection
+                    runMenu?.classList.remove('show');
+                }
+            });
+        }
+    };
+
+    // Bind all menu actions
+    const Command = nf.control.Command;
+
+    bindCommand('action-pick-drop',      Command.COMMAND_PICK_AND_DROP);
+    bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
+    bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
+    bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
+    bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
+    bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
+    bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
+    bindCommand('action-park',           Command.COMMAND_PARK);
+    bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+
+    // stop
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            console.log("Stop current task");
+            simpleCommand(Command.COMMAND_STOP_ALL);
+        });
+    }
+}
+
+// Initialize run menu listeners
+initRunMenu();
