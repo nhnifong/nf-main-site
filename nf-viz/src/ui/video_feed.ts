@@ -8,6 +8,9 @@ export class VideoFeed {
     private ctx: CanvasRenderingContext2D;
     public anchorNum: number | null = null;
     
+    // WebRTC
+    private peerConnection: RTCPeerConnection | null = null;
+
     // State
     private pose: nf.common.Pose | null = null;
     
@@ -17,27 +20,11 @@ export class VideoFeed {
     constructor(container: HTMLElement) {
         this.container = container;
         
-        // Setup DOM Elements
-        this.video = document.createElement('video');
-        this.video.style.width = '100%';
-        this.video.style.height = '100%';
-        this.video.style.objectFit = 'cover';
-        this.video.autoplay = true;
-        this.video.muted = true; // Required for autoplay in many browsers
-        this.video.playsInline = true;
-        
-        this.canvas = document.createElement('canvas');
-        this.canvas.style.position = 'absolute';
-        this.canvas.style.top = '0';
-        this.canvas.style.left = '0';
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
-        this.canvas.style.pointerEvents = 'none'; // Let clicks pass through to video/controls
+        // Find video and canvasl elements
+        this.video = this.container.querySelector('video')!;
+        this.canvas = this.container.querySelector('canvas')!;
 
-        this.container.appendChild(this.video);
-        this.container.appendChild(this.canvas);
-
-        const context = this.canvas.getContext('2d');
+        const context = this.canvas!.getContext('2d');
         if (!context) throw new Error("Could not get 2D context");
         this.ctx = context;
 
@@ -69,24 +56,56 @@ export class VideoFeed {
         this.virtualCamera.updateProjectionMatrix();
     }
 
-    public connect(url: string, posterUrl?: string) {
-        if (posterUrl) {
-            this.video.poster = posterUrl;
+    public async connect(streamPath: string) {
+        // MediaMTX WHEP endpoint (standard WebRTC playback port is 8889)
+        const whepUrl = `http://localhost:8889/${streamPath}/whep`;
+
+        try {
+            console.log('Connecting to: ' + streamPath);
+
+            // Create the PeerConnection
+            this.peerConnection = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            // Connect video element to incoming tracks
+            this.peerConnection.ontrack = (event) => {
+                console.log('Track received: ' + event.track.kind);
+                if (event.track.kind === 'video') {
+                    this.video.srcObject = event.streams[0];
+                }
+            };
+
+            // Add a receive-only transceiver (we are watching, not broadcasting)
+            this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
+
+            // Create local SDP Offer
+            const offer = await this.peerConnection.createOffer();
+            await this.peerConnection.setLocalDescription(offer);
+
+            // Send Offer to MediaMTX via WHEP (POST request)
+            const response = await fetch(whepUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/sdp' },
+                body: offer.sdp
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            }
+
+            // Set Remote Description from Server Answer
+            const answerSdp = await response.text();
+            await this.peerConnection.setRemoteDescription({
+                type: 'answer',
+                sdp: answerSdp
+            });
+
+            console.log('Connected! Stream should start shortly.');
+
+        } catch (err) {
+            console.error(err);
         }
-
-        // Handle error/fallback
-        this.video.onerror = () => {
-            console.warn(`Failed to load video stream: ${url}`);
-            // If we have a poster, it stays visible. 
-            // We could also draw text on the canvas here.
-            this.ctx.fillStyle = "rgba(0,0,0,0.5)";
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.fillStyle = "white";
-            this.ctx.font = "14px sans-serif";
-            this.ctx.fillText("Signal Lost", 20, 30);
-        };
-
-        this.video.src = url;
     }
 
     public setPose(pose: nf.common.Pose) {

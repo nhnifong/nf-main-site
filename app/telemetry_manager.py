@@ -64,7 +64,6 @@ class TelemetryManager:
             while True:
                 data = await websocket.receive_bytes()
                 batch = telemetry.TelemetryBatchUpdate().parse(data)
-                logger.info(batch)
                 # Robot sends its state. leave it seralized.
                 # We publish this to Redis so all web servers can forward it to UI's connected to this robot.
                 await self.pub_redis.publish(f"state:{robot_id}", data)

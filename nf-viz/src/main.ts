@@ -134,7 +134,6 @@ const gamepad = new GamepadController();
 const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!);
 const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!);
 const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
-let assignNext = 0;
 
 // Connection to backend
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -374,33 +373,20 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
 }
 
 function handleVideoReady(data: nf.telemetry.IVideoReady) {
-  if (data.localUri) {
-    if (data.isGripper) {
-      console.log(data.localUri);
-      gripperVideo.connect(data.localUri)
-    } else if (data.anchorNum) {
-      // one of the anchor cams.
-      console.log(data.localUri);
-
-      // The observer has two preferred overhead cameras.
-      // We have two slots to display ovehead video, which we will assign alternately.
-      if (firstOverheadVideo.anchorNum == data.anchorNum) {
-        firstOverheadVideo.connect(data.localUri);
-      } else if (secondOverheadVideo.anchorNum == data.anchorNum) {
-        secondOverheadVideo.connect(data.localUri);
-      } else {
-        // assign one
-        if (assignNext == 0) {
-          firstOverheadVideo.assign(data.anchorNum);
-          firstOverheadVideo.connect(data.localUri);
-          assignNext++;
-        } else if (assignNext == 1) {
-          secondOverheadVideo.assign(data.anchorNum);
-          secondOverheadVideo.connect(data.localUri);
-          assignNext = 0;
-        }
-      }
-    }
+  if (!data.streamPath) {
+    console.error("Got VideoReady update but it doesn't contain a streamPath");
+    return;
+  }
+  const parts: string[] = data.streamPath.split("/");
+  if (parts.length != 3) {
+    console.error(`Got VideoReady update but streamPath could not be parsed ${data.streamPath}`);
+    return;
+  }
+  const cam_num = parseInt(parts[2]);
+  const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
+  videoManager.connect(data.streamPath);
+  if (!data.isGripper && data.anchorNum) {
+    videoManager.assign(data.anchorNum);
   }
 }
 

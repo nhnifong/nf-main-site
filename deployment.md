@@ -20,7 +20,7 @@ gcloud run deploy nf-site-monolith \
 
 Push images to bucket
 
-    gsutil -m rsync -r app/public/assets gs://nf-site-assets/assets
+    gsutil -m rsync -r nf-viz/public/assets gs://nf-site-assets/assets
 
 ## Build and push media gateway vm
 

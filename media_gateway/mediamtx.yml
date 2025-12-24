@@ -15,22 +15,21 @@ authHTTPAddress: ${CONTROL_PLANE_API_URL}/internal/auth
 # Paths (Routing Logic)
 ###############################################
 paths:
-  # 1. Private Robot Streams (Default)
-  # Uses regex tilde (~) to match any path starting with 'robot_'
-  # e.g., rtmp://server/robot_99
-  ~^robot_.*:
+  # Private Robot Streams
+  # e.g., stringman/b5823f8e-0e49-4251-93f1-0bd978124883/2
+  ~^stringman/.*:
     # Just a straight pipe. No transcoding.
     # WebRTC is enabled by default in MediaMTX.
     runOnReady: ""
 
-  # 2. The Playroom (Public Broadcast)
+  # The Playroom (Public Broadcast)
   # This specific path triggers HLS transcoding for the spectators.
   playroom:
     # When a robot publishes to 'playroom', start ffmpeg to chop it into HLS segments
     # Note: $RTSP_PORT and $G1 are internal MediaMTX variables, do not touch them.
     runOnReady: >
       ffmpeg -i rtsp://localhost:$RTSP_PORT/$G1
-      -c:v copy -c:a copy
+      -c:v copy -an
       -f hls
       -hls_time 4
       -hls_list_size 5

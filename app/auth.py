@@ -38,6 +38,13 @@ curl -X POST http://localhost:8080/internal/auth \
 }'
 
     """
+
+    # TODO throw this away and just use keycloak
+    return True
+
+    logger.info(req)
+    # note that req.id is unique to each request and is created by MediaMTX.
+    # the robot id must be extracted from the path publish/{self.config.robot_id}/anchor{self.anchor_num}
     if req.action == 'publish':
         # Robot is trying to stream. Check if ID exists and password matches stream key.
         # DB Lookup: stored_key = db.query(Robot).get(req.id).stream_key
