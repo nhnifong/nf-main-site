@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
+import { projectFloorToPixels, projectPixelsToFloor } from '../utils.ts';
 
 export class VideoFeed {
     private container: HTMLElement;
@@ -12,10 +13,22 @@ export class VideoFeed {
     private peerConnection: RTCPeerConnection | null = null;
 
     // State
-    private pose: nf.common.Pose | null = null;
+    private lastTargets: nf.telemetry.IOneTarget[] = [];
+    private targetImageCoords: (THREE.Vector2 | null)[] = [];
+    private canvasSize: THREE.Vector2;
+
+    
+    // Interaction State
+    private mousePos: { x: number, y: number } | null = null;
+    private hoveredTargetIndex: number | null = null;
+    public selectedTargetId: string | null = null;
+
+    // Callbacks
+    public onFloorPoint: ((point: THREE.Vector3 | null) => void) | null = null;
+    public onTargetSelect: ((targetId: string) => void) | null = null;
     
     // Helper for 3D projection
-    private virtualCamera: THREE.PerspectiveCamera;
+    private virtualCamera: THREE.PerspectiveCamera | null = null;
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -23,6 +36,7 @@ export class VideoFeed {
         // Find video and canvasl elements
         this.video = this.container.querySelector('video')!;
         this.canvas = this.container.querySelector('canvas')!;
+        this.canvasSize = new THREE.Vector2(this.canvas.width, this.canvas.height);
 
         const context = this.canvas!.getContext('2d');
         if (!context) throw new Error("Could not get 2D context");
@@ -32,12 +46,10 @@ export class VideoFeed {
         const observer = new ResizeObserver(() => this.resize());
         observer.observe(this.container);
 
-        // Virtual Camera for Math (Not added to scene, just for calculation)
-        // Defaulting to 60deg FOV, can be tuned later
-        this.virtualCamera = new THREE.PerspectiveCamera(60, 16/9, 0.1, 100);
-        this.virtualCamera.updateMatrixWorld(); // Ensure matrix is ready
-
-        this.anchorNum;
+        // Interaction Listeners
+        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
     }
 
     // associate this feed with a particular anchor number
@@ -50,12 +62,73 @@ export class VideoFeed {
         const rect = this.container.getBoundingClientRect();
         this.canvas.width = rect.width;
         this.canvas.height = rect.height;
-        
-        // Update aspect ratio for projection math
-        this.virtualCamera.aspect = rect.width / rect.height;
-        this.virtualCamera.updateProjectionMatrix();
+        this.canvasSize = new THREE.Vector2(this.canvas.width, this.canvas.height);
+        this.draw();
     }
 
+    private handleMouseMove(e: MouseEvent) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const imagePos = new THREE.Vector2(x, y);
+        const normPos = new THREE.Vector2(x / rect.width, y / rect.height);
+
+        // Project to Floor
+        if (this.virtualCamera) {
+            const floorPoints = projectPixelsToFloor([normPos], this.virtualCamera);
+            if (floorPoints.length == 1 && this.onFloorPoint) {
+                this.onFloorPoint(floorPoints[0]);
+            }
+        }
+
+        // Hit test targets
+        this.hitTestTargets(imagePos);
+
+        // Redraw (cursor, hover states)
+        this.draw();
+    }
+
+    private handleMouseDown() {
+        if (this.hoveredTargetIndex != null) {
+            // when a target is selected, remember it by it's stable id, not it's index in the queue.
+            if (this.lastTargets.length > this.hoveredTargetIndex){
+                const tg = this.lastTargets[this.hoveredTargetIndex];
+                if (tg.id) {
+                    this.selectedTargetId = tg.id;
+                    if (this.onTargetSelect) {
+                        this.onTargetSelect(this.selectedTargetId);
+                    }
+                }
+            }
+            this.draw();
+        }
+    }
+
+    private handleMouseLeave() {
+        this.hoveredTargetIndex = null;
+        if (this.onFloorPoint) {
+            this.onFloorPoint(null); // Signal that we are no longer pointing at the floor
+        }
+        this.draw();
+    }
+
+    private hitTestTargets(mousePos: THREE.Vector2) {
+        if (!this.targetImageCoords || this.lastTargets.length==0) return;
+
+        let foundIndex: number | null = null;
+        // Simple distance check (could be bounding box if we saved the rects)
+        // We'll recalculate projection here. For optimization, we could cache projected 2D coords in draw().
+        
+        // Threshold for "hover" in pixels
+        const HIT_RADIUS = 15; 
+        foundIndex = this.targetImageCoords.findIndex(screenPos => 
+            screenPos && screenPos.distanceTo(mousePos) < HIT_RADIUS
+        );
+        
+        this.hoveredTargetIndex = foundIndex;
+    }
+
+    // --- WebRTC ---
     public async connect(streamPath: string) {
         // MediaMTX WHEP endpoint (standard WebRTC playback port is 8889)
         const whepUrl = `http://localhost:8889/${streamPath}/whep`;
@@ -70,7 +143,6 @@ export class VideoFeed {
 
             // Connect video element to incoming tracks
             this.peerConnection.ontrack = (event) => {
-                console.log('Track received: ' + event.track.kind);
                 if (event.track.kind === 'video') {
                     this.video.srcObject = event.streams[0];
                 }
@@ -108,83 +180,69 @@ export class VideoFeed {
         }
     }
 
-    public setPose(pose: nf.common.Pose) {
-        if (pose.position && pose.rotation) {
-            this.pose = pose;
-
-            // Convert Proto Pose to Three.js Camera Transform
-            // Position
-            this.virtualCamera.position.set(
-                pose.position.x ?? 0,
-                pose.position.y ?? 0,
-                pose.position.z ?? 0
-            );
-
-            // Rotation (Rodrigues Vector)
-            // Direction is axis, magnitude is angle in radians
-            const rx = pose.rotation.x ?? 0;
-            const ry = pose.rotation.y ?? 0;
-            const rz = pose.rotation.z ?? 0;
-            
-            // Calculate magnitude (angle)
-            const theta = Math.sqrt(rx * rx + ry * ry + rz * rz);
-
-            if (theta < 1e-6) {
-                // Identity rotation if vector is effectively zero
-                this.virtualCamera.quaternion.set(0, 0, 0, 1);
-            } else {
-                // Normalize vector to get axis
-                const axis = new THREE.Vector3(rx / theta, ry / theta, rz / theta);
-                this.virtualCamera.quaternion.setFromAxisAngle(axis, theta);
-            }
-
-            this.virtualCamera.updateMatrixWorld();
-        }
+    // set the virtual camera used when projecting and raycasting targets.
+    public setVirtualCamera(vCam: THREE.PerspectiveCamera) {
+        this.virtualCamera = vCam;
     }
 
-    public renderTargetsOverlay(targets: nf.telemetry.TargetList) {
-        // Clear previous frame
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Called by main.ts on telemetry update
+    public renderTargetsOverlay(targets: nf.telemetry.ITargetList) {
+        if (targets.targets) {
+            this.lastTargets = targets.targets;
 
-        if (!this.pose || !targets.targets) return;
-
-        this.ctx.strokeStyle = '#00FF00'; // Hacker green
-        this.ctx.lineWidth = 2;
-        this.ctx.font = '12px monospace';
-        this.ctx.fillStyle = '#00FF00';
-
-        for (const target of targets.targets) {
-            if (!target.position) continue;
-
-            // Create Vector3 from target position
-            const vec = new THREE.Vector3(
-                target.position.x ?? 0,
-                target.position.y ?? 0,
-                target.position.z ?? 0
-            );
-
-            // Project 3D point to 2D Screen Space
-            // .project() transforms the vector from world space to normalized device coordinate (NDC) space (-1 to +1)
-            vec.project(this.virtualCamera);
-
-            // Check if point is in front of camera and within view
-            // z < 1 means it's within the frustum's far plane
-            // x and y between -1 and 1 means it's on screen
-            if (vec.z < 1 && vec.x >= -1 && vec.x <= 1 && vec.y >= -1 && vec.y <= 1) {
-                
-                // Map NDC to Pixel Coordinates
-                const x = (vec.x * .5 + .5) * this.canvas.width;
-                const y = (-(vec.y * .5) + .5) * this.canvas.height;
-
-                // Draw Hollow Square (centered on point)
-                const size = 20; 
-                this.ctx.strokeRect(x - size/2, y - size/2, size, size);
-
-                // Optional: Label
-                if (target.id) {
-                    this.ctx.fillText(target.id, x + size/2 + 5, y);
-                }
+            // Convert all the targets from world space into normalized image coordinates for this perspective
+            // Normalized image coordinates are from 0 to 1 and the origin is the top left corner.
+            const floorPoints: THREE.Vector3[] = this.lastTargets.map((tg) => {
+                return new THREE.Vector3(tg.position!.x ?? 0, 0, -(tg.position!.y ?? 0));
+            });
+            if (this.virtualCamera) {
+                this.targetImageCoords = projectFloorToPixels(floorPoints, this.virtualCamera, this.canvasSize);
             }
         }
+
+        this.draw();
+    }
+
+    // Main Draw Loop
+    private draw() {
+        // Clear frame
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw Targets
+        this.targetImageCoords.forEach((screenPos, i) => {
+            if (screenPos) {
+                const target = this.lastTargets[i]
+                const isHovered = (i === this.hoveredTargetIndex);
+                const isSelected = ((target.id ?? '') === this.selectedTargetId);
+                const size = 20; 
+
+                // Default Style
+                let strokeColor = '#00FF00';
+                let lineWidth = 2;
+
+                if (isSelected) {
+                    strokeColor = '#FFA500'; // Orange
+                    lineWidth = 3;
+                    // Fill translucent
+                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+                    this.ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+                } else if (isHovered) {
+                    strokeColor = '#00FFFF'; // Cyan
+                    lineWidth = 3;
+                }
+
+                // Stroke
+                this.ctx.strokeStyle = strokeColor;
+                this.ctx.lineWidth = lineWidth;
+                this.ctx.strokeRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+
+                // Label
+                if (target.id) {
+                    const label = target.id.substring(0, 8);
+                    this.ctx.fillStyle = strokeColor;
+                    this.ctx.fillText(label, screenPos.x + size/2 + 5, screenPos.y);
+                }
+            }
+        });
     }
 }

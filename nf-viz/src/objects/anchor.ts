@@ -15,7 +15,9 @@ export class Anchor {
     // properties used to update the room walls when anchor pose changes.
     private room: DynamicRoom;
     private wallCorner: THREE.Object3D | undefined;
+
     private grommet: THREE.Object3D | undefined;
+    public camera: THREE.PerspectiveCamera | undefined;
 
     constructor(scene: THREE.Scene, room: DynamicRoom) {
         this.scene = scene;
@@ -45,6 +47,7 @@ export class Anchor {
             // Find sub-objects in clone
             this.wallCorner = clonedScene.getObjectByName('wall_corner');
             this.grommet = clonedScene.getObjectByName('grommet');
+            const anchorCam = clonedScene.getObjectByName('camera');
 
             if (this.wallCorner) {
                 // Initialize position immediately if needed
@@ -53,6 +56,13 @@ export class Anchor {
 
             if (this.grommet) {
                 this.grommet.getWorldPosition(this.grommet_pos);
+            }
+
+            // initialize a model of the raspi camera module 3 in the anchor for raycasting targets
+            if (anchorCam && (anchorCam as THREE.PerspectiveCamera).isPerspectiveCamera) {
+                this.camera = anchorCam as THREE.PerspectiveCamera;
+                this.camera.aspect = 16/9;
+                this.camera.updateProjectionMatrix();
             }
         } catch (error) {
             console.error('Error loading anchor.glb:', error);

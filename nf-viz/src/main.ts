@@ -134,6 +134,7 @@ const gamepad = new GamepadController();
 const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!);
 const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!);
 const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
+const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
 
 // Connection to backend
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -305,42 +306,45 @@ function formatPos(pos?: nf.common.IVec3 | null): string {
 }
 
 function handleTargetList(data: nf.telemetry.ITargetList) {
-    const container = document.getElementById('target-list');
-    if (!container) return;
+  const targets = data.targets ?? [];
 
-    // Clear the current list
-    container.innerHTML = '';
+  // show the targets in every video feed
+  overheadVideofeeds.forEach(feed => {feed.renderTargetsOverlay(data)});
 
-    const targets = data.targets ?? [];
+  // update the target list
+  const container = document.getElementById('target-list');
+  if (!container) return;
+  // Clear the current list
+  container.innerHTML = '';
 
-    targets.forEach(target => {
-        const div = document.createElement('div');
-        div.className = 'task-item';
+  targets.forEach(target => {
+    const div = document.createElement('div');
+    div.className = 'task-item';
 
-        // Map Proto Status to CSS Class
-        switch (target.status) {
-            case nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED:
-                div.classList.add('status-selected'); // Azure
-                break;
-            case nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP:
-                div.classList.add('status-picked-up'); // Gold
-                break;
-            case nf.telemetry.TargetStatus.TARGETSTATUS_SEEN:
-            default:
-                div.classList.add('status-seen');     // White
-                break;
-        }
+    // Map Proto Status to CSS Class
+    switch (target.status) {
+      case nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED:
+        div.classList.add('status-selected'); // Azure
+        break;
+      case nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP:
+        div.classList.add('status-picked-up'); // Gold
+        break;
+      case nf.telemetry.TargetStatus.TARGETSTATUS_SEEN:
+      default:
+        div.classList.add('status-seen');     // White
+        break;
+    }
 
-        // Construct Text: "Target Alpha (0.5, 0.2)"
-        const rawId = target.id ?? 'Unknown';
-        const name = rawId.substring(0, 8);
-        const source = target.source ?? '';
-        const coords = formatPos(target.position);
-        
-        div.textContent = `(${source}) ${name} ${coords}`;
+    // Construct Text: "Target Alpha (0.5, 0.2)"
+    const rawId = target.id ?? 'Unknown';
+    const name = rawId.substring(0, 8);
+    const source = target.source ?? '';
+    const coords = formatPos(target.position);
+    
+    div.textContent = `(${source}) ${name} ${coords}`;
 
-        container.appendChild(div);
-    });
+    container.appendChild(div);
+  });
 }
 
 function showPopup(data: nf.telemetry.IPopup) {
@@ -373,6 +377,7 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
 }
 
 function handleVideoReady(data: nf.telemetry.IVideoReady) {
+  console.log(data)
   if (!data.streamPath) {
     console.error("Got VideoReady update but it doesn't contain a streamPath");
     return;
@@ -385,8 +390,17 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
   const cam_num = parseInt(parts[2]);
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
   videoManager.connect(data.streamPath);
-  if (!data.isGripper && data.anchorNum) {
+  if (!data.isGripper && data.anchorNum != null) {
     videoManager.assign(data.anchorNum);
+    if (anchors[data.anchorNum].camera) {
+      videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
+
+      // When the mouse moves on this video feed and a ray intersects the floor
+      // videoManager.onFloorPoint = (point) => {};
+
+      // When a target is selected from this videoFeed
+      // videoManager.onTargetSelect = (id) => {};
+    }
   }
 }
 
