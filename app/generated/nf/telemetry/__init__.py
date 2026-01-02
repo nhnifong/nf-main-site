@@ -475,6 +475,15 @@ class TelemetryItem(betterproto2.Message):
         13, betterproto2.TYPE_MESSAGE, optional=True, group="payload"
     )
 
+    retain_key: "str | None" = betterproto2.field(
+        14, betterproto2.TYPE_STRING, optional=True
+    )
+    """
+    If set, the Control Plane will cache this item using this string as the key.
+    When a new UI connects, it receives the latest item for every unique key.
+    e.g., "anchor_poses", "conn_status_anchor_0", "conn_status_gripper"
+    """
+
 
 default_message_pool.register_message("nf.telemetry", "TelemetryItem", TelemetryItem)
 
@@ -505,11 +514,12 @@ class VideoReady(betterproto2.Message):
     udp:127.0.0.1:1234
     """
 
-    remote_uri: "str | None" = betterproto2.field(
+    stream_path: "str | None" = betterproto2.field(
         4, betterproto2.TYPE_STRING, optional=True
     )
     """
-    for remote UI's connect at this addfress
+    for remote UI's construct a url using this stream path
+    for example http://localhost:8889/${streamPath}/whep
     """
 
 

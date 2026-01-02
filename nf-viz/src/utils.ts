@@ -32,6 +32,15 @@ const rpiCam3Cal: CameraCalibration = {
     imageShape: { width: 1920, height: 1080 }
 };
 
+export const TargetColors = {
+    'mouse':     '#00FF00', // green
+    'selected':  '#FFA500', // orange
+    'hovered':   '#00FFFF', // cyan
+    'seen':      '#FFFFFF', // white
+    'movingTo': '#007fff', // blue
+    'grasped':   '#ffd700', // gold
+};
+
 /**
  * Equivalent to cv2.undistortPoints()
  * Uses an iterative method to reverse the Brown-Conrady distortion model.

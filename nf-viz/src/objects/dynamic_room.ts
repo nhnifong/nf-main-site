@@ -12,6 +12,7 @@ export class DynamicRoom {
   // point representing perspective of user holding gamepad
   private userPers: THREE.Object3D | undefined;
   private hamper: THREE.Object3D | undefined;
+  private reticule: THREE.Object3D | undefined;
 
   // moving walls
   mesh: THREE.Mesh;
@@ -77,6 +78,7 @@ export class DynamicRoom {
           // Find sub-objects in clone
           this.userPers = clonedScene.getObjectByName('user_pers');
           this.hamper = clonedScene.getObjectByName('hamper');
+          this.reticule = clonedScene.getObjectByName('reticule');
 
       } catch (error) {
           console.error('Error loading decor.glb:', error);
@@ -118,6 +120,22 @@ export class DynamicRoom {
           (position.z ?? 0),
           -(position.y ?? 0)
       );
+    }
+  }
+
+  public setReticule(position: THREE.Vector3 | null) {
+    if (this.reticule) {
+      if (position) {
+        this.reticule.position.set(
+          position.x,
+          this.reticule.position.y, // don't change y
+          position.z
+        );
+        this.reticule.visible == true;
+      } else {
+        // position==null means the reticule needs to be hidden
+        this.reticule.visible == false;
+      }
     }
   }
 

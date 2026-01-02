@@ -25,7 +25,7 @@
         pointer-events: none; 
 
         display: grid;
-        grid-template-columns: 300px 1fr 520px; 
+        grid-template-columns: 312px 1fr 520px; 
         grid-template-rows: minmax(0, 1fr) auto; 
         grid-template-areas: 
           "left center right"
@@ -92,25 +92,34 @@
       .task-item {
           padding: 8px 12px;
           margin-bottom: 4px;
-          background: rgba(0, 0, 0, 0.2); /* distinct background */
           border-left: 4px solid transparent; /* space for status color */
           font-family: monospace;
+          color: #000000; /* text black */
+          background: rgba(255, 255, 255, 0.3);
+          border-left-color: #ffffff; /* White */
+          cursor: pointer;
       }
 
-      /* Status Colors */
+      .task-item:hover, .target-mouse-hovered {
+          background: rgba(0, 255, 255, 0.3);
+      }
+
+      /* Status Colors. Text color always black. target status affects the border, mouse hover status affects the background*/
       .status-seen {
           border-left-color: #ffffff; /* White */
-          color: #eeeeee;
       }
 
       .status-selected {
           border-left-color: #007fff; /* Blue */
-          background: rgba(0, 127, 255, 0.1); /* Highlight selected */
       }
 
       .status-picked-up {
           border-left-color: #ffd700; /* Gold */
-          color: #ffd700;
+      }
+
+      /* appearance of a target that was selected by the mouse */
+      .target-mouse-selected {
+          background: rgba(255, 165, 0, 0.8); /* orange */
       }
 
       /* Right Panel: Video Feeds */
@@ -216,7 +225,13 @@
         gap: 8px;
       }
 
-      .run-button:hover {
+      .run-button.disabled {
+        color: #aaa;
+        background-color: #222;
+        cursor: default;
+      }
+
+      .run-button:hover:not(.disabled) {
         background-color: #43a047;
       }
 
@@ -272,7 +287,6 @@
       /* Disabled state */
       .menu-item.disabled {
         color: #aaa;
-        cursor: not-allowed;
         background-color: transparent;
       }
 
@@ -419,33 +433,33 @@
       
       <!-- Left Panel: Task & Targets -->
       <aside id="panel-left" class="panel">
-        <h2>Active Task</h2>
+        <h2>Task</h2>
         <div class="task-item active">
-          Pick up Object A
+          Idle
         </div>
         
         <h2>Targets</h2>
         <div id="target-list">
-          <div class="task-item status-seen">Target One (0.5, 0.2)</div>
-          <div class="task-item status-selected">Target Two (-0.5, 0.2)</div>
-          <div class="task-item status-picked-up">Target Three (-0.5, 0.2)</div>
+          <div class="task-item status-selected">Moving to (-0.5, 0.2)</div>
+          <div class="task-item status-picked-up">Grasped (-0.5, 0.2)</div>
+          <div class="task-item status-seen">Seen Target (0.5, 0.2)</div>
         </div>
       </aside>
 
       <!-- Right Panel: Video Feeds -->
       <aside id="panel-right" class="panel">
         <div class="video-feed feed-16-9" id="firstOverhead">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png"></video>
+          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 01</div>
         </div>
         <div class="video-feed feed-16-9" id="secondOverhead">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png"></video>
+          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 02</div>
         </div>
         <div class="video-feed feed-1-1" id="gripper">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video_square.png"></video>
+          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video_square.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">GRIPPER - STABILIZED</div>
         </div>
@@ -456,7 +470,7 @@
 
         <!-- Run Menu -->
         <div class="run-menu-container">
-          <button id="run-btn" class="run-button">
+          <button id="run-btn" class="run-button disabled">
             <span>RUN</span>
             <span style="font-size: 0.8em">▲</span>
           </button>
@@ -479,8 +493,8 @@
         <!-- System Status -->
         <div class="footer-stats-group">
            <div class="stat-line">
-            <span class="status-dot"></span> 
-            <strong>System Online</strong>
+            <span id="status-dot-el" class="status-dot status-offline"></span> 
+            <strong id="status-text">Offline</strong>
            </div>
            <div class="stat-line">
              <span class="label-muted">Robot ID</span>

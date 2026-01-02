@@ -28,10 +28,12 @@ class TelemetryManager:
 
     async def connect(self):
         """Initialize Redis connections."""
-        # One connection for publishing
+        # One connection for publishing binary telemetry
         self.pub_redis = redis.from_url(self.redis_url, decode_responses=False)
         # Separate connection for subscribing (blocking)
         self.sub_redis = redis.from_url(self.redis_url, decode_responses=False)
+        # Third connection for regular keys
+        self.decoding_redis = redis.from_url(self.redis_url, decode_responses=True)
         
         try:
             await self.pub_redis.ping()
@@ -53,6 +55,15 @@ class TelemetryManager:
                 if websocket in self.active_user_connections[robot_id]:
                     self.active_user_connections[robot_id].remove(websocket)
 
+    async def mark_robot_online(self, robot_id: str, online: bool):
+        await self.decoding_redis.hset(f"robot:{robot_id}:uplink_state", 'online', 'true' if online else 'false')
+        # publish a serialized batch update for all connected clients announcing that this robot is offline
+        batch = telemetry.TelemetryBatchUpdate(
+            robot_id=robot_id,
+            updates=[telemetry.TelemetryItem(uplink_status=telemetry.UplinkStatus(online=online))],
+        )
+        await self.pub_redis.publish(f"state:{robot_id}", bytes(batch))
+
     async def handle_robot_connection(self, websocket: WebSocket, robot_id: str):
         """
         Logic for the Physical Robot connecting to Cloud.
@@ -60,21 +71,36 @@ class TelemetryManager:
         Every message sent must be a serialized ControlBatchUpdate
         """
         self.active_robot_connections[robot_id] = websocket
+        await self.mark_robot_online(robot_id, True)
+
         try:
             while True:
                 data = await websocket.receive_bytes()
-                batch = telemetry.TelemetryBatchUpdate().parse(data)
-                # Robot sends its state. leave it seralized.
+                # Robot sends its state, put on redis channel for this robot. (already serialized data)
                 # We publish this to Redis so all web servers can forward it to UI's connected to this robot.
                 await self.pub_redis.publish(f"state:{robot_id}", data)
+                
+                # deserialize and look for retain_key in any TelemetryItems
+                batch = telemetry.TelemetryBatchUpdate().parse(data)
+                for item in batch.updates:
+                    if item.retain_key is not None:
+                        # retain this item at this key
+                        await self.pub_redis.hset(
+                            f"robot:{robot_id}:retained", 
+                            item.retain_key, 
+                            bytes(item) # serialized item
+                        )
         except Exception as e:
             logger.error(f"Robot {robot_id} connection lost: {e}")
             await self.disconnect(robot_id, "robot")
             raise e
+        finally:
+            await self.mark_robot_online(robot_id, False)
+
 
     async def handle_user_connection(self, websocket: WebSocket, robot_id: str, user_id: str):
         """
-        Logic for a Browser User connecting with a web UI to control or spectact a given robot
+        Logic for a Browser User connecting with a web UI to control or spectate a given robot
         1. Any messages received on websocket are ControlBatchUpdate
         2. Check permissions (Is Owner? Is Playroom Driver?).
         3. Publish Command to Redis so connected robot receives it. (it may be connected to a different server)
@@ -84,6 +110,10 @@ class TelemetryManager:
         self.active_user_connections[robot_id].append(websocket)
 
         try:
+            startup_batch = await self.get_startup_state(robot_id)
+            if startup_batch is not None:
+                await websocket.send_bytes(startup_batch)
+
             while True:
                 # data is a serialized ControlBatchUpdate. leave it serialized
                 data = await websocket.receive_bytes()
@@ -111,6 +141,38 @@ class TelemetryManager:
         except Exception as e:
             logger.error(f"User disconnected: {e}")
             await self.disconnect(robot_id, "user", websocket)
+
+    async def get_startup_state(self, robot_id: str) -> bytes:
+        """
+        Fetch all retained messages for a robot to send to a new UI.
+        Returns bytes of a TelemetryBatchUpdate.
+        """
+
+        # always send an UplinkStatus about whether the robot is connected to the control_plane
+        online = False
+        up_status = await self.decoding_redis.hgetall(f"robot:{robot_id}:uplink_state")
+        if up_status and 'online' in up_status:
+            online = up_status['online'] == 'true'
+        startup_items = [telemetry.TelemetryItem(uplink_status=telemetry.UplinkStatus(online=online))]
+
+        # If it's online, send all the retained UI startup messages
+        if online:
+            # HGETALL returns a dict {field_bytes: value_bytes}
+            # This is a single atomic operation.
+            retained_raw = await self.pub_redis.hgetall(f"robot:{robot_id}:retained")
+            if retained_raw:
+                for raw_item_bytes in retained_raw.values():
+                    # We stored the 'TelemetryItem' bytes
+                    item = telemetry.TelemetryItem().parse(raw_item_bytes)
+                    startup_items.append(item)
+
+        # Construct the batch update
+        batch = telemetry.TelemetryBatchUpdate(
+            robot_id=robot_id,
+            updates=startup_items
+        )
+        
+        return bytes(batch)
 
     async def listen_to_redis(self):
         """

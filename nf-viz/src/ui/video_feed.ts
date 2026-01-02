@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
-import { projectFloorToPixels, projectPixelsToFloor } from '../utils.ts';
+import { projectFloorToPixels, projectPixelsToFloor, TargetColors } from '../utils.ts';
+import { TargetListManager } from './target_list_manager.ts' 
+
+const TARGET_SIZE = 20; // visual size of target squares on a side
 
 export class VideoFeed {
     private container: HTMLElement;
@@ -16,22 +19,18 @@ export class VideoFeed {
     private lastTargets: nf.telemetry.IOneTarget[] = [];
     private targetImageCoords: (THREE.Vector2 | null)[] = [];
     private canvasSize: THREE.Vector2;
-
-    
-    // Interaction State
-    private mousePos: { x: number, y: number } | null = null;
-    private hoveredTargetIndex: number | null = null;
-    public selectedTargetId: string | null = null;
+    private targetListManager: TargetListManager | null = null;
+    private newItemImageCoords: THREE.Vector2 | null = null;
 
     // Callbacks
     public onFloorPoint: ((point: THREE.Vector3 | null) => void) | null = null;
-    public onTargetSelect: ((targetId: string) => void) | null = null;
     
     // Helper for 3D projection
     private virtualCamera: THREE.PerspectiveCamera | null = null;
 
-    constructor(container: HTMLElement) {
+    constructor(container: HTMLElement, tlm: TargetListManager | null = null) {
         this.container = container;
+        this.targetListManager = tlm;
         
         // Find video and canvasl elements
         this.video = this.container.querySelector('video')!;
@@ -88,44 +87,59 @@ export class VideoFeed {
         this.draw();
     }
 
-    private handleMouseDown() {
-        if (this.hoveredTargetIndex != null) {
-            // when a target is selected, remember it by it's stable id, not it's index in the queue.
-            if (this.lastTargets.length > this.hoveredTargetIndex){
-                const tg = this.lastTargets[this.hoveredTargetIndex];
-                if (tg.id) {
-                    this.selectedTargetId = tg.id;
-                    if (this.onTargetSelect) {
-                        this.onTargetSelect(this.selectedTargetId);
-                    }
-                }
-            }
-            this.draw();
+    private handleMouseDown(e: MouseEvent) {
+        if (!this.targetListManager) return;
+
+        // hitTestTargets has already updated the hover state in the manager
+        const hoveredId = this.targetListManager.getHoveredId();
+
+        if (hoveredId) {
+            this.targetListManager.setSelectedId(hoveredId);
+        } else {
+            // Clicked on background
+            this.targetListManager.setSelectedId(null);
+
+            // Add new item here?
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const imagePos = new THREE.Vector2(x, y);
+            this.newItemImageCoords = imagePos;
         }
+        this.draw();
     }
 
     private handleMouseLeave() {
-        this.hoveredTargetIndex = null;
         if (this.onFloorPoint) {
-            this.onFloorPoint(null); // Signal that we are no longer pointing at the floor
+            this.onFloorPoint(null); 
+        }
+        // Clear hover state when leaving canvas
+        if (this.targetListManager) {
+            this.targetListManager.setHoveredId(null);
         }
         this.draw();
     }
 
     private hitTestTargets(mousePos: THREE.Vector2) {
-        if (!this.targetImageCoords || this.lastTargets.length==0) return;
+        if (!this.targetImageCoords || this.lastTargets.length == 0 || !this.targetListManager) return;
 
-        let foundIndex: number | null = null;
-        // Simple distance check (could be bounding box if we saved the rects)
-        // We'll recalculate projection here. For optimization, we could cache projected 2D coords in draw().
+        let foundId: string | null = null;
+        const HALF_SIZE = TARGET_SIZE / 2;
         
-        // Threshold for "hover" in pixels
-        const HIT_RADIUS = 15; 
-        foundIndex = this.targetImageCoords.findIndex(screenPos => 
-            screenPos && screenPos.distanceTo(mousePos) < HIT_RADIUS
-        );
+        const foundIndex = this.targetImageCoords.findIndex(screenPos => {
+            if (!screenPos) return false;
+            // Axis-aligned bounding box check for exact square hit testing
+            const dx = Math.abs(screenPos.x - mousePos.x);
+            const dy = Math.abs(screenPos.y - mousePos.y);
+            return dx <= HALF_SIZE && dy <= HALF_SIZE;
+        });
         
-        this.hoveredTargetIndex = foundIndex;
+        if (foundIndex !== -1) {
+            foundId = this.lastTargets[foundIndex].id ?? null;
+        }
+
+        // Update the source of truth
+        this.targetListManager.setHoveredId(foundId);
     }
 
     // --- WebRTC ---
@@ -181,12 +195,13 @@ export class VideoFeed {
     }
 
     // set the virtual camera used when projecting and raycasting targets.
+    // This virtual camera is expected to already have a matrix that matches that of the anchor camera
     public setVirtualCamera(vCam: THREE.PerspectiveCamera) {
         this.virtualCamera = vCam;
     }
 
-    // Called by main.ts on telemetry update
-    public renderTargetsOverlay(targets: nf.telemetry.ITargetList) {
+    // Called by main.ts on telemetry update to provide latest list of targets
+    public updateList(targets: nf.telemetry.ITargetList) {
         if (targets.targets) {
             this.lastTargets = targets.targets;
 
@@ -203,46 +218,87 @@ export class VideoFeed {
         this.draw();
     }
 
-    // Main Draw Loop
+    public refresh() {
+        this.draw();
+    }
+
+    public setOffline() {
+        console.log('resetting video element');
+        if (this.peerConnection) {
+            this.peerConnection.close();
+        }
+        this.video.srcObject = null;
+        this.video.load();
+    }
+
+    // Main draw loop of the canvas that shows targets over the video
     private draw() {
         // Clear frame
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (!this.targetListManager || !this.video.srcObject) { return; }// skip for gripper
+
+        const currentHoverId = this.targetListManager.getHoveredId();
+        const currentSelectedId = this.targetListManager.getSelectedId();
+        const half = TARGET_SIZE/2;
 
         // Draw Targets
         this.targetImageCoords.forEach((screenPos, i) => {
             if (screenPos) {
                 const target = this.lastTargets[i]
-                const isHovered = (i === this.hoveredTargetIndex);
-                const isSelected = ((target.id ?? '') === this.selectedTargetId);
-                const size = 20; 
+                const isHovered = (target.id === currentHoverId);
+                const isSelected = (target.id === currentSelectedId);
 
-                // Default Style
-                let strokeColor = '#00FF00';
+                // color the stroke according to it's status in the robot's queue
+                let strokeColor = TargetColors.seen;
+                if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED) {
+                    // selected here means selected by the observer for pickup
+                    strokeColor = TargetColors.movingTo;
+                } else if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP) {
+                    strokeColor = TargetColors.grasped;
+                }
+
                 let lineWidth = 2;
 
+                // apply fill color according to mouse hover/select status
                 if (isSelected) {
-                    strokeColor = '#FFA500'; // Orange
-                    lineWidth = 3;
-                    // Fill translucent
-                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
-                    this.ctx.fillRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+                    // This is a seperate meaning of the word selected indicating the user has clicked on the target in the UI.
+                    // Fill translucent orange
+                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
+                    this.ctx.fillRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
                 } else if (isHovered) {
-                    strokeColor = '#00FFFF'; // Cyan
-                    lineWidth = 3;
+                    // Fill translucent cyan
+                    this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                    this.ctx.fillRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
                 }
 
                 // Stroke
                 this.ctx.strokeStyle = strokeColor;
                 this.ctx.lineWidth = lineWidth;
-                this.ctx.strokeRect(screenPos.x - size/2, screenPos.y - size/2, size, size);
+                this.ctx.strokeRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
 
                 // Label
                 if (target.id) {
                     const label = target.id.substring(0, 8);
                     this.ctx.fillStyle = strokeColor;
-                    this.ctx.fillText(label, screenPos.x + size/2 + 5, screenPos.y);
+                    this.ctx.fillText(label, screenPos.x + half + 5, screenPos.y);
                 }
             }
         });
+
+        if (this.newItemImageCoords) {
+            const x = this.newItemImageCoords.x;
+            const y = this.newItemImageCoords.y;
+
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeStyle = '#00FF00';
+            this.ctx.strokeRect(x - half, y - half, TARGET_SIZE, TARGET_SIZE);
+
+            const label1 = "Click again";
+            const label2 = "to add new";
+            this.ctx.fillStyle = '#00FF00';
+            this.ctx.fillText(label1, x + half + 5, y);
+            this.ctx.fillText(label2, x + half + 5, y + 10);
+        }
     }
 }

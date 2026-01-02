@@ -10,24 +10,12 @@ import { DynamicRoom } from './objects/dynamic_room.ts'
 import { SightingsManager } from './objects/sightings_manager.ts'
 import { VideoFeed } from './ui/video_feed.ts'
 import { GamepadController } from './ui/gamepad.ts'
+import { TargetListManager } from './ui/target_list_manager.ts'
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-
-/*
-
-Wishlist for web based UI
-
-Similar functionality to Ursina UI, but better aesthetics
-Overall look:
-    light beige walls, well lit.
-    Warm colored rug on the floor with company logo
-    simple window on one wall with white emissive material in place of glass
-    small shelf on opposite wall with plant
-
-*/
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -130,11 +118,24 @@ const sightingsManager = new SightingsManager(scene);
 // Input handler
 const gamepad = new GamepadController();
 
+const targetListManager = new TargetListManager();
+
 // Video feed managers
-const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!);
-const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!);
+const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, targetListManager);
+const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, targetListManager);
 const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
 const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
+
+// Listen for hover changes in the manager to trigger repaints in video feeds
+targetListManager.onTargetHover = () => {
+    firstOverheadVideo.refresh();
+    secondOverheadVideo.refresh();
+};
+
+targetListManager.onTargetSelect = () => {
+    firstOverheadVideo.refresh();
+    secondOverheadVideo.refresh();
+};
 
 // Connection to backend
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -188,6 +189,9 @@ function connect() {
         }
         else if (update.videoReady) {
           handleVideoReady(update.videoReady);
+        }
+        else if (update.uplinkStatus) {
+          handleUplinkStatus(update.uplinkStatus)
         }
 
 
@@ -296,55 +300,12 @@ function handleVidStats(data: nf.telemetry.IVidStats) {
 //   // tells us the status of the connection between observer and indibidual robot components.
 // }
 
-// Helper to format coordinates to 1 decimal place: (0.5, 0.2)
-function formatPos(pos?: nf.common.IVec3 | null): string {
-    if (!pos) return '';
-    const x = (pos.x ?? 0).toFixed(1);
-    const y = (pos.y ?? 0).toFixed(1);
-    // Ignoring Z for the 2D UI list
-    return `(${x}, ${y})`;
-}
-
 function handleTargetList(data: nf.telemetry.ITargetList) {
   const targets = data.targets ?? [];
 
   // show the targets in every video feed
-  overheadVideofeeds.forEach(feed => {feed.renderTargetsOverlay(data)});
-
-  // update the target list
-  const container = document.getElementById('target-list');
-  if (!container) return;
-  // Clear the current list
-  container.innerHTML = '';
-
-  targets.forEach(target => {
-    const div = document.createElement('div');
-    div.className = 'task-item';
-
-    // Map Proto Status to CSS Class
-    switch (target.status) {
-      case nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED:
-        div.classList.add('status-selected'); // Azure
-        break;
-      case nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP:
-        div.classList.add('status-picked-up'); // Gold
-        break;
-      case nf.telemetry.TargetStatus.TARGETSTATUS_SEEN:
-      default:
-        div.classList.add('status-seen');     // White
-        break;
-    }
-
-    // Construct Text: "Target Alpha (0.5, 0.2)"
-    const rawId = target.id ?? 'Unknown';
-    const name = rawId.substring(0, 8);
-    const source = target.source ?? '';
-    const coords = formatPos(target.position);
-    
-    div.textContent = `(${source}) ${name} ${coords}`;
-
-    container.appendChild(div);
-  });
+  overheadVideofeeds.forEach(feed => {feed.updateList(data)});
+  targetListManager.updateList(targets);
 }
 
 function showPopup(data: nf.telemetry.IPopup) {
@@ -377,7 +338,6 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
 }
 
 function handleVideoReady(data: nf.telemetry.IVideoReady) {
-  console.log(data)
   if (!data.streamPath) {
     console.error("Got VideoReady update but it doesn't contain a streamPath");
     return;
@@ -396,13 +356,39 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
       videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
 
       // When the mouse moves on this video feed and a ray intersects the floor
-      // videoManager.onFloorPoint = (point) => {};
-
-      // When a target is selected from this videoFeed
-      // videoManager.onTargetSelect = (id) => {};
+      videoManager.onFloorPoint = (point) => {
+        room.setReticule(point)
+      };
     }
   }
 }
+
+function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
+  // Indicates whether the robot is connected to control_plane
+  // update the indicator dot
+  const online = data.online;
+
+  const statusDot = document.getElementById('status-dot-el');
+  const statusText = document.getElementById('status-text');
+  const runBtn = document.getElementById('run-btn');
+
+  if (statusDot && statusText && runBtn) {
+    if (online) {
+      statusDot.classList.remove('status-offline');
+      statusText.textContent = 'Online';
+      runBtn.classList.remove('disabled');
+    } else {
+      statusDot.classList.add('status-offline');
+      statusText.textContent = 'Offline';
+      runBtn.classList.add('disabled');
+
+      firstOverheadVideo.setOffline();
+      secondOverheadVideo.setOffline();
+      gripperVideo.setOffline();
+    }
+  }
+}
+
 
 window.addEventListener('resize', () => {
     // Update Composer

@@ -1,9 +1,9 @@
-
 # first stage builds frontend and stores it in /dist
 FROM node:20 as build-frontend
 WORKDIR /app
 
-# Copy the shared protos first
+# Copy protos first so they are available at /app/protos
+# This ensures "../protos" works relative to /app/nf-viz
 COPY ./protos ./protos
 
 # Setup frontend directory (nf-viz)
@@ -35,8 +35,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the backend code
-# This copies the local 'app' folder
 COPY app ./app
+# Copy the protos to the python image
+COPY protos ./protos
+
+# Generate Python Protobuf code
+# We use grpc_tools.protoc (the python module for grpcio-tools)
+# We ensure the output directory exists first
+RUN mkdir -p app/generated && \
+    python -m grpc_tools.protoc -I protos --python_betterproto2_out=app/generated protos/*.proto
 
 COPY --from=build-frontend /app/nf-viz/dist ./nf-viz/dist
 
