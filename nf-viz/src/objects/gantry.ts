@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { nf } from '../generated/proto_bundle.js';
+import { mapRange } from '../utils.ts'
+
+const SM_PILOT_MAX_SP = 0.25;
 
 export class Gantry {
     // single copy of the geometry
@@ -16,6 +19,10 @@ export class Gantry {
     private arrowHead: THREE.Object3D | undefined;
     private arrowShaft: THREE.Object3D | undefined;
 
+    // constants derived from model
+    private arrowHeadMinY: number;
+    private arrowHeadMaxY: number;
+
     constructor(scene: THREE.Scene) {
         this.scene = scene;
 
@@ -27,6 +34,9 @@ export class Gantry {
 
         // Kick off loading (or attach to existing loading process)
         this.ready = this.loadSharedModel();
+
+        this.arrowHeadMinY = 0.086760;
+        this.arrowHeadMaxY = 0.365824;
     }
 
     private async loadSharedModel() {
@@ -45,7 +55,13 @@ export class Gantry {
             this.arrowHead = clonedScene.getObjectByName('arrowhead'); // child of velPoint
             this.arrowShaft = clonedScene.getObjectByName('shaft'); // child of velPoint
 
-            this.velPoint!.visible = false;
+            // In the model, when  the shaft is at scale=1, that's the longest it's suppoed to be.
+            // The initial position of the arrow head in the  model is the place it should be at maximum extent.
+            // the initial location of the shaft in the model is it's base, and that's where the head should be at it's minimum extent.
+            this.arrowHeadMaxY = this.arrowHead!.position.y;
+            this.arrowHeadMinY = this.arrowShaft!.position.y;
+
+            this.velPoint!.visible = true;
 
         } catch (error) {
             console.error('Error loading gantry.glb:', error);
@@ -76,9 +92,12 @@ public setVelocity(velocity: nf.common.IVec3) {
         const y = velocity.y ?? 0;
         const z = velocity.z ?? 0;
 
-        // Convert to ThreeJS Space: (x, z, -y)
+        // Convert to ThreeJS Space
         const dir = new THREE.Vector3(x, z, -y);
-        const length = dir.length();
+
+        // we are given the actual commanded velocity in meters per second.
+        // Normaize this based on the maximum movement speed of a Stringman Pilot.
+        const length = dir.length() / SM_PILOT_MAX_SP;
 
         // Visibility Check
         if (length < 0.001) {
@@ -100,6 +119,6 @@ public setVelocity(velocity: nf.common.IVec3) {
         this.arrowShaft.scale.set(1, length, 1);
 
         // Head: Move Y to sit on top of the shaft
-        this.arrowHead.position.set(0, length, 0);
+        this.arrowHead.position.set(0, mapRange(length, 0, 1, this.arrowHeadMinY, this.arrowHeadMaxY), 0);
     }
 }

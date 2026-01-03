@@ -10,7 +10,7 @@ export class SightingsManager {
     
     // Configuration
     private readonly MAX_AGE = 5.0; // Seconds to live
-    private readonly DOT_RADIUS = 0.03; // 3cm dots
+    private readonly DOT_RADIUS = 0.01; // 1cm dots
     
     // Shared geometry for performance (reuse the same shape 1000 times)
     private sharedGeometry: THREE.SphereGeometry;
@@ -33,12 +33,12 @@ export class SightingsManager {
             const age = now - dot.birthTime;
 
             if (age >= this.MAX_AGE) {
-                // 1. Kill it
+                // Kill it
                 this.root.remove(dot.mesh);
                 (dot.mesh.material as THREE.Material).dispose(); // Clean up GPU memory
                 this.dots.splice(i, 1);
             } else {
-                // 2. Fade it
+                // Fade it
                 // Opacity goes from 1.0 down to 0.0
                 const opacity = 1.0 - (age / this.MAX_AGE);
                 (dot.mesh.material as THREE.MeshBasicMaterial).opacity = opacity;
@@ -58,7 +58,7 @@ export class SightingsManager {
 
             // Create Material (Must be unique per dot to allow individual fading)
             const material = new THREE.MeshBasicMaterial({
-                color: 0x000000,
+                color: 0xFFFFFF,
                 transparent: true,
                 opacity: 1.0,
                 depthWrite: false // prevents dots from hiding things behind them while transparent

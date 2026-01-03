@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>nf-viz</title>
     <style>
       body {
@@ -506,6 +505,15 @@
            </div>
         </div>
 
+        <div class="footer-divider"></div>
+
+        <!-- how-to messages -->
+        <div class="footer-stats-group">
+           <div class="stat-line">
+            <strong id="how-to"></strong>
+           </div>
+        </div>
+
         <!-- Spacer pushes next items to the right -->
         <div class="footer-spacer"></div>
 
@@ -513,15 +521,15 @@
         <div class="footer-stats-group">
            <div class="stat-line">
              <span class="label-muted">Detections/sec</span>
-             <span id='detectionsPerSecond'>101.2</span>
+             <span id='detectionRate'>101.2</span>
            </div>
            <div class="videoLatency">
              <span class="label-muted">Video latency</span>
-             <span>0.22 s</span>
+             <span id="videoLatency">0.22 s</span>
            </div>
            <div class="avgFramerate">
              <span class="label-muted">Avg framerate</span>
-             <span>29.2 fps</span>
+             <span id="videoFramerate">29.2 fps</span>
            </div>
         </div>
 

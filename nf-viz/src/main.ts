@@ -280,9 +280,9 @@ function handleLastCommandedVel(data: nf.telemetry.ICommandedVelocity) {
 
 function handleVidStats(data: nf.telemetry.IVidStats) {
   // Get Elements
-  const dpsEl = document.getElementById('detectionsPerSecond');
+  const dpsEl = document.getElementById('detectionRate');
   const latEl = document.getElementById('videoLatency');
-  const fpsEl = document.getElementById('avgFramerate');
+  const fpsEl = document.getElementById('videoFramerate');
 
   // Format & Update elements
   if (dpsEl) {

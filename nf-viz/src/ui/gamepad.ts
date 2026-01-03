@@ -16,6 +16,8 @@ export class GamepadController {
     private fingerAngle = 0;
     private lastUpdateT = 0;
     private lastSendT = 0;
+
+    private seenValidTriggers = false;
     
     // Previous Button States (Rising Edge Detection)
     private startWasHeld = false;
@@ -35,6 +37,13 @@ export class GamepadController {
             // Just grab the first one that connects
             if (this.gamepadIndex === null) {
                 this.gamepadIndex = e.gamepad.index;
+                this.seenValidTriggers = false;
+
+                // Show the explanatory message
+                const container = document.getElementById('how-to');
+                if (container) {
+                    container.textContent = "To activate gamepad, press both analog triggers.";
+                }
             }
         });
 
@@ -60,8 +69,8 @@ export class GamepadController {
 
         return {
             leftStick: {
-                x: this.applyDeadzone(gp.axes[0]),
-                y: this.applyDeadzone(-gp.axes[1]) 
+                x: this.applyDeadzone(-gp.axes[0]),
+                y: this.applyDeadzone(gp.axes[1]) 
             },
             rightStick: {
                 x: this.applyDeadzone(gp.axes[2]),
@@ -71,16 +80,16 @@ export class GamepadController {
                 // Standard mappings (0-3)
                 a: gp.buttons[0].pressed,
                 b: gp.buttons[1].pressed,
-                x: gp.buttons[2].pressed,
-                y: gp.buttons[3].pressed,
+                y: gp.buttons[2].pressed, // not always labelled y, but usually at the top
+                x: gp.buttons[3].pressed,
                 // Bumpers (4-5)
                 lb: gp.buttons[4].pressed,
                 rb: gp.buttons[5].pressed,
-                // Triggers (6-7) - Value is 0.0 to 1.0
-                lt: gp.buttons[6].value, 
-                rt: gp.buttons[7].value,
+                // Triggers - Value is 0.0 to 1.0
+                lt: gp.axes[4],
+                rt: gp.axes[5],
                 // Extras
-                select: gp.buttons[8]?.pressed || false,
+                select: gp.buttons[8]?.pressed || false, // somtimes also called back
                 start: gp.buttons[9]?.pressed || false,
                 // D-Pad (Standard Indices 12-15)
                 dpadUp: gp.buttons[12]?.pressed || false,
@@ -115,6 +124,21 @@ export class GamepadController {
     public checkInputsAndCreateControlItems(): Array<nf.control.ControlItem> {
         const input = this.getState();
         if (!input) return [];
+
+        // trigger buttons may return invalid values until pressed.
+        if (!this.seenValidTriggers){
+            if ((input.buttons.rt > 0 && input.buttons.rt < 1) && (input.buttons.lt > 0 && input.buttons.lt < 1)) {
+                this.seenValidTriggers = true;
+
+                // Clear the explanatory message
+                const container = document.getElementById('how-to');
+                if (container) {
+                    container.textContent = "";
+                }
+            } else {
+                return [];
+            }
+        }
 
         const messages: nf.control.ControlItem[] = [];
         const now = Date.now() / 1000;

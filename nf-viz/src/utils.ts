@@ -216,3 +216,22 @@ function distortNormalizedPoint(x: number, y: number, D: DistortionCoefficients)
         y*kRadial + dy
     );
 }
+
+export function mapRange(
+    value: number,
+    inputMin: number,
+    inputMax: number,
+    outputMin: number,
+    outputMax: number
+): number {
+    const inputRange = inputMax - inputMin;
+    const outputRange = outputMax - outputMin;
+
+    if (inputRange === 0) {
+        // Avoid division by zero
+        return (outputMin + outputMax) / 2;
+    }
+
+    const scaledValue = (value - inputMin) * outputRange / inputRange;
+    return outputMin + scaledValue;
+}
