@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 from fastapi import HTTPException
-# In production, import User/Robot database models and hashing logic
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,7 @@ MOCK_USERS = {
     "user_token_xyz": "user_2"
 }
 
-async def validate_stream_auth(req) -> bool:
+async def validate_stream_auth(req, redis_conn) -> bool:
     """
     Validates MediaMTX webhook requests.
     req.action is either 'publish' (Robot) or 'read' (User)
@@ -40,33 +39,31 @@ curl -X POST http://localhost:8080/internal/auth \
     """
 
     # TODO throw this away and just use keycloak
-    return True
 
     logger.info(req)
-    # note that req.id is unique to each request and is created by MediaMTX.
-    # the robot id must be extracted from the path publish/{self.config.robot_id}/anchor{self.anchor_num}
+    # note that req.id is unique to each request and is created by MediaMTX. It's not useful here.
+    # the robot id must be extracted from the path stringman/{robot_id}/{cam_number}
+    parts = req.path.split('/')
+    if len(parts) != 3:
+        return False
+    robot_id = parts[1]
+
     if req.action == 'publish':
-        # Robot is trying to stream. Check if ID exists and password matches stream key.
-        # DB Lookup: stored_key = db.query(Robot).get(req.id).stream_key
-        stored_key = MOCK_ROBOTS.get(req.id)
-        
-        if stored_key and stored_key == req.password:
-            logger.info(f"Stream Auth Success: Robot {req.id} authorized to publish.")
+        # in order to stream, a robot with this id must already be sending telemetry.
+        online = False
+        up_status = await redis_conn.hgetall(f"robot:{robot_id}:uplink_state")
+        if up_status and 'online' in up_status:
+            online = up_status['online'] == 'true'
+
+        if online:
+            logger.info(f"Stream Auth Success: Robot {robot_id} authorized to publish.")
             return True
-        logger.warning(f"Stream Auth Failed: Robot {req.id} invalid key.")
+        logger.warning(f"Stream Auth Failed: Robot {robot_id} may not publish video.")
         return False
 
     elif req.action == 'read':
         # User is trying to watch WebRTC. Check if they have permission.
         # Req.query contains query params, e.g., "token=abc"
-        # Parse query string to get token
-        # For prototype, we might allow public read for playroom
-        if req.id == "playroom_bot":
-            return True
-            
-        # For private robots, verify token
-        # This parsing depends on how MediaMTX passes query params. 
-        # Often passed as raw string in req.query
         return True # Permissive for now for read
 
     return False

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
 import { projectFloorToPixels, projectPixelsToFloor, TargetColors } from '../utils.ts';
 import { TargetListManager } from './target_list_manager.ts' 
+import { DynamicRoom } from '../objects/dynamic_room.ts';
 
 const TARGET_SIZE = 20; // visual size of target squares on a side
 

@@ -9,7 +9,7 @@ export class GamepadController {
     private readonly GAMEPAD_WINCH_METER_PER_SEC = 0.2;
 
     // State Tracking
-    public seatOrbitMode = false;
+    public seatOrbitMode = true;
     private orbitCenter: { x: number, y: number } | null = null;
     private robotPosition: { x: number, y: number } | null = null;
 
@@ -24,6 +24,11 @@ export class GamepadController {
     private dpadUpWasHeld = false;
     private dpadLeftWasHeld = false;
     private dpadRightWasHeld = false;
+    private selectWasHeld = false;
+
+    // keyboard input state
+    private keys = new Set<string>();
+    private keyStates: { [code: string]: boolean } = {};
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
     private lastAction = new Float32Array(6); 
@@ -54,13 +59,30 @@ export class GamepadController {
                 this.gamepadIndex = null;
             }
         });
+
+        window.addEventListener('keydown', (e) => this.handleKey(e, true));
+        window.addEventListener('keyup', (e) => this.handleKey(e, false));
+    }
+
+    private handleKey(e: KeyboardEvent, isDown: boolean) {
+        // Don't control robot if user is typing in a text field
+        const active = document.activeElement;
+        if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+            return;
+        }
+
+        if (isDown) {
+            this.keys.add(e.code);
+        } else {
+            this.keys.delete(e.code);
+            this.keyStates[e.code] = false; // Reset rising edge state on release
+        }
     }
 
     /**
-     * Call this every frame to get the current state.
      * Returns null if no gamepad is active.
      */
-    public getState() {
+    public getGamepadState() {
         if (this.gamepadIndex === null) return null;
 
         const gamepads = navigator.getGamepads();
@@ -101,6 +123,43 @@ export class GamepadController {
         };
     }
 
+    /**
+     * Returns a format identical to getGamepadState but using keyboard input.
+     */
+    public getKeyboardState() {
+        return {
+            leftStick: {
+                x: (this.keys.has('KeyA') ? -1 : 0) + (this.keys.has('KeyD') ? 1 : 0),
+                y: (this.keys.has('KeyS') ? -1 : 0) + (this.keys.has('KeyW') ? 1 : 0)
+            },
+            rightStick: {
+                x: 0,
+                y: 0
+            },
+            buttons: {
+                // Standard mappings (0-3)
+                a: this.keys.has('Space'),
+                b: this.keys.has('ShiftLeft'),
+                y: this.keys.has('KeyZ'),
+                x: this.keys.has('KeyX'),
+                // Bumpers (4-5)
+                lb: false,
+                rb: false,
+                // Triggers - Value is 0.0 to 1.0
+                lt: this.keys.has('KeyQ') ? 1 : 0,
+                rt: this.keys.has('KeyE') ? 1 : 0,
+                // Extras
+                select: this.keys.has('Backspace'),
+                start: this.keys.has('Enter'),
+                // D-Pad (Standard Indices 12-15)
+                dpadUp: this.keys.has('Digit1'),
+                dpadDown:  this.keys.has('Digit4'),
+                dpadLeft: this.keys.has('Digit2'),
+                dpadRight: this.keys.has('Digit3')
+            }
+        };
+    }
+
     private applyDeadzone(value: number): number {
         if (Math.abs(value) < this.DEADZONE) {
             return 0;
@@ -123,24 +182,52 @@ export class GamepadController {
      * Returns an array of ControlItems to be sent over the network.
      */
     public checkInputsAndCreateControlItems(): Array<nf.control.ControlItem> {
-        const input = this.getState();
-        if (!input) return [];
+        // first use keyboard input
+        let input = this.getKeyboardState();
+        const gpInput = this.getGamepadState();
 
-        // trigger buttons may return invalid values until pressed.
-        if (!this.seenValidTriggers){
-            if ((input.buttons.rt > 0 && input.buttons.rt < 1) && (input.buttons.lt > 0 && input.buttons.lt < 1)) {
-                this.seenValidTriggers = true;
-
-                // Clear the explanatory message
-                const container = document.getElementById('how-to');
-                if (container) {
-                    container.textContent = "";
+        if (gpInput) {
+            // gamepad unlock check  - trigger buttons may return invalid values until pressed.
+            if (!this.seenValidTriggers){
+                if ((gpInput.buttons.rt > 0 && gpInput.buttons.rt < 1) && (gpInput.buttons.lt > 0 && gpInput.buttons.lt < 1)) {
+                    this.seenValidTriggers = true;
+                    // Gamepad has been unlocked. Clear the explanatory message
+                    const container = document.getElementById('how-to');
+                    if (container) {
+                        container.textContent = "";
+                    }
                 }
             } else {
-                return [];
+                // have gp input and it's unlocked. merge it with keyboard input
+                input = {
+                    leftStick: {
+                        x: input.leftStick.x + (gpInput?.leftStick.x ?? 0),
+                        y: input.leftStick.y + (gpInput?.leftStick.y ?? 0)
+                    },
+                    rightStick: {
+                        x: input.rightStick.x + (gpInput?.rightStick.x ?? 0),
+                        y: input.rightStick.y + (gpInput?.rightStick.y ?? 0)
+                    },
+                    buttons: {
+                        a: input.buttons.a || (gpInput?.buttons.a ?? false),
+                        b: input.buttons.b || (gpInput?.buttons.b ?? false),
+                        x: input.buttons.x || (gpInput?.buttons.x ?? false),
+                        y: input.buttons.y || (gpInput?.buttons.y ?? false),
+                        lb: input.buttons.lb || (gpInput?.buttons.lb ?? false),
+                        rb: input.buttons.rb || (gpInput?.buttons.rb ?? false),
+                        lt: Math.max(input.buttons.lt, gpInput?.buttons.lt ?? 0),
+                        rt: Math.max(input.buttons.rt, gpInput?.buttons.rt ?? 0),
+                        start: input.buttons.start || (gpInput?.buttons.start ?? false),
+                        select: input.buttons.select || (gpInput?.buttons.select ?? false),
+                        dpadUp: input.buttons.dpadUp || (gpInput?.buttons.dpadUp ?? false),
+                        dpadDown: input.buttons.dpadDown || (gpInput?.buttons.dpadDown ?? false),
+                        dpadLeft: input.buttons.dpadLeft || (gpInput?.buttons.dpadLeft ?? false),
+                        dpadRight: input.buttons.dpadRight || (gpInput?.buttons.dpadRight ?? false),
+                    }
+                };
             }
         }
-
+        
         const messages: nf.control.ControlItem[] = [];
         const now = Date.now() / 1000;
         const dt = now - this.lastUpdateT;
@@ -246,6 +333,17 @@ export class GamepadController {
             }));
         }
         this.dpadRightWasHeld = input.buttons.dpadRight;
+
+        // nothing is mapped to dpad down at the moment
+
+        // Select/back - stop all
+        if (input.buttons.select && !this.selectWasHeld) {
+            messages.push(nf.control.ControlItem.create({
+                command: { name: nf.control.Command.COMMAND_STOP_ALL }
+            }));
+        }
+        this.selectWasHeld = input.buttons.select;
+
 
         // Movement Message (Throttled/Changed)
         

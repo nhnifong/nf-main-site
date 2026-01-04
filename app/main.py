@@ -83,13 +83,12 @@ async def media_server_auth(req: StreamAuthRequest):
     Webhook called by MediaMTX.
     Returns 200 OK to allow, 401/403 to deny.
     
-    MediaMTX logic:
     - If action == 'publish', the Robot is trying to stream video.
-      We verify the 'password' (stream key) matches the robot_id.
+      We verify the robot has permission to publish
     - If action == 'read', a User is trying to watch via WebRTC.
       We verify the user has permission to view this robot.
     """
-    is_valid = await validate_stream_auth(req)
+    is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis)
     if not is_valid:
         # tell mediamtx to disconnect the client
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -152,7 +151,7 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         logger.info(f"Client disconnected from {robot_id}")
-        # Cleanup is handled within telemetry_manager usually, but specific disconnect logic goes here
+        # Cleanup is handled within telemetry_manager, but specific disconnect logic goes here
         await telemetry_manager.disconnect(robot_id, "user")
         
     except Exception as e:
