@@ -476,11 +476,12 @@ function initRunMenu() {
     bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
     bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
     bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
-    bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
-    bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
-    bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
-    bindCommand('action-park',           Command.COMMAND_PARK);
-    bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+    bindCommand('action-grasp',          Command.COMMAND_GRASP);
+    // bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
+    // bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
+    // bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
+    // bindCommand('action-park',           Command.COMMAND_PARK);
+    // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
 
     // stop
     if (stopBtn) {

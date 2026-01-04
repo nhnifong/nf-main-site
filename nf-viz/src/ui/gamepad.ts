@@ -23,6 +23,7 @@ export class GamepadController {
     private startWasHeld = false;
     private dpadUpWasHeld = false;
     private dpadLeftWasHeld = false;
+    private dpadRightWasHeld = false;
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
     private lastAction = new Float32Array(6); 
@@ -237,6 +238,14 @@ export class GamepadController {
             }));
         }
         this.dpadLeftWasHeld = input.buttons.dpadLeft;
+
+        // D-Pad Right -> Grasp
+        if (input.buttons.dpadRight && !this.dpadRightWasHeld) {
+            messages.push(nf.control.ControlItem.create({
+                command: { name: nf.control.Command.COMMAND_GRASP }
+            }));
+        }
+        this.dpadRightWasHeld = input.buttons.dpadRight;
 
         // Movement Message (Throttled/Changed)
         
