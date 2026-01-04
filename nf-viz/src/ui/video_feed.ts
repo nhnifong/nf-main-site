@@ -21,6 +21,7 @@ export class VideoFeed {
     private canvasSize: THREE.Vector2;
     private targetListManager: TargetListManager | null = null;
     private newItemImageCoords: THREE.Vector2 | null = null;
+    private room: DynamicRoom;
 
     // Callbacks
     public onFloorPoint: ((point: THREE.Vector3 | null) => void) | null = null;
@@ -28,8 +29,9 @@ export class VideoFeed {
     // Helper for 3D projection
     private virtualCamera: THREE.PerspectiveCamera | null = null;
 
-    constructor(container: HTMLElement, tlm: TargetListManager | null = null) {
+    constructor(container: HTMLElement, room: DynamicRoom, tlm: TargetListManager | null = null) {
         this.container = container;
+        this.room = room;
         this.targetListManager = tlm;
         
         // Find video and canvasl elements
@@ -198,6 +200,39 @@ export class VideoFeed {
     // This virtual camera is expected to already have a matrix that matches that of the anchor camera
     public setVirtualCamera(vCam: THREE.PerspectiveCamera) {
         this.virtualCamera = vCam;
+        this.addPerspectiveLink();
+    }
+
+    private addPerspectiveLink() {
+        const label = this.container.querySelector('.feed-label');
+        if (!label) return;
+
+        // Check if link already exists
+        if (label.querySelector('.persp-link')) return;
+
+        const link = document.createElement('a');
+        link.className = 'persp-link';
+        link.textContent = 'Use perspective';
+        link.href = '#';
+        link.style.marginLeft = '8px';
+        link.style.fontSize = '0.9em';
+        link.style.color = '#ccc';
+        link.style.textDecoration = 'underline';
+        link.style.pointerEvents = 'auto'; // allow clicks
+        link.style.cursor = 'pointer';
+
+        // Use arrow function to preserve 'this' context of the class instance
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (this.virtualCamera) {
+                // Get world position of related anchor camera
+                const p = new THREE.Vector3();
+                this.virtualCamera.getWorldPosition(p);
+                // Convert Three.js coordinates (Y-up) back to Robot coordinates (Z-up)
+                this.room.setUserPerspective({ x: p.x, y: -p.z, z: p.y });
+            }
+        });
+        label.appendChild(link);
     }
 
     // Called by main.ts on telemetry update to provide latest list of targets

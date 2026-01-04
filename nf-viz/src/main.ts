@@ -121,9 +121,9 @@ const gamepad = new GamepadController();
 const targetListManager = new TargetListManager();
 
 // Video feed managers
-const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, targetListManager);
-const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, targetListManager);
-const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
+const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, room, targetListManager);
+const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, room, targetListManager);
+const gripperVideo = new VideoFeed(document.getElementById('gripper')!, room);
 const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
 
 // Listen for hover changes in the manager to trigger repaints in video feeds
