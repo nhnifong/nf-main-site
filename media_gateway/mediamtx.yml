@@ -4,11 +4,19 @@
 # General
 ###############################################
 
+# Webrtc must be served over https in production build
+# however, these keys would not be found on the local build and that is a fatal error.
+webrtcEncryption: ${WEBRTC_USE_HTTPS}
+webrtcServerKey: /https/privkey.pem
+webrtcServerCert: /https/fullchain.pem
+
+# inform mediamtx of it's public hostname
+webrtcAdditionalHosts: ${WEBRTC_ADDITIONAL_HOSTS}
+
 # Authentication
 # We use http authentication to delegate permissions to the control_plane
 # This sends a POST request to the configured URL with the stream credentials
 authMethod: http
-# We use a template variable here. The Dockerfile will fill this in at runtime.
 authHTTPAddress: ${CONTROL_PLANE_API_URL}/internal/auth
 
 ###############################################

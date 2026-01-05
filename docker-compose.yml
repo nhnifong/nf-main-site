@@ -1,20 +1,26 @@
-version: '3.8'
-
 services:
-  # The Backend + Frontend Container
   web:
     build: .
     ports:
       - "8080:8080"
     environment:
       # In Docker Compose, hostnames are service names.
-      # We tell the app to talk to the 'redis' service defined below.
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
 
-  # The Redis Container
   redis:
     image: "redis:alpine"
-    # ports:
-    #   - "6379:6379"
+
+  media_gateway:
+    build: media_gateway
+    ports:
+      - "8554:8554"
+      - "1935:1935"
+      - "8888:8888"
+      - "8889:8889"
+      - "8189:8189/udp"
+    environment:
+      - WEBRTC_USE_HTTPS=no
+      - CONTROL_PLANE_API_URL=http://web:8080
+      - WEBRTC_ADDITIONAL_HOSTS=[]

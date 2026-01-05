@@ -148,7 +148,12 @@ export class VideoFeed {
     // --- WebRTC ---
     public async connect(streamPath: string) {
         // MediaMTX WHEP endpoint (standard WebRTC playback port is 8889)
-        const whepUrl = `http://localhost:8889/${streamPath}/whep`;
+        // production or staging
+        let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
+        if (window.location.host === "localhost:5173") {
+            // local testing with vite
+            whepUrl = `http://localhost:8889/${streamPath}/whep`;
+        }
 
         try {
             console.log('Connecting to: ' + streamPath);

@@ -6,6 +6,7 @@ import { resolve } from 'path'
 
 export default defineConfig({
   server: {
+    host: "0.0.0.0", // allow lan connections so we can test on mobile
     proxy: {
       // Any request starting with /telemetry goes to local control_plane
       '/telemetry': {

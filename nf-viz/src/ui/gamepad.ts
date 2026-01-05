@@ -90,6 +90,19 @@ export class GamepadController {
 
         if (!gp) return null;
 
+        // Find the analog triggers
+        let lt = 0.0;
+        let rt = 0.0;
+        if (gp.axes.length == 6) {
+            // firefox
+            lt = gp.axes[4];
+            rt = gp.axes[4];
+        } else {
+            // chrome
+            lt = gp.buttons[6].value;
+            rt = gp.buttons[7].value;
+        }
+
         return {
             leftStick: {
                 x: this.applyDeadzone(-gp.axes[0]),
@@ -109,8 +122,8 @@ export class GamepadController {
                 lb: gp.buttons[4].pressed,
                 rb: gp.buttons[5].pressed,
                 // Triggers - Value is 0.0 to 1.0
-                lt: gp.axes[4],
-                rt: gp.axes[5],
+                lt: lt,
+                rt: rt,
                 // Extras
                 select: gp.buttons[8]?.pressed || false, // somtimes also called back
                 start: gp.buttons[9]?.pressed || false,

@@ -97,13 +97,39 @@
         .hero-content p {
             font-size: 1.5rem;
             font-weight: 300;
-            opacity: 0.9;
+            /*opacity: 0.9;*/
+        }
+
+        .hero-learn-more {
+            position: absolute;
+            bottom: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            padding: 12px 35px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .hero-learn-more:hover {
+            background: white;
+            color: #222;
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         /* --- FEATURE SECTIONS --- */
         .feature-section {
             display: flex;
-            min-height: 90vh;
+            min-height: 50vh;
             padding: 40px;
             align-items: center;
             justify-content: center;
@@ -157,7 +183,7 @@
 
         /* --- CTA / ORDER SECTION --- */
         .cta-section {
-            min-height: 80vh;
+            min-height: 50vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -198,6 +224,41 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.3);
         }
 
+        .join-section {
+            min-height: 10vh;
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            text-align: center;
+            flex-wrap: wrap;
+        }
+
+        .join-button, 
+        .join-button:visited {
+            display: inline-block;
+            background-color: #586bed;
+            color: #000;
+            padding: 15px 30px;
+            min-width: 280px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .join-button:hover {
+            transform: translateY(-2px) scale(1.02);
+            background-color: #EEE;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+
         /* --- adaptations for mobile --- */
         @media (max-width: 900px) {
             .hero-content h1 { font-size: 3.5rem; }
@@ -210,6 +271,10 @@
             .feature-text h2 { font-size: 2rem; }
             .navbar { justify-content: center; padding: 20px; }
             .navbar a { margin: 0 10px; font-size: 0.8rem; }
+            /* Shift video to the right (reveal left side) on mobile */
+            .hero-video {
+                object-position: 30% center; 
+            }
         }
     </style>
 </head>
@@ -220,13 +285,12 @@
         <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
         <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
         <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
-        <a href="company">Company</a>
+        <a href="/company">Company</a>
         <a href="#">Future</a>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <!-- TODO REPLACE SRC with video asset -->
         <video class="hero-video" autoplay muted loop playsinline>
             <source src="https://storage.googleapis.com/nf-site-assets/assets/background-no-audio.mp4" type="video/mp4">
             Your browser does not support the video tag.
@@ -238,6 +302,8 @@
             <h1>Stringman</h1>
             <p>Cable-driven room-scale organization robot</p>
         </div>
+
+        <a href="stringman-pilot" class="hero-learn-more">learn more</a>
     </section>
 
     <section class="feature-section">
@@ -301,12 +367,18 @@
         </div>
     </section>
 
+
+    <section class="join-section">
+        <a href="https://groups.google.com/g/stringman-crew" class="join-button">Mailing List</a>
+        <a href="https://discord.gg/T5HEvxVgbA" class="join-button">Discord Group</a>
+    </section>
+
+
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-image-container">
             <img src="https://storage.googleapis.com/nf-site-assets/assets/product_pilot.png" alt="Stringman Pilot">
         </div>
-        
         <a href="stringman-pilot" class="order-button">Order Stringman</a>
     </section>
 

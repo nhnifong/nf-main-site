@@ -1,5 +1,4 @@
 cd nf-main-site
-git checkout main
 docker build -t media-gateway ./media_gateway
 
 # Run the MediaMTX container, mapping the necessary ports
@@ -12,4 +11,8 @@ docker run -d \
     -p 8889:8889 \
     -p 8189:8189/udp \
     -e CONTROL_PLANE_API_URL="https://nf-site-monolith-staging-690802609278.us-east1.run.app" \
+    -e WEBRTC_USE_HTTPS="yes" \
+    -e WEBRTC_ADDITIONAL_HOSTS="[media.neufangled.com]" \
+    -v /etc/letsencrypt/live/media.neufangled.com/fullchain.pem:/https/fullchain.pem:ro \
+    -v /etc/letsencrypt/live/media.neufangled.com/privkey.pem:/https/privkey.pem:ro \
     media-gateway

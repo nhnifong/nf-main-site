@@ -17,6 +17,9 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
+const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
+const urlRobotId: string = urlParams.get('robotid') ?? 'playroom';
+
 // Scene Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x444444);
@@ -139,7 +142,7 @@ targetListManager.onTargetSelect = () => {
 
 // Connection to backend
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}/control/0`;
+const wsUrl = `${protocol}//${window.location.host}/control/${urlRobotId}`;
 let socket: WebSocket;
 
 function connect() {
@@ -414,7 +417,7 @@ initPopup();
 // Send a list of ControlItems immediately
 function sendControl(items: Array<nf.control.ControlItem>) {
   const batchData = nf.control.ControlBatchUpdate.create({
-    robotId: "0",
+    robotId: urlRobotId,
     updates: items
   });
 
