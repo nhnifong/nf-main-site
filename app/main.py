@@ -55,6 +55,10 @@ async def read_playroom():
 async def read_playroom():
     return FileResponse(f"{FRONTEND_DIST}/company.html")
 
+@app.get("/future")
+async def read_playroom():
+    return FileResponse(f"{FRONTEND_DIST}/future.html")
+
 # --- Data Models for API Requests ---
 
 class StreamAuthRequest(BaseModel):
