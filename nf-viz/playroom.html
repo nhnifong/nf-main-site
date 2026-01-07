@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
     <title>nf-viz</title>
     <style>
       body {
@@ -99,7 +100,7 @@
           cursor: pointer;
       }
 
-      .task-item:hover, .target-mouse-hovered {
+      .task-item:hover:not(.target-mouse-selected), .target-mouse-hovered:not(.target-mouse-selected) {
           background: rgba(0, 255, 255, 0.3);
       }
 
@@ -349,6 +350,65 @@
         letter-spacing: 0.5px;
       }
 
+      /* --- Perspective Buttons Styling --- */
+      .perspective-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        margin-left: 15px;
+      }
+
+      .perspective-label {
+        font-weight: bold;
+        font-size: 0.85rem;
+        color: #333;
+        text-align: right;
+        line-height: 1.1;
+        max-width: 90px;
+      }
+
+      .perspective-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .perspective-button {
+        background-color: #555;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-weight: bold;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        min-width: 100px;
+      }
+
+      .perspective-button:hover:not(.perspective-button-selected) {
+        background-color: #333;
+      }
+
+      .perspective-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+      .perspective-button-selected {
+        background-color: #005;
+      }
+
+
       .stop-button {
         background-color: #d32f2f;
         color: white;
@@ -420,6 +480,19 @@
 
       #popup-ok:hover {
           background: #0066cc;
+      }
+
+      .orbit-image {
+        display: inline-block; /* Treats it like a text character */
+        height: 1em;
+        width: auto;
+        padding-right: 10px;
+        vertical-align: middle;/* Aligns it vertically with text */
+        background-size: contain; /* Scales image to fit within its box */
+        background-repeat: no-repeat;
+        background-position: center;
+        max-width: 100%;
+        line-height: 1;
       }
 
     </style>
@@ -504,6 +577,20 @@
         </div>
 
         <div class="footer-divider"></div>
+
+        <!-- Perspective Grid -->
+        <div class="perspective-container">
+           <div class="perspective-label">Motion<br>Perspective</div>
+           <div class="perspective-grid">
+              <button id="btn-viewport" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Viewport</button>
+              <button id="btn-top" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 1</button>
+              <button id="btn-person" class="perspective-button perspective-button-selected"><img src="assets/orbit_icon.png" class="orbit-image"/>Seat Tag</button>
+              <button id="btn-bottom" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 2</button>
+           </div>
+        </div>
+
+        <!-- Spacer pushes next items to the right -->
+        <div class="footer-spacer"></div>
 
         <!-- how-to messages -->
         <div class="footer-stats-group">

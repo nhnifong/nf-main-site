@@ -3,17 +3,10 @@ Homepage for Neufangled Robotics
 
 ## Run locally
 
-### Control plane
+Run all components (control_plane, media_gateway, redis) at once with docker compose
 
-Run control plane in container
 ```
 docker compose up --build
-```
-
-Or run individual components seperately
-```
-sudo service redis-server start
-uvicorn app.main:app --host=0.0.0.0 --port=8080
 ```
 
 ### Media gateway

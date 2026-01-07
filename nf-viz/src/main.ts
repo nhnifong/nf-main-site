@@ -20,6 +20,13 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 const urlRobotId: string = urlParams.get('robotid') ?? 'playroom';
 
+// Motion perspective modes
+const perspViewport = 0; 
+const perspPerson = 1;
+const perspTop = 2;
+const perspBottom = 3;
+let currentPerspective: number = perspPerson;
+
 // Scene Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x444444);
@@ -61,8 +68,10 @@ dirLight.position.set(2, 5, 2);
 scene.add(dirLight);
 
 // Geometry
-
 const room = new DynamicRoom(scene);
+
+// Input handler
+const gamepad = new GamepadController();
 
 // Anchors
 // default poses for four anchors. nf.common.Pose in specified in Z up coordinate system
@@ -118,15 +127,12 @@ scene.add(gantryHangCube);
 // gantry sightings manager
 const sightingsManager = new SightingsManager(scene);
 
-// Input handler
-const gamepad = new GamepadController();
-
 const targetListManager = new TargetListManager();
 
 // Video feed managers
-const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, room, targetListManager);
-const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, room, targetListManager);
-const gripperVideo = new VideoFeed(document.getElementById('gripper')!, room);
+const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, targetListManager);
+const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, targetListManager);
+const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
 const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
 
 // Listen for hover changes in the manager to trigger repaints in video feeds
@@ -257,6 +263,8 @@ function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
     cables.forEach((cable, i) => {
       cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0)
     });
+    // Inform input controller so it can calculate input orbits
+    gamepad.setRobotPosition(data.gantryPosition.x!, data.gantryPosition.y!);
   }
 
   if (data.gripperPose) {
@@ -329,7 +337,7 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
         room.setHamper(data.position);
       }
       else if (data.name == 'gamepad') {
-        room.setUserPerspective(data.position);
+        room.setPersonTagPosition(data.position);
       }
       // else if (data.name == 'gantry_goal_marker') {
         
@@ -391,6 +399,71 @@ function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
     }
   }
 }
+
+// Function called when mode changes
+function onPerspectiveChanged(mode: number) {
+  switch (mode) {
+    case perspViewport:
+      gamepad.setOrbitCenter(camera);
+      break;
+
+    case perspPerson:
+      if (room.userPers) {
+        gamepad.setOrbitCenter(room.userPers);
+      }
+      break;
+
+    case perspTop:
+      if (firstOverheadVideo.virtualCamera) {
+        gamepad.setOrbitCenter(firstOverheadVideo.virtualCamera);
+      }
+      break;
+
+    case perspBottom:
+      if (secondOverheadVideo.virtualCamera) {
+        gamepad.setOrbitCenter(secondOverheadVideo.virtualCamera);
+      }
+      break;
+
+  }
+}
+
+// Helper to handle state change and UI updates
+function setPerspective(mode: number) {
+    // Update state
+    currentPerspective = mode;
+
+    // Update UI classes
+    const buttonIds: Record<number, string> = {
+        [perspViewport]: 'btn-viewport',
+        [perspPerson]: 'btn-person',
+        [perspTop]: 'btn-top',
+        [perspBottom]: 'btn-bottom'
+    };
+
+    // Remove 'perspective-button-selected' from all buttons
+    Object.values(buttonIds).forEach(id => {
+        document.getElementById(id)?.classList.remove('perspective-button-selected');
+    });
+
+    // Add 'perspective-button-selected' to the active button
+    const activeId = buttonIds[mode];
+    document.getElementById(activeId)?.classList.add('perspective-button-selected');
+
+    onPerspectiveChanged(mode);
+}
+
+// Initialize listeners for perspective button
+function initPerspectiveControls() {
+    document.getElementById('btn-viewport')?.addEventListener('click', () => setPerspective(perspViewport));
+    document.getElementById('btn-person')?.addEventListener('click', () => setPerspective(perspPerson));
+    document.getElementById('btn-top')?.addEventListener('click', () => setPerspective(perspTop));
+    document.getElementById('btn-bottom')?.addEventListener('click', () => setPerspective(perspBottom));
+    
+    setPerspective(currentPerspective);
+}
+
+initPerspectiveControls();
 
 
 window.addEventListener('resize', () => {

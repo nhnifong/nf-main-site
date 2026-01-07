@@ -19,7 +19,7 @@ gcloud run deploy nf-site-monolith-staging \
 
 Push images to bucket
 
-    gsutil -m rsync -r nf-viz/public/assets gs://nf-site-assets/assets
+    gsutil -m rsync -r nf-viz/public/assets gs://nf-site-assets-staging/assets
 
 ## Set up redis
 

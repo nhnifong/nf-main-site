@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "https://nf-site-monolith-690802609278.us-central1.run.app/",
+      "https://nf-site-monolith-staging-690802609278.us-east1.run.app",
+      "https://neufangled.com"
+    ],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]

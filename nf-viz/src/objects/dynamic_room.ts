@@ -10,7 +10,7 @@ export class DynamicRoom {
   public ready: Promise<void>;
 
   // point representing perspective of user holding gamepad
-  private userPers: THREE.Object3D | undefined;
+  public userPers: THREE.Object3D | undefined;
   private hamper: THREE.Object3D | undefined;
   private reticule: THREE.Object3D | undefined;
 
@@ -77,7 +77,7 @@ export class DynamicRoom {
 
           // Find sub-objects in clone
           this.userPers = clonedScene.getObjectByName('user_pers');
-          this.hamper = clonedScene.getObjectByName('hamper');
+          this.hamper = clonedScene.getObjectByName('hamper_tag');
           this.reticule = clonedScene.getObjectByName('reticule');
 
       } catch (error) {
@@ -103,7 +103,9 @@ export class DynamicRoom {
     }
   }
 
-  public setUserPerspective(position: nf.common.IVec3) {
+  // Called every time telemetry has an update for it, whether we are using it or not
+  public setPersonTagPosition(position: nf.common.IVec3) {
+    // update the visual represenation of this position
     if (this.userPers) {
       this.userPers.position.set(
           (position.x ?? 0),

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
 
 export class GamepadController {
@@ -10,7 +11,7 @@ export class GamepadController {
 
     // State Tracking
     public seatOrbitMode = true;
-    private orbitCenter: { x: number, y: number } | null = null;
+    private orbitObj: THREE.Object3D | null = null;
     private robotPosition: { x: number, y: number } | null = null;
 
     private fingerAngle = 0;
@@ -81,6 +82,7 @@ export class GamepadController {
 
     /**
      * Returns null if no gamepad is active.
+     * https://hardwaretester.com/gamepad is really helpful in debugging this
      */
     public getGamepadState() {
         if (this.gamepadIndex === null) return null;
@@ -95,7 +97,7 @@ export class GamepadController {
         let rt = 0.0;
         if (gp.axes.length == 6) {
             // firefox
-            lt = gp.axes[4];
+            lt = gp.axes[4]; 
             rt = gp.axes[4];
         } else {
             // chrome
@@ -105,8 +107,8 @@ export class GamepadController {
 
         return {
             leftStick: {
-                x: this.applyDeadzone(-gp.axes[0]),
-                y: this.applyDeadzone(gp.axes[1]) 
+                x: this.applyDeadzone(gp.axes[0]), // positive is to the right
+                y: this.applyDeadzone(-gp.axes[1]), // positive is up (after the negation)
             },
             rightStick: {
                 x: this.applyDeadzone(gp.axes[2]),
@@ -182,8 +184,9 @@ export class GamepadController {
         return value;
     }
 
-    public setOrbitCenter(x: number, y: number) {
-        this.orbitCenter = { x, y };
+    // Set an object to use as the orbit center for control inputs
+    public setOrbitCenter(orbitObj: THREE.Object3D) {
+        this.orbitObj = orbitObj
     }
 
     public setRobotPosition(x: number, y: number) {
@@ -253,10 +256,17 @@ export class GamepadController {
 
         // in orbit mode, lateral movements orbit a given position and
         // forward/back movements move away/towards it.
-        if (this.seatOrbitMode && this.orbitCenter && this.robotPosition) {
-            // Vector from Robot TO Center (Radial)
-            const dx = this.orbitCenter.x - this.robotPosition.x;
-            const dy = this.orbitCenter.y - this.robotPosition.y;
+        if (this.seatOrbitMode && this.orbitObj && this.robotPosition) {
+
+            // get position of orbitObj in x,y plane in robot space
+            const p = new THREE.Vector3();
+            this.orbitObj.getWorldPosition(p);
+            const orbitX = p.x
+            const orbitY = -p.z;
+
+            // Vector from orbit position to robot
+            const dx = this.robotPosition.x - orbitX;
+            const dy = this.robotPosition.y - orbitY;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             // We can only orbit if we aren't at the exact center.
