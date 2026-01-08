@@ -4,6 +4,7 @@ import { projectFloorToPixels, projectPixelsToFloor, TargetColors } from '../uti
 import { TargetListManager } from './target_list_manager.ts' 
 
 const TARGET_SIZE = 20; // visual size of target squares on a side
+const HALF_SIZE = TARGET_SIZE / 2;
 
 export class VideoFeed {
     private container: HTMLElement;
@@ -20,10 +21,21 @@ export class VideoFeed {
     private targetImageCoords: (THREE.Vector2 | null)[] = [];
     private canvasSize: THREE.Vector2;
     private targetListManager: TargetListManager | null = null;
+    
+    // New Item State
     private newItemImageCoords: THREE.Vector2 | null = null;
+    private newItemIsHovered: boolean = false;
+
+    // Dragging State
+    private isDragging: boolean = false;
+    private draggedTargetId: string | null = null;
+    private draggedCurrentPos: THREE.Vector2 | null = null; // Screen coords
+    private dragStartScreenPos: THREE.Vector2 | null = null;
+    private readonly DRAG_THRESHOLD = 5; // pixels
 
     // Callbacks
     public onFloorPoint: ((point: THREE.Vector3 | null) => void) | null = null;
+    public sendFn: ((items: Array<nf.control.ControlItem>) => void) | null = null;
     
     // Helper for 3D projection
     public virtualCamera: THREE.PerspectiveCamera | null = null;
@@ -32,7 +44,7 @@ export class VideoFeed {
         this.container = container;
         this.targetListManager = tlm;
         
-        // Find video and canvasl elements
+        // Find video and canvas elements
         this.video = this.container.querySelector('video')!;
         this.canvas = this.container.querySelector('canvas')!;
         this.canvasSize = new THREE.Vector2(this.canvas.width, this.canvas.height);
@@ -48,6 +60,7 @@ export class VideoFeed {
         // Interaction Listeners
         this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
         this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
     }
 
@@ -72,6 +85,23 @@ export class VideoFeed {
         const imagePos = new THREE.Vector2(x, y);
         const normPos = new THREE.Vector2(x / rect.width, y / rect.height);
 
+        // Check for Drag Initiation (Threshold check)
+        if (this.dragStartScreenPos && !this.isDragging) {
+            const dist = imagePos.distanceTo(this.dragStartScreenPos);
+            if (dist > this.DRAG_THRESHOLD) {
+                this.isDragging = true;
+                // dragging has officially started, update current pos immediately
+                this.draggedCurrentPos = imagePos;
+            }
+        }
+
+        // if already dragging
+        if (this.isDragging && this.draggedTargetId) {
+            this.draggedCurrentPos = imagePos;
+            this.draw(); // Update visuals immediately
+            return; // Skip hover effects and floor projection while dragging
+        }
+
         // Project to Floor
         if (this.virtualCamera) {
             const floorPoints = projectPixelsToFloor([normPos], this.virtualCamera);
@@ -82,7 +112,8 @@ export class VideoFeed {
 
         // Hit test targets
         this.hitTestTargets(imagePos);
-
+        // Hit test new item
+        this.hitTestNewItem(imagePos);
         // Redraw (cursor, hover states)
         this.draw();
     }
@@ -90,22 +121,84 @@ export class VideoFeed {
     private handleMouseDown(e: MouseEvent) {
         if (!this.targetListManager) return;
 
-        // hitTestTargets has already updated the hover state in the manager
-        const hoveredId = this.targetListManager.getHoveredId();
-
-        if (hoveredId) {
-            this.targetListManager.setSelectedId(hoveredId);
-        } else {
-            // Clicked on background
-            this.targetListManager.setSelectedId(null);
-
-            // Add new item here?
+        if (this.newItemIsHovered && this.newItemImageCoords) {
+            // user has clicked again on a newly placed item, confirming that we should create it.
             const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const imagePos = new THREE.Vector2(x, y);
-            this.newItemImageCoords = imagePos;
+            const normPos = new THREE.Vector2(this.newItemImageCoords.x / rect.width, this.newItemImageCoords.y / rect.height);
+            // Send message to robot
+            if (this.sendFn) {
+                const item = nf.control.ControlItem.create({
+                    addCamTarget: {
+                        anchorNum: this.anchorNum,
+                        imgNormX: normPos.x,
+                        imgNormY: normPos.y,
+                    }
+                })
+                this.sendFn([item]);
+            }
+            // clear these
+            this.newItemIsHovered = false;
+            this.newItemImageCoords = null;
+        } else {
+            // hitTestTargets has already updated the hover state in the manager during mousemove
+            const hoveredId = this.targetListManager.getHoveredId();
+
+            if (hoveredId) {
+                this.targetListManager.setSelectedId(hoveredId);
+                
+                // Prepare for potential drag
+                this.draggedTargetId = hoveredId;
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.dragStartScreenPos = new THREE.Vector2(x, y);
+                this.isDragging = false; // Wait for move threshold
+            } else {
+                // Clicked on background
+                this.targetListManager.setSelectedId(null);
+
+                // Add new item here?
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const imagePos = new THREE.Vector2(x, y);
+                this.newItemImageCoords = imagePos;
+                this.newItemIsHovered = true;
+            }
         }
+        this.draw();
+    }
+
+    private handleMouseUp() {
+        if (this.isDragging && this.draggedTargetId && this.draggedCurrentPos) {
+            
+            const rect = this.canvas.getBoundingClientRect();
+            // Clamp within canvas to avoid negative coords or > 1
+            const clampedX = Math.max(0, Math.min(this.draggedCurrentPos.x, rect.width));
+            const clampedY = Math.max(0, Math.min(this.draggedCurrentPos.y, rect.height));
+
+            const normPos = new THREE.Vector2(clampedX / rect.width, clampedY / rect.height);
+
+            if (this.sendFn) {
+                // this.onTargetMoved(this.draggedTargetId, normPos);
+                const item = nf.control.ControlItem.create({
+                    addCamTarget: {
+                        anchorNum: this.anchorNum,
+                        imgNormX: normPos.x,
+                        imgNormY: normPos.y,
+                        targetId: this.draggedTargetId, // when set, this is a move command
+                    }
+                })
+                this.sendFn([item]);
+            }
+        }
+
+        // Reset drag state
+        this.isDragging = false;
+        this.draggedTargetId = null;
+        this.draggedCurrentPos = null;
+        this.dragStartScreenPos = null;
         this.draw();
     }
 
@@ -113,6 +206,15 @@ export class VideoFeed {
         if (this.onFloorPoint) {
             this.onFloorPoint(null); 
         }
+        
+        // Reset drag if mouse leaves canvas
+        if (this.isDragging || this.dragStartScreenPos) {
+            this.isDragging = false;
+            this.draggedTargetId = null;
+            this.draggedCurrentPos = null;
+            this.dragStartScreenPos = null;
+        }
+
         // Clear hover state when leaving canvas
         if (this.targetListManager) {
             this.targetListManager.setHoveredId(null);
@@ -124,10 +226,13 @@ export class VideoFeed {
         if (!this.targetImageCoords || this.lastTargets.length == 0 || !this.targetListManager) return;
 
         let foundId: string | null = null;
-        const HALF_SIZE = TARGET_SIZE / 2;
         
-        const foundIndex = this.targetImageCoords.findIndex(screenPos => {
+        const foundIndex = this.targetImageCoords.findIndex((screenPos, i) => {
             if (!screenPos) return false;
+            
+            // Skip hit testing for the item currently being dragged (it's under the cursor anyway)
+            if (this.isDragging && this.lastTargets[i].id === this.draggedTargetId) return true;
+
             // Axis-aligned bounding box check for exact square hit testing
             const dx = Math.abs(screenPos.x - mousePos.x);
             const dy = Math.abs(screenPos.y - mousePos.y);
@@ -142,39 +247,40 @@ export class VideoFeed {
         this.targetListManager.setHoveredId(foundId);
     }
 
+    private hitTestNewItem(mousePos: THREE.Vector2) {
+        if (!this.newItemImageCoords) return;
+
+        const dx = Math.abs(this.newItemImageCoords.x - mousePos.x);
+        const dy = Math.abs(this.newItemImageCoords.y - mousePos.y);
+        this.newItemIsHovered = dx <= HALF_SIZE && dy <= HALF_SIZE;
+    }
+
     // --- WebRTC ---
     public async connect(streamPath: string) {
-        // MediaMTX WHEP endpoint (standard WebRTC playback port is 8889)
-        // production or staging
+        // MediaMTX WHEP endpoint
         let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
-        if (window.location.host === "localhost:5173") {
-            // local testing with vite
+        if (window.location.host.includes("localhost")) {
             whepUrl = `http://localhost:8889/${streamPath}/whep`;
         }
 
         try {
             console.log('Connecting to: ' + streamPath);
 
-            // Create the PeerConnection
             this.peerConnection = new RTCPeerConnection({
                 iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             });
 
-            // Connect video element to incoming tracks
             this.peerConnection.ontrack = (event) => {
                 if (event.track.kind === 'video') {
                     this.video.srcObject = event.streams[0];
                 }
             };
 
-            // Add a receive-only transceiver (we are watching, not broadcasting)
             this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
 
-            // Create local SDP Offer
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
 
-            // Send Offer to MediaMTX via WHEP (POST request)
             const response = await fetch(whepUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/sdp' },
@@ -185,7 +291,6 @@ export class VideoFeed {
                 throw new Error(`Server returned ${response.status} ${response.statusText}`);
             }
 
-            // Set Remote Description from Server Answer
             const answerSdp = await response.text();
             await this.peerConnection.setRemoteDescription({
                 type: 'answer',
@@ -199,8 +304,6 @@ export class VideoFeed {
         }
     }
 
-    // set the virtual camera used when projecting and raycasting targets.
-    // This virtual camera is expected to already have a matrix that matches that of the anchor camera
     public setVirtualCamera(vCam: THREE.PerspectiveCamera) {
         this.virtualCamera = vCam;
     }
@@ -210,8 +313,6 @@ export class VideoFeed {
         if (targets.targets) {
             this.lastTargets = targets.targets;
 
-            // Convert all the targets from world space into normalized image coordinates for this perspective
-            // Normalized image coordinates are from 0 to 1 and the origin is the top left corner.
             const floorPoints: THREE.Vector3[] = this.lastTargets.map((tg) => {
                 return new THREE.Vector3(tg.position!.x ?? 0, 0, -(tg.position!.y ?? 0));
             });
@@ -219,7 +320,6 @@ export class VideoFeed {
                 this.targetImageCoords = projectFloorToPixels(floorPoints, this.virtualCamera, this.canvasSize);
             }
         }
-
         this.draw();
     }
 
@@ -241,23 +341,29 @@ export class VideoFeed {
         // Clear frame
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (!this.targetListManager || !this.video.srcObject) { return; }// skip for gripper
+        if (!this.targetListManager || !this.video.srcObject) { return; }
 
         const currentHoverId = this.targetListManager.getHoveredId();
         const currentSelectedId = this.targetListManager.getSelectedId();
-        const half = TARGET_SIZE/2;
 
         // Draw Targets
         this.targetImageCoords.forEach((screenPos, i) => {
-            if (screenPos) {
-                const target = this.lastTargets[i]
+            const target = this.lastTargets[i];
+            const isDraggingThis = (this.isDragging && target.id === this.draggedTargetId);
+            
+            // If dragging this specific target, override position with draggedCurrentPos
+            let renderPos = screenPos;
+            if (isDraggingThis && this.draggedCurrentPos) {
+                renderPos = this.draggedCurrentPos;
+            }
+
+            if (renderPos) {
                 const isHovered = (target.id === currentHoverId);
                 const isSelected = (target.id === currentSelectedId);
 
                 // color the stroke according to it's status in the robot's queue
                 let strokeColor = TargetColors.seen;
                 if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED) {
-                    // selected here means selected by the observer for pickup
                     strokeColor = TargetColors.movingTo;
                 } else if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP) {
                     strokeColor = TargetColors.grasped;
@@ -266,27 +372,24 @@ export class VideoFeed {
                 let lineWidth = 2;
 
                 // apply fill color according to mouse hover/select status
-                if (isSelected) {
-                    // This is a seperate meaning of the word selected indicating the user has clicked on the target in the UI.
-                    // Fill translucent orange
+                if (isSelected || isDraggingThis) {
                     this.ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
-                    this.ctx.fillRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
+                    this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
                 } else if (isHovered) {
-                    // Fill translucent cyan
                     this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-                    this.ctx.fillRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
+                    this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
                 }
 
                 // Stroke
                 this.ctx.strokeStyle = strokeColor;
                 this.ctx.lineWidth = lineWidth;
-                this.ctx.strokeRect(screenPos.x - half, screenPos.y - half, TARGET_SIZE, TARGET_SIZE);
+                this.ctx.strokeRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
 
                 // Label
                 if (target.id) {
                     const label = target.id.substring(0, 8);
                     this.ctx.fillStyle = strokeColor;
-                    this.ctx.fillText(label, screenPos.x + half + 5, screenPos.y);
+                    this.ctx.fillText(label, renderPos.x + HALF_SIZE + 5, renderPos.y);
                 }
             }
         });
@@ -294,16 +397,21 @@ export class VideoFeed {
         if (this.newItemImageCoords) {
             const x = this.newItemImageCoords.x;
             const y = this.newItemImageCoords.y;
+            
+            if (this.newItemIsHovered) {
+                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                this.ctx.fillRect(this.newItemImageCoords.x - HALF_SIZE, this.newItemImageCoords.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+            }
 
             this.ctx.lineWidth = 2;
             this.ctx.strokeStyle = '#00FF00';
-            this.ctx.strokeRect(x - half, y - half, TARGET_SIZE, TARGET_SIZE);
+            this.ctx.strokeRect(x - HALF_SIZE, y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
 
             const label1 = "Click again";
             const label2 = "to add new";
             this.ctx.fillStyle = '#00FF00';
-            this.ctx.fillText(label1, x + half + 5, y);
-            this.ctx.fillText(label2, x + half + 5, y + 10);
+            this.ctx.fillText(label1, x + HALF_SIZE + 5, y);
+            this.ctx.fillText(label2, x + HALF_SIZE + 5, y + 10);
         }
     }
 }

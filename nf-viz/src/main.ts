@@ -129,6 +129,9 @@ const sightingsManager = new SightingsManager(scene);
 
 const targetListManager = new TargetListManager();
 
+// gamepad needs a reference
+gamepad.targetListManager = targetListManager;
+
 // Video feed managers
 const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead')!, targetListManager);
 const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, targetListManager);
@@ -358,11 +361,11 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
     console.error(`Got VideoReady update but streamPath could not be parsed ${data.streamPath}`);
     return;
   }
-  const cam_num = parseInt(parts[2]);
+  const cam_num = parseInt(parts[2]); // Note that this is not anchor num in stringman pilot.
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
   videoManager.connect(data.streamPath);
   if (!data.isGripper && data.anchorNum != null) {
-    videoManager.assign(data.anchorNum);
+    videoManager.assign(data.anchorNum); // anchor num is here
     if (anchors[data.anchorNum].camera) {
       videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
 
@@ -510,6 +513,9 @@ function simpleCommand(cmdEnum: nf.control.Command) {
     })]);
 }
 
+overheadVideofeeds.forEach(feed => {feed.sendFn = sendControl});
+targetListManager.sendFn = sendControl;
+
 // --- Run menu ---
 function initRunMenu() {
     const runBtn = document.getElementById('run-btn');
@@ -553,6 +559,7 @@ function initRunMenu() {
     bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
     bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
     bindCommand('action-grasp',          Command.COMMAND_GRASP);
+    bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
     // bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
     // bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
     // bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);

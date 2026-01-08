@@ -7,6 +7,7 @@ export class TargetListManager {
     // Callbacks for external components
     public onTargetSelect: ((id: string | null) => void) | null = null;
     public onTargetHover: ((id: string | null) => void) | null = null;
+    public sendFn: ((items: Array<nf.control.ControlItem>) => void) | null = null
 
     constructor() {
         // Setup background click handler for the list container to clear selection
@@ -83,18 +84,40 @@ export class TargetListManager {
                     break;
             }
 
-            // Initial Style check
-            this.applyStylesToElement(div, tid);
-
-            // Text Content
+            // Info Span (Left side)
+            const infoSpan = document.createElement('span');
+            infoSpan.className = 'task-text-span';
             const rawId = tid;
             const name = rawId.substring(0, 8);
             const source = target.source ?? '';
             const coords = this.formatPos(target.position);
-            div.textContent = `(${source}) ${name} ${coords}`;
+            infoSpan.textContent = `(${source}) ${name} ${coords}`;
+            div.appendChild(infoSpan);
+
+            // Delete Button (right side)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '✗';
+            deleteBtn.className = 'task-delete';
+            div.appendChild(deleteBtn);
+
+            // Initial Style check
+            this.applyStylesToElement(div, tid);
 
             // --- Interaction Handlers ---
             
+            // Click handler for delete
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop bubbling so we don't re-select or deselect immediately
+                if (this.sendFn) {
+                    const item = nf.control.ControlItem.create({
+                        deleteTarget: {
+                            targetId: tid
+                        }
+                    })
+                    this.sendFn([item]);
+                }
+            });
+
             // Selection (Click)
             div.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent container from clearing selection
@@ -111,6 +134,17 @@ export class TargetListManager {
 
             container.appendChild(div);
         });
+    }
+
+    public deleteSelectedItem() {
+        if (this.selectedId && this.sendFn) {
+            const item = nf.control.ControlItem.create({
+                deleteTarget: {
+                    targetId: this.selectedId
+                }
+            })
+            this.sendFn([item]);
+        }
     }
 
     private refreshStyles() {
@@ -130,6 +164,7 @@ export class TargetListManager {
     private applyStylesToElement(div: HTMLElement, tid: string) {
         const isSelected = (tid === this.selectedId);
         const isHovered = (tid === this.hoveredId);
+        const deleteBtn = div.querySelector('.task-delete') as HTMLElement;
 
         // Apply 'target-mouse-selected' (orange background) if selected
         if (isSelected) {
@@ -143,6 +178,12 @@ export class TargetListManager {
             div.classList.add('target-mouse-hovered');
         } else {
             div.classList.remove('target-mouse-hovered');
+        }
+
+        if (isSelected || isHovered) {
+            if (deleteBtn) deleteBtn.style.display = 'block';
+        } else {
+            if (deleteBtn) deleteBtn.style.display = 'none';
         }
     }
 

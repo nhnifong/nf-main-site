@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
+import { TargetListManager } from './target_list_manager.js';
 
 export class GamepadController {
     private gamepadIndex: number | null = null;
@@ -33,6 +34,8 @@ export class GamepadController {
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
     private lastAction = new Float32Array(6); 
+
+    public targetListManager: TargetListManager | null = null
 
     constructor() {
         // Listen for connection events to know which index to poll
@@ -74,6 +77,9 @@ export class GamepadController {
 
         if (isDown) {
             this.keys.add(e.code);
+            if (e.code === "Delete" && this.targetListManager) {
+                this.targetListManager.deleteSelectedItem();
+            }
         } else {
             this.keys.delete(e.code);
             this.keyStates[e.code] = false; // Reset rising edge state on release

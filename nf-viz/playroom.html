@@ -80,6 +80,10 @@
         border-radius: 8px;
         margin-bottom: 8px;
         font-size: 0.9rem;
+
+        display: flex;
+        justifyContent: space-between;
+        alignItems: center;
       }
 
       .task-item.active {
@@ -88,20 +92,58 @@
         font-weight: bold;
       }
 
-      /* Base Item Style */
       .task-item {
-          padding: 8px 12px;
-          margin-bottom: 4px;
-          border-left: 4px solid transparent; /* space for status color */
-          font-family: monospace;
-          color: #000000; /* text black */
-          background: rgba(255, 255, 255, 0.3);
-          border-left-color: #ffffff; /* White */
-          cursor: pointer;
+        /* Layout */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        /* Visuals */
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        border-left: 4px solid transparent; /* space for status color */
+        border-left-color: #ffffff; /* Default White */
+        
+        /* Text */
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #000000;
+        
+        /* Interaction */
+        cursor: pointer;
       }
 
       .task-item:hover:not(.target-mouse-selected), .target-mouse-hovered:not(.target-mouse-selected) {
           background: rgba(0, 255, 255, 0.3);
+      }
+
+      .task-delete {
+        cursor: pointer;
+        padding: 6px 6px;
+        border-radius: 4px;
+        margin: 2px;
+        font-weight: bold;
+        font-size: 1em;
+        color: #555;
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        transition: background-color 0.2s, color 0.2s;
+        display: none; /* initially hidden */
+      }
+
+      .task-delete:hover {
+        background-color: rgba(200, 50, 50, 0.15);
+        color: #d00;
+      }
+
+      .task-text-span {
+        margin: 8px 10px;
       }
 
       /* Status Colors. Text color always black. target status affects the border, mouse hover status affects the background*/
@@ -505,16 +547,25 @@
       
       <!-- Left Panel: Task & Targets -->
       <aside id="panel-left" class="panel">
-        <h2>Task</h2>
+<!--         <h2>Task</h2>
         <div class="task-item active">
           Idle
-        </div>
+        </div> -->
         
         <h2>Targets</h2>
         <div id="target-list">
-          <div class="task-item status-selected">Moving to (-0.5, 0.2)</div>
-          <div class="task-item status-picked-up">Grasped (-0.5, 0.2)</div>
-          <div class="task-item status-seen">Seen Target (0.5, 0.2)</div>
+          <div class="task-item status-selected">
+            <span class="task-text-span">Moving to (-0.5, 0.2)</span>
+            <button class="task-delete">✗</button>
+          </div>
+          <div class="task-item status-picked-up">
+            <span class="task-text-span">Moving to (-0.5, 0.2)</span>
+            <button class="task-delete">✗</button>
+          </div>
+          <div class="task-item status-seen">
+            <span class="task-text-span">Moving to (-0.5, 0.2)</span>
+            <button class="task-delete">✗</button>
+          </div>
         </div>
       </aside>
 
@@ -555,6 +606,7 @@
 <!--             <div id="action-park" class="menu-item">Park</div>
             <div id="action-unpark" class="menu-item">UnPark</div> -->
             <div id="action-grasp" class="menu-item">Auto Grasp Here (D-right)</div>
+            <div id="action-dataset" class="menu-item">Add targets to dataset</div>
           </div>
         </div>
 
