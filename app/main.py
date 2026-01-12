@@ -43,6 +43,10 @@ if os.path.exists(FRONTEND_DIST):
 async def read_index():
     return FileResponse(f"{FRONTEND_DIST}/index.html")
 
+@app.get("/control_panel")
+async def read_playroom():
+    return FileResponse(f"{FRONTEND_DIST}/playroom.html")
+
 @app.get("/playroom")
 async def read_playroom():
     return FileResponse(f"{FRONTEND_DIST}/playroom.html")
