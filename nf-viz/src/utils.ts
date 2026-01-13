@@ -27,8 +27,8 @@ export interface CameraCalibration {
 }
 
 const rpiCam3Cal: CameraCalibration = {
-    K: { fx: 1691.33070, fy: 1697.39780, cx: 1163.88477, cy: 633.903475 },
-    D: { k1: 0.021986, k2: 0.160533, p1: -0.003378, p2: 0.00264, k3: -0.356843 },
+    K: { fx: 1421.61873, fy: 1427.73940, cx: 960.0, cy: 540.0 },
+    D: { k1: 0.011584, k2: 0.187238, p1: -0.001261, p2: 0.000583, k3: -0.388072 },
     imageShape: { width: 1920, height: 1080 }
 };
 
