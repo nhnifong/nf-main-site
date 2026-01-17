@@ -1,0 +1,90 @@
+# This build promotes a previously built and tested image to production.
+# It deploys the specified image to the production Cloud Run service
+# and then updates the deployment state to reflect the new live asset bucket.
+
+steps:
+# ==============================================================================
+# Determine Live and Inactive Buckets (to know which one is becoming live)
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'determine-buckets'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    LIVE_PROD_BUCKET_A="gs://nf-site-assets-prod-a"
+    LIVE_PROD_BUCKET_B="gs://nf-site-assets-prod-b"
+    STATE_BUCKET="gs://nf-site-deployment-state"
+
+    STATE_FILE="$${STATE_BUCKET}/live_bucket.txt"
+
+    echo "Ensuring state bucket exists: $${STATE_BUCKET}"
+    if ! gsutil ls "$${STATE_BUCKET}" > /dev/null 2>&1; then
+      echo "State bucket $${STATE_BUCKET} not found, creating it."
+      gsutil mb -p ${PROJECT_ID} -l us "$${STATE_BUCKET}"
+    else
+      echo "State bucket $${STATE_BUCKET} already exists."
+    fi
+
+    echo "Reading current live bucket state from $${STATE_FILE}"
+    CURRENT_LIVE_BUCKET=$(gsutil cat "$${STATE_FILE}" 2>/dev/null || echo "$${LIVE_PROD_BUCKET_A}")
+
+    echo "Currently identified live bucket: $${CURRENT_LIVE_BUCKET}"
+
+    if [ "$${CURRENT_LIVE_BUCKET}" == "$${LIVE_PROD_BUCKET_A}" ]; then
+      TARGET_INACTIVE_BUCKET="$${LIVE_PROD_BUCKET_B}" # This is the bucket that was updated for staging
+    else
+      TARGET_INACTIVE_BUCKET="$${LIVE_PROD_BUCKET_A}" # This is the bucket that was updated for staging
+    fi
+
+    echo "------------------------------------------------"
+    echo "Current Live Production Bucket: $${CURRENT_LIVE_BUCKET}"
+    echo "Target Production Bucket (will become live): $${TARGET_INACTIVE_BUCKET}"
+    echo "------------------------------------------------"
+
+    echo "$${TARGET_INACTIVE_BUCKET}" > /workspace/new_live_bucket.txt # Store the bucket that will become live
+
+# ==============================================================================
+# Deploy to Production Environment
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'deploy-production'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'nf-site-monolith' # The production service name
+  - '--image'
+  - 'gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG}'
+  - '--region'
+  - 'us-east1'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
+  - '--vpc-connector'
+  - 'redis-connector'
+  - '--set-env-vars'
+  - 'REDIS_URL=redis://10.83.184.211:6379'
+  - '--service-account'
+  - '690802609278-compute@developer.gserviceaccount.com' # Use your actual project number
+  waitFor: ['determine-buckets']
+
+# ==============================================================================
+# Update State to Flip the Live Bucket
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'update-state'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    NEW_LIVE_BUCKET=$(cat /workspace/new_live_bucket.txt)
+    STATE_FILE="gs://nf-site-deployment-state/live_bucket.txt"
+    echo "Updating live bucket state. New live bucket: $${NEW_LIVE_BUCKET}"
+    echo -n "$${NEW_LIVE_BUCKET}" | gsutil cp - "$${STATE_FILE}"
+    echo "State updated. The production environment is now pointing to: $${NEW_LIVE_BUCKET}"
+  waitFor: ['deploy-production']
+
+substitutions:
+  _TAG: 'latest' # You MUST provide the exact tag of the image you want to promote
+
+timeout: '600s' # 10 minutes

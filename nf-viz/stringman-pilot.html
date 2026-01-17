@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Stringman - Product Details</title>
+    <style>
+        /* --- RESET & TYPOGRAPHY --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- UTILITY NAVBAR (Dark Text Version) --- */
+        .navbar {
+            position: relative; /* Changed from absolute to relative */
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 100;
+            background-color: #fff; /* Opaque white background */
+            flex-shrink: 0; /* Prevent navbar from shrinking */
+            border-bottom: 1px solid #f0f0f0; /* Optional: subtle separator */
+        }
+
+        .navbar a {
+            color: #333;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.3s;
+        }
+
+        .navbar a:hover {
+            opacity: 0.6;
+            text-decoration: underline;
+        }
+
+        /* --- TOP SECTION (SPLIT LAYOUT) --- */
+        .product-hero {
+            display: flex;
+            flex: 1; /* Fill remaining vertical space below navbar */
+            width: 100%;
+            overflow: hidden; /* Contains the scrollable areas */
+        }
+
+        /* LEFT: GALLERY */
+        .gallery-container {
+            flex: 1.2;
+            background-color: #f4f4f4;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .gallery-slide {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .gallery-slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .gallery-slide img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            border-radius: 4px;
+        }
+
+        /* Gallery Controls */
+        .arrow-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.8);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.2rem;
+            color: #333;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .arrow-btn:hover {
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .prev-btn { left: 20px; }
+        .next-btn { right: 20px; }
+
+        /* RIGHT: INFO & PURCHASE */
+        .info-container {
+            flex: 1;
+            /* Scroll configuration */
+            height: 100%;
+            overflow-y: auto;
+            
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            
+            padding: 60px; /* Reduced top padding since navbar doesn't overlap */
+            background: #fff;
+        }
+
+        .product-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 400;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .product-intro {
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            max-width: 500px;
+            color: #666;
+        }
+
+        .purchase-btn {
+            display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 20px 60px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-align: center;
+            width: fit-content;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .purchase-btn:hover {
+            background-color: #333;
+            transform: translateY(-2px);
+        }
+
+        .shipping-note {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        /* --- SCROLLING CONTENT --- */
+        .details-section {
+            max-width: 800px;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .details-section h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            margin-top: 40px;
+        }
+
+        .details-section p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        .details-section ul {
+            margin-left: 20px;
+            margin-bottom: 30px;
+            color: #444;
+        }
+
+        .details-section li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            body {
+                /* Unlock body scroll on mobile */
+                height: auto;
+                overflow: auto;
+                overflow-x: hidden;
+                display: block; /* Revert flex layout on mobile */
+            }
+
+            .product-hero {
+                flex-direction: column;
+                height: auto;
+            }
+            .gallery-container {
+                height: 50vh;
+                width: 100%;
+            }
+            .info-container {
+                padding: 40px 20px;
+                height: auto;
+                overflow-y: visible;
+            }
+            .product-title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
+        <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
+        <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
+        <a href="company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <!-- Split Page layout -->
+    <section class="product-hero">
+
+        <!-- Left: Image Gallery -->
+        <div class="gallery-container">
+            <button class="arrow-btn prev-btn" onclick="changeSlide(-1)">&#10094;</button>
+            
+            <div class="gallery-slide active">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/hangtoy.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/topview.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/product_pilot.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/outside_anchor.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/inside_anchor.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/inside_gripper.png">
+            </div>
+            <div class="gallery-slide">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/gripper_palm.png">
+            </div>
+
+            <button class="arrow-btn next-btn" onclick="changeSlide(1)">&#10095;</button>
+        </div>
+
+        <!-- Right: Info & Purchase -->
+        <div class="info-container">
+            <h1 class="product-title">Stringman Pilot</h1>
+            
+            <p class="product-intro">
+                An Automatic decluttering system, hung from anchors mounted in the corners of your ceiling and controlled by self-hosted AI or Gamepad. Our Pilot launch is the first Stringman version available to the public.
+            </p>
+            <p class="shipping-note">
+                Ships in 5-8 days within the United States
+            </p>
+                
+            <script async
+              src="https://js.stripe.com/v3/buy-button.js">
+            </script>
+
+            <stripe-buy-button
+              buy-button-id="buy_btn_1SMXtbCIW3Ilocb5T8liPv3n"
+              publishable-key="pk_live_51JYZ0uCIW3Ilocb5y7EkW5LJjzUJSwzWCguVaABSLBorbRxfhsG1SH4S7xZdPthayAJLHSttrPfTWPfJvcPtPcw600OHVi585G"
+            >
+            </stripe-buy-button>
+            
+            <!-- Detailed Description -->
+            <section class="details-section">
+                <div class="hidden-xs" data-bind="css: { 'hidden-xs': !mobileReadMore() }">
+                    <h3><strong>The affordable robot with room-scale reach</strong></h3>
+                    <p>This robot's ultimate purpose is to save you time on household chores. And because not every job needs a humanoid form and 90 DOFs, a simple cable-driven parallel robot is all it takes to tidy your floor by putting trash or laundry in designated bins.</p>
+                    <p>Stringman stays completely off the floor, so navigating obstacles is not the main challenge. When not in use, it can be parked up above head level on a wall mounted dock.</p>
+                    <p>It’s designed to grip and drop clutter (up to 1kg) into a bin, laundry hamper, or trash can with a max travel speed of 0.25 m/s.</p>
+                    <p>Get up and running in an afternoon. Just mount components to the wall and run calibration. You can even download and run the open source control panel now for a preview.</p>
+                    <p>Control via a gamepad lets you pick up anything in the room and bring it to you (or drop it on someone's head). AI integration is optional, no software or AI expertise is needed to to drive it around.</p>
+                    <p>Note: This is a Pilot Launch. While the hardware is finalized, the software is in active development. This is your chance to own the platform, contribute to the data, and train your own models.</p>
+                    <hr>
+                    <h3><strong>At a Glance</strong></h3>
+                    <ul>
+                        <li><strong>Unparalelled Reach:</strong> Hangs from four ceiling anchors, giving it full access to any rectangular room.</li>
+                        <li><strong>Teleoperation:</strong> Directly control the gripper's location using either keyboard or gamepad.</li>
+                        <li><strong>Light Two-fingered Gripper:</strong> Lifts up to 1kg in motion. Onboard finger pressure sensor provides feedback when using AI models.</li>
+                        <li><strong>Low latency 5-Camera Vision:</strong> Four cameras on the anchors and a fifth on the gripper allow the robot to locate itself, identify targets, and home in for a perfect grab.</li>
+                        <li><strong>No Battery, No Charging:</strong> Powered by a wire from one anchor, this robot is always ready to run. No downtime for charging.</li>
+                        <li><strong>Documentation:</strong> <a href="https://nhnifong.github.io/neufangled-site-2/">Complete guides</a> for assembling, operating, and troubleshooting the robot. </li>
+                    </ul>
+                    <hr>
+                    <h3><strong>Intuitive Control Panel</strong></h3>
+                    <p>The Stringman control panel gives visually intuitive control over every aspect of the robot:</p>
+                    <ul>
+                        <li><strong>3D work space:</strong> A model of the robot's work area, gripper position, and line tightness.</li>
+                        <li><strong>Calibration:</strong> Activate the automatic calibration process to adapt the control parameters to your space.</li>
+                        <li><strong>Camera Feeds:</strong> Observe from the point of view of any camera on the robot.</li>
+                        <li><strong>Lerobot Mode:</strong> Record datasets or enable full control or from a trained LeRobot policy.</li>
+                    </ul>
+                    <hr>
+                    <h3><strong>System Requirements</strong></h3>
+                    <ul>
+                        <li><strong>Local PC Required:</strong> The control panel must run on a computer on the same Local Area Network (LAN).</li>
+                        <li><strong>Linux OS:</strong> The control panel has only been tested on Ubuntu Linux. However, windows and mac compatibility is currently in development.</li>
+                        <li><strong>PC Specs:</strong> A decent computer (such as a gaming PC) with at least <strong>8 cores</strong> is recommended. Nearly all computation is done on the host machine. The Raspberry Pi Zero 2W's perform only local video streaming and motor control occuring on individual robot components.</li>
+                        <li><strong>Ample lighting:</strong> The room the robot is to be installed in should have consistent and ample lighting.</li>
+                    </ul>
+                    <hr>
+                    <h3><strong>What's in the Box</strong></h3>
+                    <p>This listing is for the <strong>fully assembled robot</strong>, which includes:</p>
+                    <ul>
+                        <li><strong>Four Anchor Modules:</strong> These units secure to the studs in your room's corners. They contain the NEMA 17 steppers, a Raspberry Pi Zero 2W and Camera Module 3, all hidden by a paintable, crown-molding-style cover.</li>
+                        <li><strong>One Gripper Module:</strong> This is the "business end," featuring a Raspberry Pi Zero 2W, Camera module 3, laser rangefinder, inertial measurement unit (IMU), and high-torque (35kg.cm) Injora servo motors.</li>
+                        <li><strong>One Gantry Module:</strong> The passive component where the lines meet which displays april tags on four sides. Looks like a cyberpunk lampshade.</li>
+                        <li><strong>Cabling:</strong> Anchor spools are pre-wound with white braided fishing line and a low friction, low memory, low visibility, low weight, high tension power tether wire.</li>
+                        <li><strong>Wireless E-Stop:</strong> The robot ships with an off-the-shelf wireless outlet switch. This low-tech "emergency stop" can kill the power to all robot components instantly, independent of any software.</li>
+                    </ul>
+                    <hr>
+                    <h3><strong>Optional AI Control</strong></h3>
+                    <p>Stringman has been designed from the beginning with teleoperation and AI control as the end goal but it is still in active development</p>
+                    <ul>
+                        <li><strong>Dataset collection mode:</strong> In this mode, you control the bot with a gamepad and collect example of some task which you want it to perform autonomously.</li>
+                        <li><strong>Training:</strong> This can be done outside the control panel, either on google compute engine with a ipython notebook, or on a local Nvidia GPU. Similar to the Lerobot SO101 arm, an ACT policy can be trained on a 4090 overnight.</li>
+                        <li><strong>Inference:</strong> Use a model trained on a specific task to control the robot. Inference can be performed without a GPU. Under the current architecture inference is also divided into episodes started and stopped by the user.</li>
+                    </ul>
+                    <p>Full disclosure, at this stage, I do not yet have on offer a trained model that can perform a useful task and generalize to new rooms.
+                    To do so will require a greater variety of data. If you are capable and interested in contributing episodes, please get in touch.</p>
+                    <hr>
+                    <h3><strong>Customization</strong></h3>
+                    <p>To suit your room layout, at checkout you will be asked to provide a diagram of your room or otherwise specify which type of anchor modules you need (corner, flat looking left, or flat looking right). I will email you to confirm the choice of modules is appropriate before shipping. this does not affect the price.</p>
+                    <p>You may also provide the wifi credentials of the network you want your robot to connect to. I reccomend letting me preconfigure this but I provide <a href="https://github.com/nhnifong/cranebot3-firmware/blob/pilot/add_wifi_config.sh">a script</a> that will configure the wifi network that can be run on a linux machine with each component's SD card inserted one at a time.</p>
+                    <p>The gripper face plate is shipped in the pictured copper color, but I will print it in other colors at your request if I have the filament, just describe what you'd like in the extra comments box at checkout.</p>
+                    <p>If you are thinking of replacing the gripper with an end effector of your own design, you absolutely can. the tether can support 1kg in motion and somewhat more at rest, and supplies 24v at a maximum current of 500mA.</p>
+                    <hr>
+                    <h3><strong>Early Adopter Benefits</strong></h3>
+                    <p>Your support as an early adopter and participant in the Stringman Pilot launch is invaluable and for that you deserve to be repaid in kind.</p>
+                    <p>Purchasing Stringman Pilot entitles you to a <strong>permanent 20% discount</strong> on any subsequent robot designed by Neufangled Robotics in the future.</p>
+                </div>
+            </section>
+
+        </div>
+    </section>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.gallery-slide');
+
+        function changeSlide(direction) {
+            // Remove active class from current
+            slides[currentSlide].classList.remove('active');
+
+            // Calculate new index
+            currentSlide += direction;
+
+            // Loop logic
+            if (currentSlide >= slides.length) {
+                currentSlide = 0;
+            } else if (currentSlide < 0) {
+                currentSlide = slides.length - 1;
+            }
+
+            // Add active class to new
+            slides[currentSlide].classList.add('active');
+        }
+    </script>
+</body>
+</html>

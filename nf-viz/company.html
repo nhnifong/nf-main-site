@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <title>Neufangled - Company</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        a:link {
+          color: #7cdbfb;
+          text-decoration: none; /* Removes underline */
+        }
+
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: #333;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.3s;
+        }
+
+        .navbar a:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
+        /* --- HERO SECTION --- */
+        .company-hero {
+            height: 60vh;
+            background-color: #111;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .company-hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        .company-hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            color: #ccc;
+        }
+
+        /* Override navbar color */
+        .navbar-dark a {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .navbar-dark a:hover {
+            color: white;
+        }
+
+
+        /* --- FEATURE SECTIONS (Re-used) --- */
+        .feature-section {
+            display: flex;
+            min-height: 50vh;
+            padding: 60px 40px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-content {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            font-weight: 600;
+        }
+
+        .feature-text p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .feature-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .feature-image img {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Alternating Layout */
+        .feature-section:nth-of-type(even) .feature-content {
+            flex-direction: row-reverse;
+        }
+
+
+        /* --- CONTACT & FOOTER --- */
+        .contact-section {
+            padding: 100px 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        .contact-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .contact-link {
+            font-size: 1.5rem;
+            color: #000;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .nc-footer {
+            padding: 40px;
+            text-align: center;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nc-seal {
+            width: 280px;
+            height: auto;
+            opacity: 0.8;
+        }
+
+        .nc-text {
+            font-size: 0.9rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .feature-content {
+                flex-direction: column !important;
+                gap: 40px;
+                text-align: center;
+            }
+            .company-hero h1 { font-size: 3rem; }
+            .feature-section { min-height: auto; padding: 60px 20px; }
+            .navbar { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar (Dark theme for Hero) -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
+        <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
+        <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/face.png" alt="Nathaniel Nifong">
+            </div>
+            <div class="feature-text">
+                <h2>Origins</h2>
+                <p>Neufangled Robotics is an open source hardware startup founded in North Carolina in 2025 by Nathaniel Nifong.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/organized.png" alt="An organized room">
+            </div>
+            <div class="feature-text">
+                <h2>Our Mission</h2>
+                <p>Our mission is to give people an organized home.</p>
+                <p>We believe in relentlessly pursuing pragmatic and innovative designs that can bring real time-saving conveniences to the domestic consumer using open source hardware, 3D printing, and state-of-the-art developments in AI. We prioritize robots that are narrowly effective at something that helps today rather than a general purpose robot that may be in devopment for years.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-section">
+        <div class="feature-content">
+            <div class="feature-image">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/realstuff.png" alt="calibration cards on floor">
+            </div>
+            <div class="feature-text">
+                <h2>Built for Real Life</h2>
+                <p>We dogfood our products — meaning we test them in our own homes with kids — to ensure that we're creating an end-to-end solution that is truly adapted to real life problems. Whether that means inconsistent lighting, ceiling fans or apple sauce, we are ready for it.</p>
+                <p>In my time as an engineer, one phrase comes back again and again - Untested code is broken</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <h2>Partnerships & Investing</h2>
+        <br>
+        <a href="mailto:naavox@gmail.com" class="contact-link">naavox@gmail.com</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="nc-footer">
+        <div class="nc-text">Built in North Carolina</div>
+        <img class="nc-seal" src="assets/nc_dogwood.png" alt="North Carolina Seal">
+    </footer>
+
+</body>
+</html>

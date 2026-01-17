@@ -562,7 +562,7 @@ function initRunMenu() {
     bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
     // bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
     // bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
-    // bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
+    bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
     // bindCommand('action-park',           Command.COMMAND_PARK);
     // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
 

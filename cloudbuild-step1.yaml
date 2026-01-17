@@ -1,0 +1,135 @@
+# This build performs a blue/green deployment for website assets.
+# It reads the current "live" bucket, deploys new assets to the "inactive" bucket,
+# builds a new frontend image pointing to the inactive bucket, and deploys to staging.
+# after reviewing the staging website, run cloudbuild-step2.yaml
+
+steps:
+# ==============================================================================
+# Determine Live and Inactive Buckets
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'determine-buckets'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # Define the two production buckets as shell variables.
+    # No need for these to be Cloud Build substitutions as their values are fixed.
+    LIVE_PROD_BUCKET_A="gs://nf-site-assets-prod-a"
+    LIVE_PROD_BUCKET_B="gs://nf-site-assets-prod-b"
+    STATE_BUCKET="gs://nf-site-deployment-state" # Dedicated bucket to store state
+
+    # Define the state file location
+    STATE_FILE="$${STATE_BUCKET}/live_bucket.txt" # ESCAPED: $$STATE_BUCKET
+
+    echo "Ensuring state bucket exists: $${STATE_BUCKET}" # ESCAPED: $$STATE_BUCKET
+    # Ensure the state bucket exists. If 'gsutil ls' fails, 'gsutil mb' will create it.
+    # Check if the bucket exists by trying to list its contents.
+    # If not found, create it.
+    if ! gsutil ls "$${STATE_BUCKET}" > /dev/null 2>&1; then # ESCAPED: $$STATE_BUCKET
+      echo "State bucket $${STATE_BUCKET} not found, creating it." # ESCAPED: $$STATE_BUCKET
+      gsutil mb -p ${PROJECT_ID} -l us "$${STATE_BUCKET}" # ESCAPED: $$STATE_BUCKET
+    else
+      echo "State bucket $${STATE_BUCKET} already exists." # ESCAPED: $$STATE_BUCKET
+    fi
+
+    echo "Reading current live bucket state from $${STATE_FILE}" # ESCAPED: $$STATE_FILE
+    # Read the current live bucket. If the file doesn't exist, default to BUCKET_A.
+    # Use || true to prevent script from exiting if gsutil cat fails (file not found)
+    CURRENT_LIVE_BUCKET=$(gsutil cat "$${STATE_FILE}" 2>/dev/null || echo "$${LIVE_PROD_BUCKET_A}") # ESCAPED: $$STATE_FILE, $$LIVE_PROD_BUCKET_A
+
+    echo "Currently identified live bucket: $${CURRENT_LIVE_BUCKET}" # ESCAPED: $$CURRENT_LIVE_BUCKET
+
+    if [ "$${CURRENT_LIVE_BUCKET}" == "$${LIVE_PROD_BUCKET_A}" ]; then # ESCAPED: $$CURRENT_LIVE_BUCKET, $$LIVE_PROD_BUCKET_A
+      TARGET_INACTIVE_BUCKET="$${LIVE_PROD_BUCKET_B}" # ESCAPED: $$LIVE_PROD_BUCKET_B
+    else
+      TARGET_INACTIVE_BUCKET="$${LIVE_PROD_BUCKET_A}" # ESCAPED: $$LIVE_PROD_BUCKET_A
+    fi
+
+    echo "------------------------------------------------"
+    echo "Live Production Bucket (currently serving): $${CURRENT_LIVE_BUCKET}" # ESCAPED: $$CURRENT_LIVE_BUCKET
+    echo "Inactive Bucket (target for new assets and new build): $${TARGET_INACTIVE_BUCKET}" # ESCAPED: $$TARGET_INACTIVE_BUCKET
+    echo "------------------------------------------------"
+
+    # Persist the determined INACTIVE bucket name and URL for subsequent steps
+    # Note: Cloud Build steps run in separate environments, so we write to a file.
+    echo "$${TARGET_INACTIVE_BUCKET}" > /workspace/target_inactive_bucket.txt # ESCAPED: $$TARGET_INACTIVE_BUCKET
+    echo "$${TARGET_INACTIVE_BUCKET}" | sed 's|gs://|https://storage.googleapis.com/|' > /workspace/target_inactive_bucket_url.txt # ESCAPED: $$TARGET_INACTIVE_BUCKET
+
+# ==============================================================================
+# Build the Monolith Docker Image
+#    This image will be built to point to the INACTIVE bucket.
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'build-image'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # Read the inactive bucket URL from the file created in the previous step
+    INACTIVE_BUCKET_URL=$(cat /workspace/target_inactive_bucket_url.txt)
+    echo "Building image for asset URL: $${INACTIVE_BUCKET_URL}" # ESCAPED: $$INACTIVE_BUCKET_URL
+
+    docker build \
+      -t gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG} \
+      --build-arg ASSET_BUCKET_URL="$${INACTIVE_BUCKET_URL}" \
+      .
+  waitFor: ['determine-buckets']
+
+# ==============================================================================
+# Push the Built Docker Image to Artifact Registry
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'push-image'
+  args: ['push', 'gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG}']
+  waitFor: ['build-image']
+
+
+# ==============================================================================
+# Sync Assets to the Inactive Bucket
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'sync-assets'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # Read the inactive bucket name from the file
+    TARGET_INACTIVE_BUCKET=$(cat /workspace/target_inactive_bucket.txt)
+    echo "Syncing assets from nf-viz/public/assets to $${TARGET_INACTIVE_BUCKET}/assets..." # ESCAPED: $$TARGET_INACTIVE_BUCKET
+    # -d for delete extra files in dest, -r for recursive
+    # Use -m for parallel (faster)
+    gsutil -m rsync -d -r nf-viz/public/assets "$${TARGET_INACTIVE_BUCKET}/assets" # ESCAPED: $$TARGET_INACTIVE_BUCKET
+    echo "Asset sync complete for $${TARGET_INACTIVE_BUCKET}." # ESCAPED: $$TARGET_INACTIVE_BUCKET
+  waitFor: ['determine-buckets'] # Only depends on bucket determination, can run in parallel with build-image
+
+# ==============================================================================
+# Deploy to Staging Environment
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: 'deploy-staging'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'nf-site-monolith-staging'
+  - '--image'
+  - 'gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG}'
+  - '--region'
+  - 'us-east1'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
+  - '--vpc-connector'
+  - 'redis-connector'
+  - '--set-env-vars'
+  - 'REDIS_URL=redis://10.83.184.211:6379'
+  - '--service-account'
+  - '690802609278-compute@developer.gserviceaccount.com'
+  waitFor: ['push-image', 'sync-assets']
+
+# Default substitutions (can be overridden with --substitutions)
+substitutions:
+  _TAG: 'latest'
+
+# Increase timeout as this is a complex build
+timeout: '1200s'

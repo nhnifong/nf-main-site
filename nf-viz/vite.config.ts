@@ -1,4 +1,3 @@
-// File relevant only to local development.
 // when vite server is running, forwards any requests for backend API to port 8080 where fastAPI is presumed to be running
 
 import { defineConfig } from 'vite'
@@ -27,6 +26,9 @@ export default defineConfig({
         // We list every HTML file we want Vite to process here
         main: resolve(__dirname, 'index.html'),
         playroom: resolve(__dirname, 'playroom.html'),
+        company: resolve(__dirname, 'company.html'),
+        future: resolve(__dirname, 'future.html'),
+        stringmanpilot: resolve(__dirname, 'stringman-pilot.html'),
       }
     }
   }

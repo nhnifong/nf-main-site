@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <title>Stringman - Future Roadmap</title>
+    <style>
+        /* --- RESET & TYPOGRAPHY --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #e0e0e0;
+            line-height: 1.6;
+            background-color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        /* --- UTILITY NAVBAR --- */
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 100;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #7cdbfb;
+            text-decoration: underline;
+        }
+
+        .title-section {
+            position: relative;
+            height: 30vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            padding: 0 20px;
+        }
+
+        .title-section h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, #7cdbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-section p {
+            font-size: 1.5rem;
+            max-width: 600px;
+            color: #aaa;
+        }
+
+        /* --- ROADMAP SECTIONS --- */
+        .section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            border-bottom: 1px solid #333;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        /* Content Layout */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        /* Alternate Layout */
+        .section:nth-child(even) .roadmap-grid {
+            direction: rtl; /* simple way to swap columns visually */
+        }
+        
+        .section:nth-child(even) .roadmap-grid > * {
+            direction: ltr; /* reset text direction */
+        }
+
+        .text-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #7cdbfb;
+        }
+
+        .text-content ul {
+            list-style: none;
+        }
+
+        .text-content li {
+            margin-bottom: 25px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .text-content li::before {
+            content: "•";
+            color: #7cdbfb;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .text-content strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .image-content img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            transition: transform 0.3s ease;
+        }
+
+        .image-content img:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .title-section h1 { font-size: 3rem; }
+            .roadmap-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                direction: ltr !important; /* disable alternation on mobile */
+            }
+            .section { padding: 60px 20px; }
+            .image-content { order: -1; } /* Images always on top on mobile */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="https://nhnifong.github.io/neufangled-site-2/">Docs</a>
+        <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
+        <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
+        <a href="/company">Company</a>
+    </nav>
+
+    <section class="title-section">
+        <h1>What's Next</h1>
+        <p>The roadmap for Stringman, from upcoming software releases to the next generation of hardware.</p>
+    </section>
+
+    <!-- Events & Demos -->
+    <section class="section">
+        <div class="roadmap-grid">
+            <div class="text-content">
+                <h3>Events & Demos</h3>
+                <ul>
+                    <li>
+                        <strong>Monthly Demo Days</strong>
+                        I am planning monthly public demo days to let you see Stringman in action. These will begin as soon as we secure a suitable public venue for installation. If you operate a public establishment and are interested in hosting a demo, please get in touch.
+                    </li>
+                    <li>
+                        <strong>Raleigh-Durham Startup Week</strong>
+                        Neufangled Robotics will be present at <a href="https://www.raleighdurhamstartupweek.com/">Raleigh-Durham Startup Week</a> on April 20-24, 2026. I'll be there personally with a prototype you can examine. Come say hi and grab some stickers.
+                    </li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/demo_days.png" alt="Events and Demos">
+            </div>
+        </div>
+    </section>
+
+    <!-- Software Features -->
+    <section class="section">
+        <div class="roadmap-grid">
+            <div class="text-content">
+                <h3>Software Evolution</h3>
+                <ul>
+                    <li>
+                        <strong>Remote Web Interface</strong>
+                        The "cockpit" is moving to the cloud. In the next few weeks, we are launching a comprehensive web interface that allows for completely remote operation of your robot from anywhere in the world. In addition, whe offline LAN-only mode will always be fully supported.
+                    </li>
+                    <li>
+                        <strong>Project "Playroom"</strong>
+                        We will soon be opening a special public-access robot, codenamed "Playroom," which users will be able to drive remotely for two minutes at a time. This will serve as a stress test for our new remote stack and let you try before you buy.
+                    </li>
+                    <li>
+                        <strong>Advanced Dataset Management</strong>
+                        Making Stringman's AI effective requires a variety of data. We are making the target selection system more robust, introducing the ability to build distinct Public and Private datasets. The Public set will ship as a baseline for all new robots, while your Private set allows the robot to learn the specific objects and quirks of your own home.
+                    </li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/web_control_panel.png" alt="Software Features">
+            </div>
+        </div>
+    </section>
+
+    <!-- Hardware Updates -->
+    <section class="section">
+        <div class="roadmap-grid">
+            <div class="text-content">
+                <h3>Next-Gen Hardware</h3>
+                <p style="margin-bottom: 20px; color: #aaa;">
+                    While the <a href="stringman-pilot">Pilot edition</a> is being manufactured for early adopters, I am already working on the next hardware revision.
+                </p>
+                <ul>
+                    <li>
+                        <strong>Consolidated Anchor Modules</strong>
+                        Rectangular CDPRs need four pull points, but since the lines have such low stretch and friction, the motors don't actually need to be at the corners. I am merging pairs of anchors into single components to save cost and complexity, while using eyelets in the adjacent corners to maintain ideal geometry.
+                    </li>
+                    <li>
+                        <strong>High-Torque BLDC Motors</strong>
+                        Moving away from steppers, the next generation will utilize Brushless DC (BLDC) motors. This provides a roughly 4x increase in torque and a more favorable torque curve. We are targeting a payload capacity of around 4kg.
+                    </li>
+                    <li>
+                        <strong>Redesigned Gripper Architecture</strong>
+                        The hanging "winch" design is being retired in favor of a rigid tube linkage that places the gripper about 2 feet below the gantry. Combined with a new wrist degree-of-freedom (DoF) and smart servos (similar to the Lerobot SO-101), this offers significantly better stability and control.
+                    </li>
+                    <li>
+                        <strong>Electronics Consolidation</strong>
+                        To improve reliability and lower costs, all gripper electronics are being merged into a single, custom-designed PCB.
+                    </li>
+                    <li>
+                        <strong>Aesthetic Overhaul</strong>
+                        Since this robot lives on your wall, it needs to look good. I am redesigning the docking station to be more visually appealing. While we joked about a cuckoo clock design, expect something tasteful that blends well with home decor.
+                    </li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/onshape_v2.png" alt="Hardware Updates">
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="text-content">
+            <strong>Subscribe on Youtube for more</strong>
+        </div>
+        <div class="roadmap-grid">
+            <div class="image-content">
+                <iframe width="960" height="540" src="https://www.youtube.com/embed/yTLdWOAkQaQ?si=etZh_68fhX6DyNUV" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

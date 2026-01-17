@@ -1,6 +1,10 @@
 services:
   web:
-    build: .
+    build:
+      context:
+        .
+      # args: # use this to test bucket prefix substitution or leave commented out to serve assets from the container.
+      #   ASSET_BUCKET_URL: https://storage.googleapis.com/nf-site-assets-staging
     ports:
       - "8080:8080"
     environment:

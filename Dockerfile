@@ -1,5 +1,12 @@
+ARG ASSET_BUCKET_URL
+
 # first stage builds frontend and stores it in /dist
 FROM node:20 as build-frontend
+
+# redeclare argument inside nested context
+ARG ASSET_BUCKET_URL
+ENV VITE_ASSET_BUCKET_URL=$ASSET_BUCKET_URL
+
 WORKDIR /app
 
 # Copy protos first so they are available at /app/protos
@@ -14,7 +21,10 @@ RUN npm install
 # Copy source
 COPY ./nf-viz .
 
-# build
+RUN echo "ASSET_BUCKET_URL is $ASSET_BUCKET_URL"
+RUN echo "VITE_ASSET_BUCKET_URL is $VITE_ASSET_BUCKET_URL"
+
+# build frontend with env var
 # This should successfully find "../protos" relative to "/app/nf-viz"
 RUN npm run build
 

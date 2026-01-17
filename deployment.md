@@ -3,23 +3,19 @@ To be run in repo root in cloud shell
 
 ## Build and push monolithic site
 
-    gcloud builds submit --tag gcr.io/nf-web-480214/nf-site-monolith:1.2.0 .
-
-Deploy site monolith to cloud run
+Increase the tag version number and build and deploy to staging
 
 ```
-gcloud run deploy nf-site-monolith-staging \
-  --image gcr.io/nf-web-480214/nf-site-monolith:1.2.0 \
-  --platform managed \
-  --region us-east1 \
-  --allow-unauthenticated \
-  --vpc-connector redis-connector \
-  --set-env-vars REDIS_URL=redis://10.83.184.211:6379
+gcloud builds submit --config=cloudbuild-step1.yaml --substitutions=_TAG=1.4.0 .
 ```
 
-Push images to bucket
+Verify staging looks fine https://nf-site-monolith-staging-690802609278.us-east1.run.app/
 
-    gsutil -m rsync -r nf-viz/public/assets gs://nf-site-assets-staging/assets
+Deploy to production
+
+```
+gcloud builds submit --config=cloudbuild-step2.yaml --substitutions=_TAG=1.4.0 .
+```
 
 ## Set up redis
 
