@@ -303,111 +303,123 @@
             <p class="shipping-note">
                 Ships in 5-8 days within the United States
             </p>
-                
-            <script async
-              src="https://js.stripe.com/v3/buy-button.js">
-            </script>
-
-            <stripe-buy-button
-              buy-button-id="buy_btn_1SMXtbCIW3Ilocb5T8liPv3n"
-              publishable-key="pk_live_51JYZ0uCIW3Ilocb5y7EkW5LJjzUJSwzWCguVaABSLBorbRxfhsG1SH4S7xZdPthayAJLHSttrPfTWPfJvcPtPcw600OHVi585G"
-            >
-            </stripe-buy-button>
             
-            <!-- Detailed Description -->
-            <section class="details-section">
-                <div class="hidden-xs" data-bind="css: { 'hidden-xs': !mobileReadMore() }">
-                    <h3><strong>The affordable robot with room-scale reach</strong></h3>
-                    <p>This robot's ultimate purpose is to save you time on household chores. And because not every job needs a humanoid form and 90 DOFs, a simple cable-driven parallel robot is all it takes to tidy your floor by putting trash or laundry in designated bins.</p>
-                    <p>Stringman stays completely off the floor, so navigating obstacles is not the main challenge. When not in use, it can be parked up above head level on a wall mounted dock.</p>
-                    <p>It’s designed to grip and drop clutter (up to 1kg) into a bin, laundry hamper, or trash can with a max travel speed of 0.25 m/s.</p>
-                    <p>Get up and running in an afternoon. Just mount components to the wall and run calibration. You can even download and run the open source control panel now for a preview.</p>
-                    <p>Control via a gamepad lets you pick up anything in the room and bring it to you (or drop it on someone's head). AI integration is optional, no software or AI expertise is needed to to drive it around.</p>
-                    <p>Note: This is a Pilot Launch. While the hardware is finalized, the software is in active development. This is your chance to own the platform, contribute to the data, and train your own models.</p>
-                    <hr>
-                    <h3><strong>At a Glance</strong></h3>
-                    <ul>
-                        <li><strong>Unparalelled Reach:</strong> Hangs from four ceiling anchors, giving it full access to any rectangular room.</li>
-                        <li><strong>Teleoperation:</strong> Directly control the gripper's location using either keyboard or gamepad.</li>
-                        <li><strong>Light Two-fingered Gripper:</strong> Lifts up to 1kg in motion. Onboard finger pressure sensor provides feedback when using AI models.</li>
-                        <li><strong>Low latency 5-Camera Vision:</strong> Four cameras on the anchors and a fifth on the gripper allow the robot to locate itself, identify targets, and home in for a perfect grab.</li>
-                        <li><strong>No Battery, No Charging:</strong> Powered by a wire from one anchor, this robot is always ready to run. No downtime for charging.</li>
-                        <li><strong>Documentation:</strong> <a href="https://nhnifong.github.io/neufangled-site-2/">Complete guides</a> for assembling, operating, and troubleshooting the robot. </li>
-                    </ul>
-                    <hr>
-                    <h3><strong>Intuitive Control Panel</strong></h3>
-                    <p>The Stringman control panel gives visually intuitive control over every aspect of the robot:</p>
-                    <ul>
-                        <li><strong>3D work space:</strong> A model of the robot's work area, gripper position, and line tightness.</li>
-                        <li><strong>Calibration:</strong> Activate the automatic calibration process to adapt the control parameters to your space.</li>
-                        <li><strong>Camera Feeds:</strong> Observe from the point of view of any camera on the robot.</li>
-                        <li><strong>Lerobot Mode:</strong> Record datasets or enable full control or from a trained LeRobot policy.</li>
-                    </ul>
-                    <hr>
-                    <h3><strong>System Requirements</strong></h3>
-                    <ul>
-                        <li><strong>Local PC Required:</strong> The control panel must run on a computer on the same Local Area Network (LAN).</li>
-                        <li><strong>Linux OS:</strong> The control panel has only been tested on Ubuntu Linux. However, windows and mac compatibility is currently in development.</li>
-                        <li><strong>PC Specs:</strong> A decent computer (such as a gaming PC) with at least <strong>8 cores</strong> is recommended. Nearly all computation is done on the host machine. The Raspberry Pi Zero 2W's perform only local video streaming and motor control occuring on individual robot components.</li>
-                        <li><strong>Ample lighting:</strong> The room the robot is to be installed in should have consistent and ample lighting.</li>
-                    </ul>
-                    <hr>
-                    <h3><strong>What's in the Box</strong></h3>
-                    <p>This listing is for the <strong>fully assembled robot</strong>, which includes:</p>
-                    <ul>
-                        <li><strong>Four Anchor Modules:</strong> These units secure to the studs in your room's corners. They contain the NEMA 17 steppers, a Raspberry Pi Zero 2W and Camera Module 3, all hidden by a paintable, crown-molding-style cover.</li>
-                        <li><strong>One Gripper Module:</strong> This is the "business end," featuring a Raspberry Pi Zero 2W, Camera module 3, laser rangefinder, inertial measurement unit (IMU), and high-torque (35kg.cm) Injora servo motors.</li>
-                        <li><strong>One Gantry Module:</strong> The passive component where the lines meet which displays april tags on four sides. Looks like a cyberpunk lampshade.</li>
-                        <li><strong>Cabling:</strong> Anchor spools are pre-wound with white braided fishing line and a low friction, low memory, low visibility, low weight, high tension power tether wire.</li>
-                        <li><strong>Wireless E-Stop:</strong> The robot ships with an off-the-shelf wireless outlet switch. This low-tech "emergency stop" can kill the power to all robot components instantly, independent of any software.</li>
-                    </ul>
-                    <hr>
-                    <h3><strong>Optional AI Control</strong></h3>
-                    <p>Stringman has been designed from the beginning with teleoperation and AI control as the end goal but it is still in active development</p>
-                    <ul>
-                        <li><strong>Dataset collection mode:</strong> In this mode, you control the bot with a gamepad and collect example of some task which you want it to perform autonomously.</li>
-                        <li><strong>Training:</strong> This can be done outside the control panel, either on google compute engine with a ipython notebook, or on a local Nvidia GPU. Similar to the Lerobot SO101 arm, an ACT policy can be trained on a 4090 overnight.</li>
-                        <li><strong>Inference:</strong> Use a model trained on a specific task to control the robot. Inference can be performed without a GPU. Under the current architecture inference is also divided into episodes started and stopped by the user.</li>
-                    </ul>
-                    <p>Full disclosure, at this stage, I do not yet have on offer a trained model that can perform a useful task and generalize to new rooms.
-                    To do so will require a greater variety of data. If you are capable and interested in contributing episodes, please get in touch.</p>
-                    <hr>
-                    <h3><strong>Customization</strong></h3>
-                    <p>To suit your room layout, at checkout you will be asked to provide a diagram of your room or otherwise specify which type of anchor modules you need (corner, flat looking left, or flat looking right). I will email you to confirm the choice of modules is appropriate before shipping. this does not affect the price.</p>
-                    <p>You may also provide the wifi credentials of the network you want your robot to connect to. I reccomend letting me preconfigure this but I provide <a href="https://github.com/nhnifong/cranebot3-firmware/blob/pilot/add_wifi_config.sh">a script</a> that will configure the wifi network that can be run on a linux machine with each component's SD card inserted one at a time.</p>
-                    <p>The gripper face plate is shipped in the pictured copper color, but I will print it in other colors at your request if I have the filament, just describe what you'd like in the extra comments box at checkout.</p>
-                    <p>If you are thinking of replacing the gripper with an end effector of your own design, you absolutely can. the tether can support 1kg in motion and somewhat more at rest, and supplies 24v at a maximum current of 500mA.</p>
-                    <hr>
-                    <h3><strong>Early Adopter Benefits</strong></h3>
-                    <p>Your support as an early adopter and participant in the Stringman Pilot launch is invaluable and for that you deserve to be repaid in kind.</p>
-                    <p>Purchasing Stringman Pilot entitles you to a <strong>permanent 20% discount</strong> on any subsequent robot designed by Neufangled Robotics in the future.</p>
-                </div>
-            </section>
+            <script async
+            src="https://js.stripe.com/v3/buy-button.js">
+        </script>
+
+        <stripe-buy-button
+        buy-button-id="buy_btn_1SMXtbCIW3Ilocb5T8liPv3n"
+        publishable-key="pk_live_51JYZ0uCIW3Ilocb5y7EkW5LJjzUJSwzWCguVaABSLBorbRxfhsG1SH4S7xZdPthayAJLHSttrPfTWPfJvcPtPcw600OHVi585G"
+        >
+    </stripe-buy-button>
+    
+    <!-- Detailed Description -->
+    <section class="details-section">
+        <div class="hidden-xs" data-bind="css: { 'hidden-xs': !mobileReadMore() }">
+            
+            <h1 id="stringman-a-room-scale-cable-robot">Stringman: A Room-Scale Cable Robot</h1>
+            <p><strong>Stringman</strong> is a ceiling-mounted, cable-driven parallel robot (CDPR) designed for researchers, hobbyists, and engineers who want to explore room-scale manipulation without the constraint of an arm clamped to a desk or the complexity of humanoid navigation</p>
+            <p>By utilizing a four-anchor overhead architecture, Stringman remains entirely off the floor, offering a unique sandbox for <strong>Imitation Learning (IL)</strong>, <strong>Teleoperation</strong>, and <strong>Home Automation</strong> experimentation on more than just desk toys. The work area can be an entire room.<br>
+            Why the ceiling? Avoiding the floor means avoiding navigation, so you can focus on higher level tasks and start automating the organization of objects in the room while keeping it low cost.</p>
+            <h3 id="the-platform"><strong>The Platform</strong></h3>
+            <p>Stringman is an open source hardware platform and software stack. It is designed to be an affordable, extensible entry point for domestic robotics.</p>
+            <ul>
+                <li><strong>Kinematics:</strong> 4-cable parallel wire system.  </li>
+                <li><strong>Payload:</strong> 750g dynamic lifting capacity (specific capacity depends on end effector speed and altitude.)  </li>
+                <li><strong>Workspace:</strong> Full rectangular room coverage; docks at ceiling height when idle.  </li>
+                <li><strong>Compute:</strong> External. Robot components run on Raspberry Pi Zero 2Ws streaming video to a host machine running the motion controller.</li>
+            </ul>
+            <hr>
+            <h3 id="technical-specifications"><strong>Technical Specifications</strong></h3>
+            <div class="md-typeset__scrollwrap"><div class="md-typeset__table"><table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Feature</th>
+                        <th style="text-align: left;">Specification</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: left;"><strong>Vision System</strong></td>
+                        <td style="text-align: left;">5-Camera Array (4x Anchors, 1x End-Effector) for global localization and target identification.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;"><strong>End-Effector</strong></td>
+                        <td style="text-align: left;">Two-fingered servo gripper with integrated finger pressure sensor, IMU, and laser rangefinder.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;"><strong>Anchors</strong></td>
+                        <td style="text-align: left;">4x NEMA 17 Stepper Motors with Makerbase MKS42C controllers, housed in "crown-molding" style enclosures.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;"><strong>Power</strong></td>
+                        <td style="text-align: left;">Each component powered independently with 24V from the nearest outlet. Continuous tethered power (24V) to the gripper via one of the support lines.</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;"><strong>Safety</strong></td>
+                        <td style="text-align: left;">Independent wireless hardware E-Stop to instantly kill power to all modules.</td>
+                    </tr>
+                </tbody>
+            </table></div></div>
+            <hr>
+            <h3 id="control-intelligence"><strong>Control &amp; Intelligence</strong></h3>
+            <p>Stringman is built for experimentation. The <strong>Stringman motion controller</strong> is the brain of the robot, running headless on a host machine. The robot can be controlled by connecting to it’s protobuf-based telemetry server. Two UI’s are available for 3D visualization of the workspace, tension monitoring, and automatic calibration. One, a LAN only local application, and a web based control panel that uses Neufangled Robotic’s servers to to allow secure access to your robot from anywhere.</p>
+            <p>Stringman currently utilizes a custom control stack in which a model for identifying targets, a model for centering the gripper, and a procedure for target-pick-and-place are combined for a pseudo-intelligent laundry pickup behavior out of the box</p>
+            <ul>
+                <li><strong>Intuitive Teleop:</strong> Use a gamepad to navigate the room. The system handles the complex inverse kinematics of the four-cable system for you.  </li>
+                <li><strong>Custom control:</strong> The nf_robot python module makes it easy to hook into the robot's state and write your own high-level behaviors.  </li>
+                <li><strong>The Roadmap:</strong> We are actively working to re-integrate <strong>LeRobot</strong> support. The goal is to allow users to once again record datasets for ACT and Diffusion policies using our new, lower latency telemetry protocol.</li>
+            </ul>
+            <hr>
+            <h3 id="pilot-launch-disclosure"><strong>Pilot Launch Disclosure</strong></h3>
+            <p>This is a <strong>Pilot Launch</strong>. Both hardware and software are in active development. We are looking for "pioneer" users who want to try a new robot, share datasets, and provide feedback that will help us eventually create a fully autonomous household utility.</p>
+            <p><strong>Note:</strong> The current "out of the box" autonomous behavior is to pick up laundry and drop it into the hamper with a hybrid approach. This platform is for those who are ok with trying something that may not always work, downloading the latest updates and trying things again, or training models themselves.</p>
+            <p>This listing is for a fully assembled Stringman consisting of several components, ready to mount on the wall. Build kits are also available if you want to print and assemble it.</p>
+            <hr>
+            <h3 id="system-requirements"><strong>System Requirements</strong></h3>
+            <ul>
+                <li><strong>Host PC:</strong> A dedicated machine (Ubuntu Linux recommended) with 6+ cores. All image processing occur here. GPU accelerated inference is ideal, but the CPU fallback is still workable at 1hz since neither target nor camera are moving in this unique design.  </li>
+                <li><strong>Environment:</strong> Consistent and strong indoor lighting in the work area is needed to maintain high precision.</li>
+            </ul>
+            <hr>
+            <h3 id="appearance-and-livability"><strong>Appearance and Livability</strong></h3>
+            <ul>
+                <li><strong>Parked out of reach</strong>: The support lines remain connected when powered off and hang taught across the ceiling of the room. They are thin and very hard to see from a distance, and out of reach when parked. The can be disconnected using fishing “speed clips” if needed.  </li>
+                <li><strong>Crown moulding look:</strong> The spool anchors have a decorative cover that looks like white crown moulding to blend in. They are intended to be mounted to studs with wood screws. If removed, holes would need to be spackled and painted.  </li>
+                <li><strong>Gripper customization:</strong> The gripper face shell is shipped in copper silk PLA but is easy to reprint in any color you like. STLs are provided on the <a href="../downloads/">downloads page</a>.</li>
+            </ul>
+            <hr>
+            <h3 id="early-adopter-perks"><strong>Early Adopter Perks</strong></h3>
+            <p><strong>Legacy Discount:</strong> All Pilot Launch supporters receive a <strong>permanent 10% discount</strong> on all future Neufangled Robotics hardware.</p>
 
         </div>
     </section>
 
-    <script>
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.gallery-slide');
+</div>
+</section>
 
-        function changeSlide(direction) {
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.gallery-slide');
+
+    function changeSlide(direction) {
             // Remove active class from current
-            slides[currentSlide].classList.remove('active');
+        slides[currentSlide].classList.remove('active');
 
             // Calculate new index
-            currentSlide += direction;
+        currentSlide += direction;
 
             // Loop logic
-            if (currentSlide >= slides.length) {
-                currentSlide = 0;
-            } else if (currentSlide < 0) {
-                currentSlide = slides.length - 1;
-            }
+        if (currentSlide >= slides.length) {
+            currentSlide = 0;
+        } else if (currentSlide < 0) {
+            currentSlide = slides.length - 1;
+        }
 
             // Add active class to new
-            slides[currentSlide].classList.add('active');
-        }
-    </script>
+        slides[currentSlide].classList.add('active');
+    }
+</script>
 </body>
 </html>
