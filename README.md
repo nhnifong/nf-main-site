@@ -9,7 +9,7 @@ Run all components (control_plane, media_gateway, redis) at once with docker com
 docker compose up --build
 ```
 
-### Media gateway
+### Run media gateway in isolation
 
 build
 ```

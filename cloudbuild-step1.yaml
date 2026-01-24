@@ -119,6 +119,8 @@ steps:
   - '--platform'
   - 'managed'
   - '--allow-unauthenticated'
+  - '--timeout'
+  - '3600' # allow websocket connections to be open for up to 1 hour.
   - '--vpc-connector'
   - 'redis-connector'
   - '--set-env-vars'
