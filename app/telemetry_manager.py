@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import traceback
 from typing import Dict, List
 from fastapi import WebSocket
 import redis.asyncio as redis
@@ -27,7 +28,6 @@ class TelemetryManager:
         self.listen_task = None
 
     async def connect(self):
-        """Initialize Redis connections."""
         # One connection for publishing binary telemetry
         self.pub_redis = redis.from_url(self.redis_url, decode_responses=False)
         # Separate connection for subscribing (blocking)
@@ -35,25 +35,20 @@ class TelemetryManager:
         # Third connection for regular keys
         self.decoding_redis = redis.from_url(self.redis_url, decode_responses=True)
         
-        try:
-            await self.pub_redis.ping()
-            await self.sub_redis.ping()
-        except Exception as e:
-            logger.error(f"Could not connect to Redis at {self.redis_url}")
-            raise e
+        # Ping to ensure connectivity at startup
+        await self.pub_redis.ping()
+        await self.sub_redis.ping()
         
-        # Start background listener
         self.listen_task = asyncio.create_task(self.listen_to_redis())
-        logger.info("TelemetryManager connected to Redis")
+        logger.info(f"TelemetryManager initialized. Listener task started.")
 
     async def disconnect(self, robot_id: str, client_type: str, websocket: WebSocket = None):
         if client_type == "robot":
-            if robot_id in self.active_robot_connections:
-                del self.active_robot_connections[robot_id]
+            self.active_robot_connections.pop(robot_id, None)
         else:
-            if robot_id in self.active_user_connections:
-                if websocket in self.active_user_connections[robot_id]:
-                    self.active_user_connections[robot_id].remove(websocket)
+            connections = self.active_user_connections.get(robot_id, [])
+            if websocket in connections:
+                connections.remove(websocket)
 
     async def mark_robot_online(self, robot_id: str, online: bool):
         await self.decoding_redis.hset(f"robot:{robot_id}:uplink_state", 'online', 'true' if online else 'false')
@@ -92,9 +87,9 @@ class TelemetryManager:
                         )
         except Exception as e:
             logger.error(f"Robot {robot_id} connection lost: {e}")
-            await self.disconnect(robot_id, "robot")
             raise e
         finally:
+            await self.disconnect(robot_id, "robot")
             await self.mark_robot_online(robot_id, False)
 
 
@@ -176,43 +171,50 @@ class TelemetryManager:
 
     async def listen_to_redis(self):
         """
-        Background task: Listens to both state and commands Redis channels.
-        - If message on 'state:{robot_id}': Broadcast to local Users.
-        - If message on 'commands:{robot_id}': Send to local Robot.
+        Background task with automatic reconnection logic to listen to robot state channel and
+        filter for bots that are connected to this instance.
         """
-        psub = self.sub_redis.pubsub()
-        await psub.psubscribe("state:*", "commands:*")
+        retry_delay = 1
+        while True:
+            try:
+                psub = self.sub_redis.pubsub()
+                async with psub as p:
+                    await p.psubscribe("state:*", "commands:*")
+                    logger.info("Redis Pub/Sub listener subscribed to channels.")
+                    
+                    # Reset delay on successful subscription
+                    retry_delay = 1 
 
-        async for msg in psub.listen():
-            if msg["type"] != "pmessage":
-                continue
-            
-            # decode channel name since it's text
-            channel = msg["channel"].decode("utf-8")
-            # leave payload as binary (serialized protobuf)
-            payload = msg["data"]
-            
-            # channel is like "state:robot_01" or "commands:robot_01"
-            prefix, robot_id = channel.split(":", 1)
+                    async for msg in p.listen():
+                        if msg["type"] != "pmessage":
+                            continue
+                        
+                        channel = msg["channel"].decode("utf-8")
+                        payload = msg["data"]
+                        prefix, robot_id = channel.split(":", 1)
 
-            if prefix == "state":
-                # Broadcast to all users connected to this server instance watching this robot
-                if robot_id in self.active_user_connections:
-                    # Copy list to avoid concurrent modification issues
-                    for ws in self.active_user_connections[robot_id][:]:
-                        try:
-                            await ws.send_bytes(payload)
-                        except:
-                            # Stale connection
-                            pass
-                            
-            elif prefix == "commands":
-                # Forward to the Robot if it is connected to this server instance
-                if robot_id in self.active_robot_connections:
-                    ws = self.active_robot_connections[robot_id]
-                    try:
-                        await ws.send_bytes(payload)
-                    except:
-                        pass
+                        if prefix == "state":
+                            if robot_id in self.active_user_connections:
+                                for ws in self.active_user_connections[robot_id][:]:
+                                    try:
+                                        await ws.send_bytes(payload)
+                                    except Exception:
+                                        # Stale WS, cleanup handled by handle_user_connection
+                                        pass
+                                        
+                        elif prefix == "commands":
+                            if robot_id in self.active_robot_connections:
+                                ws = self.active_robot_connections[robot_id]
+                                try:
+                                    await ws.send_bytes(payload)
+                                except Exception:
+                                    pass
+
+            except Exception:
+                # Log full traceback to identify why the listener died
+                logger.error(f"Telemetry listener crashed. Retrying in {retry_delay}s...\n{traceback.format_exc()}")
+                await asyncio.sleep(retry_delay)
+                # Exponential backoff to avoid hammering Redis during an outage
+                retry_delay = min(retry_delay * 2, 60)
 
 telemetry_manager = TelemetryManager()
