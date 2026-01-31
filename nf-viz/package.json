@@ -7,7 +7,9 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "npm run proto && tsc && vite build",
-    "proto": "mkdir -p src/generated && pbjs -t static-module -w es6 -p ../protos -o src/generated/proto_bundle.js ../protos/*.proto && pbts -o src/generated/proto_bundle.d.ts src/generated/proto_bundle.js"
+    
+    "//comment": "Run python sync and build JS from the temp_protos folder.",
+    "proto": "python3 sync_protos.py && mkdir -p src/generated && pbjs -t static-module -w es6 -p src/temp_protos -o src/generated/proto_bundle.js src/temp_protos/*.proto && pbts -o src/generated/proto_bundle.d.ts src/generated/proto_bundle.js"
   },
   "devDependencies": {
     "@types/three": "^0.182.0",
