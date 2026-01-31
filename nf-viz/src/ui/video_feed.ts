@@ -21,6 +21,7 @@ export class VideoFeed {
     private targetImageCoords: (THREE.Vector2 | null)[] = [];
     private canvasSize: THREE.Vector2;
     private targetListManager: TargetListManager | null = null;
+    private gripperPredictions: nf.telemetry.IGripCamPredictions | null = null;
     
     // New Item State
     private newItemImageCoords: THREE.Vector2 | null = null;
@@ -42,7 +43,7 @@ export class VideoFeed {
 
     constructor(container: HTMLElement, tlm: TargetListManager | null = null) {
         this.container = container;
-        this.targetListManager = tlm;
+        this.targetListManager = tlm; // set to null for gripper video
         
         // Find video and canvas elements
         this.video = this.container.querySelector('video')!;
@@ -336,82 +337,210 @@ export class VideoFeed {
         this.video.load();
     }
 
+    public setGripperPredictions(data: nf.telemetry.IGripCamPredictions) {
+      // Feedback on the inference that was done on the gripper camera.
+      // should be shown with appropriate overlays on the camera feed
+      this.gripperPredictions = data;
+      this.draw();
+    }
+
     // Main draw loop of the canvas that shows targets over the video
     private draw() {
         // Clear frame
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (!this.targetListManager || !this.video.srcObject) { return; }
+        if (!this.video.srcObject) { return; }
 
-        const currentHoverId = this.targetListManager.getHoveredId();
-        const currentSelectedId = this.targetListManager.getSelectedId();
+        if (this.targetListManager) { 
+            // drawing for anchor cams.
 
-        // Draw Targets
-        this.targetImageCoords.forEach((screenPos, i) => {
-            const target = this.lastTargets[i];
-            const isDraggingThis = (this.isDragging && target.id === this.draggedTargetId);
-            
-            // If dragging this specific target, override position with draggedCurrentPos
-            let renderPos = screenPos;
-            if (isDraggingThis && this.draggedCurrentPos) {
-                renderPos = this.draggedCurrentPos;
-            }
+            const currentHoverId = this.targetListManager.getHoveredId();
+            const currentSelectedId = this.targetListManager.getSelectedId();
 
-            if (renderPos) {
-                const isHovered = (target.id === currentHoverId);
-                const isSelected = (target.id === currentSelectedId);
-
-                // color the stroke according to it's status in the robot's queue
-                let strokeColor = TargetColors.seen;
-                if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED) {
-                    strokeColor = TargetColors.movingTo;
-                } else if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP) {
-                    strokeColor = TargetColors.grasped;
+            // Draw Targets
+            this.targetImageCoords.forEach((screenPos, i) => {
+                const target = this.lastTargets[i];
+                const isDraggingThis = (this.isDragging && target.id === this.draggedTargetId);
+                
+                // If dragging this specific target, override position with draggedCurrentPos
+                let renderPos = screenPos;
+                if (isDraggingThis && this.draggedCurrentPos) {
+                    renderPos = this.draggedCurrentPos;
                 }
 
-                let lineWidth = 2;
+                if (renderPos) {
+                    const isHovered = (target.id === currentHoverId);
+                    const isSelected = (target.id === currentSelectedId);
 
-                // apply fill color according to mouse hover/select status
-                if (isSelected || isDraggingThis) {
-                    this.ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
-                    this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
-                } else if (isHovered) {
-                    this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-                    this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                    // color the stroke according to it's status in the robot's queue
+                    let strokeColor = TargetColors.seen;
+                    if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_SELECTED) {
+                        strokeColor = TargetColors.movingTo;
+                    } else if (target.status == nf.telemetry.TargetStatus.TARGETSTATUS_PICKED_UP) {
+                        strokeColor = TargetColors.grasped;
+                    }
+
+                    let lineWidth = 2;
+
+                    // apply fill color according to mouse hover/select status
+                    if (isSelected || isDraggingThis) {
+                        this.ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
+                        this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                    } else if (isHovered) {
+                        this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+                        this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                    }
+
+                    // Stroke
+                    this.ctx.strokeStyle = strokeColor;
+                    this.ctx.lineWidth = lineWidth;
+                    this.ctx.strokeRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+
+                    // Label
+                    if (target.id) {
+                        const label = target.id.substring(0, 8);
+                        this.ctx.fillStyle = strokeColor;
+                        this.ctx.fillText(label, renderPos.x + HALF_SIZE + 5, renderPos.y);
+                    }
+                }
+            });
+
+            if (this.newItemImageCoords) {
+                const x = this.newItemImageCoords.x;
+                const y = this.newItemImageCoords.y;
+                
+                if (this.newItemIsHovered) {
+                    this.ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                    this.ctx.fillRect(this.newItemImageCoords.x - HALF_SIZE, this.newItemImageCoords.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
                 }
 
-                // Stroke
-                this.ctx.strokeStyle = strokeColor;
-                this.ctx.lineWidth = lineWidth;
-                this.ctx.strokeRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = '#00FF00';
+                this.ctx.strokeRect(x - HALF_SIZE, y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
 
-                // Label
-                if (target.id) {
-                    const label = target.id.substring(0, 8);
-                    this.ctx.fillStyle = strokeColor;
-                    this.ctx.fillText(label, renderPos.x + HALF_SIZE + 5, renderPos.y);
-                }
+                const label1 = "Click again";
+                const label2 = "to add new";
+                this.ctx.fillStyle = '#00FF00';
+                this.ctx.fillText(label1, x + HALF_SIZE + 5, y);
+                this.ctx.fillText(label2, x + HALF_SIZE + 5, y + 10);
             }
-        });
+        } else if (this.gripperPredictions) {
+            // gripper overlays
 
-        if (this.newItemImageCoords) {
-            const x = this.newItemImageCoords.x;
-            const y = this.newItemImageCoords.y;
-            
-            if (this.newItemIsHovered) {
-                this.ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
-                this.ctx.fillRect(this.newItemImageCoords.x - HALF_SIZE, this.newItemImageCoords.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
-            }
+            const pred = this.gripperPredictions;
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
 
-            this.ctx.lineWidth = 2;
+            // 1. Calculate Predicted Target Position
+            // Assuming moveX/moveY are normalized displacements
+            const moveX = pred.moveX ?? 0;
+            const moveY = pred.moveY ?? 0;
+            const targetX = cx + (moveX * w);
+            const targetY = cy + (moveY * h);
+
+            // 2. Motion Vector (Green Arrow)
+            this.ctx.beginPath();
+            this.ctx.moveTo(cx, cy);
+            this.ctx.lineTo(targetX, targetY);
             this.ctx.strokeStyle = '#00FF00';
-            this.ctx.strokeRect(x - HALF_SIZE, y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+            this.ctx.lineWidth = 3;
+            this.ctx.stroke();
 
-            const label1 = "Click again";
-            const label2 = "to add new";
+            // Arrowhead
+            const arrowAngle = Math.atan2(targetY - cy, targetX - cx);
+            const headLen = 15;
+            this.ctx.beginPath();
+            this.ctx.moveTo(targetX, targetY);
+            this.ctx.lineTo(
+                targetX - headLen * Math.cos(arrowAngle - Math.PI / 6),
+                targetY - headLen * Math.sin(arrowAngle - Math.PI / 6)
+            );
+            this.ctx.lineTo(
+                targetX - headLen * Math.cos(arrowAngle + Math.PI / 6),
+                targetY - headLen * Math.sin(arrowAngle + Math.PI / 6)
+            );
+            this.ctx.lineTo(targetX, targetY);
             this.ctx.fillStyle = '#00FF00';
-            this.ctx.fillText(label1, x + HALF_SIZE + 5, y);
-            this.ctx.fillText(label2, x + HALF_SIZE + 5, y + 10);
+            this.ctx.fill();
+
+            // 3. Ideal Grip Angle (Capital "I" shape)
+            const gripAngle = pred.gripAngle ?? 0;
+            const gripLen = 50; 
+            const capWidth = 12;
+
+            this.ctx.save();
+            this.ctx.translate(targetX, targetY);
+            // Rotate so that 0 radians is Vertical (Up). 
+            // In Canvas, 0 is Right (X-axis). -PI/2 brings it to Up (-Y axis).
+            this.ctx.rotate(gripAngle - Math.PI / 2);
+
+            this.ctx.strokeStyle = '#00FFFF'; // Cyan
+            this.ctx.lineWidth = 4;
+
+            // Main Bar
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, -gripLen/2);
+            this.ctx.lineTo(0, gripLen/2);
+            this.ctx.stroke();
+
+            // Caps
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            // Top Cap
+            this.ctx.moveTo(-capWidth, -gripLen/2);
+            this.ctx.lineTo(capWidth, -gripLen/2);
+            // Bottom Cap
+            this.ctx.moveTo(-capWidth, gripLen/2);
+            this.ctx.lineTo(capWidth, gripLen/2);
+            this.ctx.stroke();
+            this.ctx.restore();
+
+            // 4. Probability Bars (Right Side)
+            const barW = 12;
+            const barH = 120;
+            const margin = 25;
+            const barX = w - margin - barW;
+            const gap = 30;
+
+            // -- Prob Target In View (Yellow) --
+            // Top half of right side
+            const pView = Math.max(0, Math.min(1, pred.probTargetInView ?? 0));
+            const viewY = cy - barH - (gap / 2);
+
+            this.ctx.strokeStyle = '#FFF';
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeRect(barX, viewY, barW, barH); // Outline
+
+            // Fill (Bottom up)
+            this.ctx.fillStyle = '#FFFF00';
+            const viewFillH = barH * pView;
+            this.ctx.fillRect(barX, viewY + (barH - viewFillH), barW, viewFillH);
+            
+            // Label
+            this.ctx.fillStyle = '#FFF';
+            this.ctx.font = '12px monospace';
+            this.ctx.textAlign = 'right';
+            this.ctx.fillText("TARGET", barX - 5, viewY + barH/2);
+
+
+            // -- Prob Holding (Black with White outline) --
+            // Bottom half of right side
+            const pHold = Math.max(0, Math.min(1, pred.probHolding ?? 0));
+            const holdY = cy + (gap / 2);
+
+            this.ctx.strokeStyle = '#FFF';
+            this.ctx.strokeRect(barX, holdY, barW, barH); // Outline
+
+            // Fill (Bottom up)
+            this.ctx.fillStyle = '#000000';
+            const holdFillH = barH * pHold;
+            this.ctx.fillRect(barX, holdY + (barH - holdFillH), barW, holdFillH);
+
+            // Label
+            this.ctx.fillStyle = '#FFF';
+            this.ctx.fillText("GRASP", barX - 5, holdY + barH/2);
         }
     }
 }

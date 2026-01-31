@@ -203,7 +203,10 @@ function connect() {
           handleVideoReady(update.videoReady);
         }
         else if (update.uplinkStatus) {
-          handleUplinkStatus(update.uplinkStatus)
+          handleUplinkStatus(update.uplinkStatus);
+        }
+        else if (update.gripCamPreditions) { // intentional mispelling
+          gripperVideo.setGripperPredictions(update.gripCamPreditions);
         }
 
 
