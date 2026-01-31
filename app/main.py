@@ -11,7 +11,6 @@ from pydantic import BaseModel
 from .telemetry_manager import telemetry_manager
 from .auth import validate_stream_auth, get_current_user_ws, get_current_robot_ws
 from .queue_manager import queue_manager
-from .models import User, Robot
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

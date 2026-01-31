@@ -4,7 +4,10 @@
 
     cd nf-viz
     npm install
-    npm build
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install nf_robot
+    npm run build
 
 ### Run locally
 

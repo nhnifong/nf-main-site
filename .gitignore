@@ -6,3 +6,5 @@ venv
 __pycache__/
 app/__pycache__/
 nf-viz/.vite/
+nf-viz/venv/
+nf-viz/src/temp_protos/

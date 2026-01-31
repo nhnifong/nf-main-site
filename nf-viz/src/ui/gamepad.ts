@@ -9,6 +9,8 @@ export class GamepadController {
     private readonly DEADZONE = 0.1; // 10% deadzone
     private readonly GAMEPAD_GRIP_DEG_PER_SEC = 90;
     private readonly GAMEPAD_WINCH_METER_PER_SEC = 0.2;
+    private readonly GAMEPAD_WRIST_DEG_PER_SEC = 2;
+
 
     // State Tracking
     public seatOrbitMode = true;
@@ -16,6 +18,7 @@ export class GamepadController {
     private robotPosition: { x: number, y: number } | null = null;
 
     private fingerAngle = 0;
+    private wristAngle = 0;
     private lastUpdateT = 0;
     private lastSendT = 0;
 
@@ -33,7 +36,7 @@ export class GamepadController {
     private keyStates: { [code: string]: boolean } = {};
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
-    private lastAction = new Float32Array(6); 
+    private lastAction = new Float32Array(7); 
 
     public targetListManager: TargetListManager | null = null
 
@@ -154,7 +157,7 @@ export class GamepadController {
                 y: (this.keys.has('KeyS') ? -1 : 0) + (this.keys.has('KeyW') ? 1 : 0)
             },
             rightStick: {
-                x: 0,
+                x: (this.keys.has('KeyZ') ? -1 : 0) + (this.keys.has('KeyX') ? 1 : 0),
                 y: 0
             },
             buttons: {
@@ -328,6 +331,11 @@ export class GamepadController {
             lineSpeed = this.GAMEPAD_WINCH_METER_PER_SEC;
         }
 
+        // Wrist Control (Right stick X)
+        let wristChange = input.rightStick.x * this.GAMEPAD_WRIST_DEG_PER_SEC;
+        this.wristAngle += wristChange
+        this.wristAngle = Math.max(-360*3, Math.min(360*3, this.wristAngle));
+
         // Rising Edge Detectors for Events
 
         // Start Button -> Episode Start/Stop
@@ -378,7 +386,7 @@ export class GamepadController {
         
         // Construct current action array for comparison: [vx, vy, vz, speed, winch, finger]
         // Note: We only care about direction if magnitude > 0
-        const currentAction = [vx, vy, vz, speed, lineSpeed, this.fingerAngle];
+        const currentAction = [vx, vy, vz, speed, lineSpeed, this.fingerAngle, this.wristAngle];
         
         const hasChanged = !this.arraysEqual(currentAction, this.lastAction);
         const isMoving = mag > 1e-3;
@@ -392,7 +400,8 @@ export class GamepadController {
                     direction: { x: vx, y: vy, z: vz },
                     speed: speed,
                     finger: this.fingerAngle,
-                    winch: lineSpeed
+                    winch: lineSpeed,
+                    wrist: this.wristAngle,
                 }
             }));
 

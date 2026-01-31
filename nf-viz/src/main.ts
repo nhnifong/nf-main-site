@@ -266,6 +266,7 @@ function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
     cables.forEach((cable, i) => {
       cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0)
     });
+    winchCable.update(gantry.position, gripper.grommet_pos, 0.0)
     // Inform input controller so it can calculate input orbits
     gamepad.setRobotPosition(data.gantryPosition.x!, data.gantryPosition.y!);
   }

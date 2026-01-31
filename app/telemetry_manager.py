@@ -6,7 +6,7 @@ from typing import Dict, List
 from fastapi import WebSocket
 import redis.asyncio as redis
 import os
-from .generated.nf import telemetry, control, common
+from nf_robot.generated.nf import telemetry, control, common
 
 from .queue_manager import queue_manager
 
