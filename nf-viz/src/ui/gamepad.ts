@@ -9,7 +9,7 @@ export class GamepadController {
     private readonly DEADZONE = 0.1; // 10% deadzone
     private readonly GAMEPAD_GRIP_DEG_PER_SEC = 90;
     private readonly GAMEPAD_WINCH_METER_PER_SEC = 0.2;
-    private readonly GAMEPAD_WRIST_DEG_PER_SEC = 2;
+    private readonly GAMEPAD_WRIST_DEG_PER_SEC = 70;
 
 
     // State Tracking
@@ -333,7 +333,7 @@ export class GamepadController {
 
         // Wrist Control (Right stick X)
         let wristChange = input.rightStick.x * this.GAMEPAD_WRIST_DEG_PER_SEC;
-        this.wristAngle += wristChange
+        this.wristAngle += wristChange * dt
         this.wristAngle = Math.max(-360*3, Math.min(360*3, this.wristAngle));
 
         // Rising Edge Detectors for Events
@@ -405,6 +405,8 @@ export class GamepadController {
                 }
             }));
 
+            console.log(this.wristAngle);
+
             // Update state
             for(let i=0; i<7; i++) this.lastAction[i] = currentAction[i];
             this.lastSendT = now;
@@ -417,7 +419,7 @@ export class GamepadController {
     private arraysEqual(a: number[], b: Float32Array): boolean {
         for (let i = 0; i < a.length; ++i) {
             // Use small epsilon for float comparison
-            if (Math.abs(a[i] - b[i]) > 1e-6) return false;
+            if (Math.abs(a[i] - b[i]) > 1e-2) return false;
         }
         return true;
     }
