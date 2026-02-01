@@ -406,7 +406,7 @@ export class GamepadController {
             }));
 
             // Update state
-            for(let i=0; i<6; i++) this.lastAction[i] = currentAction[i];
+            for(let i=0; i<7; i++) this.lastAction[i] = currentAction[i];
             this.lastSendT = now;
         }
 
