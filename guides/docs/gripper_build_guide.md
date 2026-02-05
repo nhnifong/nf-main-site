@@ -1,4 +1,4 @@
-# Gripper Build Guide
+# Pilot Gripper Build Guide
 
 Hardware Version: Pilot run
 

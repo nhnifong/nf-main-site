@@ -6,24 +6,40 @@ The source for both the servers which run on the raspberri pi's in the robot com
 
 **[cranebot-firmware on Github](https://github.com/nhnifong/cranebot3-firmware)**
 
-I do not yet have a bundled release of the control panel. it has to be run from the source according to the instructions in the [Desktop Setup Guide](desktop_setup_guide.md)
+I do not yet have a bundled release of the control panel. It can be run according to the instructions in the [Desktop Setup Guide](desktop_setup_guide.md)
 
-## STLs for 3D printing
+=== "Pilot Gripper"
 
-Compatible with the pilot release hardware kit
+	### STLs for 3D printing
 
- * **[Download STLs](assets/stringman_pilot_stls.zip)**
- * **[Print Guide](print_guide.md)**
+	 * **[Download STLs](assets/stringman_pilot_stls.zip)**
+	 * **[Print Guide](print_guide.md)**
 
-## CAD Design Document
+	#### CAD Design Document
 
-CAD for this project was done in Onshape
+	CAD for this project was done in Onshape
 
-**[Stringman Pilot in Onshape](https://cad.onshape.com/documents/ea96e0d2d8469b02fac4d6e6/w/25bbd77eeea8846326810e62/e/14939e56a0c1dbe418025bc0?configuration=List_uhAENovwJydxAX%3DDefault&renderMode=0&uiState=690d018b8fe16c0273a90399)**
+	**[Stringman Pilot in Onshape](https://cad.onshape.com/documents/ea96e0d2d8469b02fac4d6e6/w/25bbd77eeea8846326810e62/e/14939e56a0c1dbe418025bc0?configuration=List_uhAENovwJydxAX%3DDefault&renderMode=0&uiState=690d018b8fe16c0273a90399)**
 
-## BOM
+	#### BOM
 
-**[Bill Of Materials](https://docs.google.com/spreadsheets/d/1kLsbVjql81v7XJIGpkoWXCpJR9cWpTetd8mgG_NxFNU/edit?usp=sharing)**
+	**[Bill Of Materials](https://docs.google.com/spreadsheets/d/1kLsbVjql81v7XJIGpkoWXCpJR9cWpTetd8mgG_NxFNU/edit?usp=sharing)**
+
+=== "Arpeggio Gripper"
+
+	#### STLs for 3D printing
+
+	#### Arpeggio gripper, Pilot Anchors
+
+	 * **[Download STLs](assets/stringman_arp_gripper_pilot_anchors_stls.zip)**
+
+	#### CAD Design Document
+
+	Coming soon
+
+	#### BOM
+
+	Coming soon
 
 ## License
 

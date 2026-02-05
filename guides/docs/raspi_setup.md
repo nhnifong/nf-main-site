@@ -54,7 +54,7 @@ the password on the default stringman image is `Fo0bar!!`
 ### Setting a different wifi network
 
 At boot if none of the saved wifi networks can be connected to, the device will go into QR code checking mode with it's camera.
-Just hold up a new code.
+**Just hold up a new code**
 
 If that doesn't work in your scenario, insert the Micro SD card from a robot component in your PC. Confirm it is mounted at /media/$USER/rootfs
 run the following command from the cranebot3-firmware repo
