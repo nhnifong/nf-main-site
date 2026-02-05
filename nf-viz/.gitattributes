@@ -1,0 +1,2 @@
+public/assets/* filter=lfs diff=lfs merge=lfs -text
+public/assets/models/* filter=lfs diff=lfs merge=lfs -text
