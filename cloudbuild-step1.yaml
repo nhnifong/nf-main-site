@@ -57,6 +57,60 @@ steps:
     echo "$${TARGET_INACTIVE_BUCKET}" | sed 's|gs://|https://storage.googleapis.com/|' > /workspace/target_inactive_bucket_url.txt # ESCAPED: $$TARGET_INACTIVE_BUCKET
 
 # ==============================================================================
+# Build MkDocs and Replace URLs in docs
+# ==============================================================================
+- name: 'python:3.11-slim'
+  id: 'build-docs'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # Install dependencies
+    apt-get update && apt-get install -y graphviz
+    pip install -r guides/requirements.txt
+    
+    # Export the URL so the url_replacer.py hook can read it
+    export ASSET_BUCKET_URL=$(cat /workspace/target_inactive_bucket_url.txt)
+    
+    cd guides
+    wireviz docs/wires/wires.yml
+    # Build directly into the vite public folder
+    mkdocs build -d ../nf-viz/public/docs
+  waitFor: ['determine-buckets']
+
+# ==============================================================================
+# Sync Assets to the Inactive Bucket
+# ==============================================================================
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'sync-assets'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    # Read the inactive bucket name from the file
+    TARGET_INACTIVE_BUCKET=$(cat /workspace/target_inactive_bucket.txt)
+    echo "Syncing nf-viz/public/ to $${TARGET_INACTIVE_BUCKET}..."
+    # -d for delete extra files in dest, -r for recursive, -m for parallel
+    gsutil -m rsync -d -r nf-viz/public "$${TARGET_INACTIVE_BUCKET}"
+    echo "Asset sync complete for $${TARGET_INACTIVE_BUCKET}."
+  waitFor: ['build-docs']
+
+# ==============================================================================
+# Purge large files from public/ before building container
+# ==============================================================================
+- name: 'bash'
+  id: 'purge-heavy-assets'
+  args:
+  - '-c'
+  - |
+    # Remove the heavy stuff so it's not included in the Docker Image layers
+    # We keep the HTML/JS/CSS so FastAPI can still serve the shell of the site
+    rm -rf nf-viz/public/docs/images
+    rm -rf nf-viz/public/docs/assets/*.zip
+    rm -rf nf-viz/public/assets/
+  waitFor: ['sync-assets']
+
+# ==============================================================================
 # Build the Monolith Docker Image
 #    This image will be built to point to the INACTIVE bucket.
 # ==============================================================================
@@ -74,7 +128,7 @@ steps:
       -t gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG} \
       --build-arg ASSET_BUCKET_URL="$${INACTIVE_BUCKET_URL}" \
       .
-  waitFor: ['determine-buckets']
+  waitFor: ['purge-heavy-assets']
 
 # ==============================================================================
 # Push the Built Docker Image to Artifact Registry
@@ -83,25 +137,6 @@ steps:
   id: 'push-image'
   args: ['push', 'gcr.io/${PROJECT_ID}/nf-site-monolith:${_TAG}']
   waitFor: ['build-image']
-
-
-# ==============================================================================
-# Sync Assets to the Inactive Bucket
-# ==============================================================================
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: 'sync-assets'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    # Read the inactive bucket name from the file
-    TARGET_INACTIVE_BUCKET=$(cat /workspace/target_inactive_bucket.txt)
-    echo "Syncing assets from nf-viz/public/assets to $${TARGET_INACTIVE_BUCKET}/assets..." # ESCAPED: $$TARGET_INACTIVE_BUCKET
-    # -d for delete extra files in dest, -r for recursive
-    # Use -m for parallel (faster)
-    gsutil -m rsync -d -r nf-viz/public/assets "$${TARGET_INACTIVE_BUCKET}/assets" # ESCAPED: $$TARGET_INACTIVE_BUCKET
-    echo "Asset sync complete for $${TARGET_INACTIVE_BUCKET}." # ESCAPED: $$TARGET_INACTIVE_BUCKET
-  waitFor: ['determine-buckets'] # Only depends on bucket determination, can run in parallel with build-image
 
 # ==============================================================================
 # Deploy to Staging Environment
@@ -127,7 +162,7 @@ steps:
   - 'REDIS_URL=redis://10.83.184.211:6379'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com'
-  waitFor: ['push-image', 'sync-assets']
+  waitFor: ['push-image']
 
 # Default substitutions (can be overridden with --substitutions)
 substitutions:

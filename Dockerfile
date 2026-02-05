@@ -50,7 +50,7 @@ ENV PYTHONUNBUFFERED=1
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# opy Backend Code
+# Copy Backend Code
 COPY app ./app
 
 # Copy Built Frontend Assets from Stage 1

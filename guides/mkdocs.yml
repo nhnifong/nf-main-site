@@ -1,0 +1,37 @@
+site_name: Cranebot/Stringman Docs
+site_url: https://nhnifong.github.io/neufangled-site
+theme:
+  name: material
+  logo: icons/neufangled_icon_outline.png
+  favicon: icons/neufangled_icon_32.png
+  palette:
+    scheme: default
+    primary: indigo
+    accent: green
+  features:
+    - navigation.footer
+    - content.tabs.link
+extra:
+  social:
+    - icon: fontawesome/solid/hand-holding-dollar 
+      link: https://ko-fi.com/neufangled
+    - icon: fontawesome/brands/github
+      link: https://github.com/nhnifong/cranebot3-firmware/tree/main
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@overengineer7691
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/T5HEvxVgbA
+markdown_extensions:
+  - attr_list
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - footnotes
+plugins:
+  - glightbox
+extra_css:
+  - stylesheets/extra.css
+hooks:
+  - url_replacer.py
