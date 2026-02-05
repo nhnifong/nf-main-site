@@ -1,60 +1,94 @@
 # Usage Guide
 
-For installation and startup, refer to [Desktop Setup Guide](desktop_setup_guide.md)
+This guide covers the use of the web based control panel.
 
-### Connecting
+For installation and startup of the motion controller, refer to [Desktop Setup Guide](desktop_setup_guide.md)
 
-Whether starting the control panel first, or powering on the robot components first, the control panel should discover and connect to every component automatically. The status of the connection to each component is displayed above it.
+For the LAN-only local UI based on Ursina, see the [LAN-only guide](lan_only_guide.md)
 
-![](images/usage/image1.png){ loading=lazy, width=45% }
+## Getting Started
 
-After making the initial connection to a component, the control panel will attempt to connect to the video stream as well. The status of all video stream connections is indicated in the bottom left. An unconnected video stream is indicated by a hollow monitor icon, and a connected stream is indicated by a filled monitor icon.
+The first thing you need to do after hanging up stringman and connecting to it, is raise it off the floor.
 
-![](images/usage/image2.png){ loading=lazy, width=45% }
+First tension all lines. In the **RUN** menu, select **Tension all lines** or press `1`
 
-If some components don't connect, please refer to the [Troubleshooting](quality_assurance.md) page.
-Or ask for help on our [Discord](https://discord.gg/T5HEvxVgbA).
+Then briefly tap the `E` key to move upwards. Briefly hold it enough to raise the gripper to a unobtrusive height.
 
-#### Status bar
-
-The bar at the bottom of the screen shows various system health measurements such as video latency and error messages.
-
-The STOP button can be pressed at any time to cause a soft stop. this means any task which is generating motion commands will be cancelled and all motors will be commanded to stop. After a soft stop the robot can continue to move again as soon as any task or control input is given.
-
-![](images/usage/image3.png){ loading=lazy, width=45% }
-
-#### Main menu
-
- * Change system mode
- * Calibration
- * 
+Any complex motion beyond this requires calibration, which is the next step.
 
 ## Calibration
 
-Print out the [full-page "origin" marker](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing) at 100% scale with no margins. Tape the page to something completely flat such as a large book, a pane of glass, or an un-damaged peice of cardboard. Lay the origin marker in the center of the room.
+Print out the [full-page "origin" marker](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing) as well as calibration helper 1 thru 3 at 100% scale with no margins. Tape the pages to something completely flat such as a large book, a pane of glass, or an un-damaged peice of cardboard. Lay the origin marker in the center of the room, and place the helper markers around it as spread out as possible while still being visible to all the cameras. The origin card must be on the floor, the the others can be anywhere.
 
-Select the "Full Auto Calibration" option from the main menu. The robot should move to a variety of locations around the room collecting data. After this process is complete, the system should have decided where it thinks the anchors are mounted and will update their locations in the UI. If anything looks drastically wrong, try repeating the calibration with better lighting.
+![](images/usage/calibration_cards.png){ loading=lazy, width=45% }
 
-You should be able to judge the quality of the calibration by moving in straight lines. *WASDQE* keys move the gantry and *RF* raise and lower the winch.
-With good calibration, the gantry should move in straight lines. Poor calibration usually causes it to move in an ascending arc, with some lines becoming slack in the process.
+Select the "Full Calibration" option from the main menu. The robot should move to a position over the origin and make some other small motions. When this is finished, the shape of the room in the UI should update. If anything looks drastically wrong try repeating the calibration with better lighting, or with the helper cards in different places.
 
-At any time, you can run the *quick calibration* which tightens all lines and resets the internal counter on the line length based on visual observation. Quick calibration only takes a few seconds. This can fix slightly slack lines, but cannot fix excessive errors in the position of anchors. Quick calibration also attempts to reset the length of the winch line using the time between recent gantry swings. The gantry is almost always slightly swinging, but if it's not swinging at all, this part will not be updated.
+You should can judge the quality of the calibration by moving in straight lines. *WASDQE* keys move the robot along the cardinal directions of the origin card. With good calibration, the gantry should move in straight lines. Poor calibration usually causes it to move in an ascending arc, with some lines becoming slack in the process.
+
+At any time, you can run the *quick calibration* (dpad-left) or key `2` which tightens all lines and resets the internal counter on the line length based on visual observation. Quick calibration only takes a few seconds. This can fix slightly slack lines, but cannot fix excessive errors in the position of anchors. In the pilot gripper, Quick calibration also attempts to reset the length of the winch line using the time between recent gantry swings. The gantry is almost always slightly swinging, but if it's not swinging at all, this part will not be updated.
 
 !!! tip
 
-    Left D-pad on the gamepad performs quick calibration.
+    Left D-pad on the gamepad or key `2` performs quick calibration. Doing this often is very beneficial.
 
-If automatic calibration absolutely cannot determine the true position of the anchors in your room, you can edit them manually in `configuration.json` at the root of cranebot3-firmware. Units are in meters. The control panel will not alter them unless you run full auto calibration again.
+If automatic calibration absolutely cannot determine the true position of the anchors in your room, you can edit them manually in `configuration.json` in the working directory where you ran `stringman-headless`. Units are in meters. The motion controller will not alter them unless you run full calibration again.
+
+### Controls
+
+#### Keyboard
+
+* `WASD` to move laterally and *QE* to move vertically.
+* `ZX` to rotate the wrist (arpeggio gripper) or winch motor (pilot gripper)
+* `Space` to close the gripper
+* `L-Shift` to open the gripper
+* `1` to tension all lines
+* `2` perform quick calibration
+* `3` execute an automated grasp at the current location
+
+#### Gamepad
+
+Any HID gamepad connected to your computer should be recognized by the control panel.
+Connect a gamepad and press any button to wake it, then press both left and right analog triggers at the same time.
+Gamepad control is highly reccommended over keyboard as it gives you analog speed control.
+
+!!! Warning
+
+    Doesn't work in Linux/Firefox but does work in Linux/Chrome
+    [https://hardwaretester.com/gamepad](https://hardwaretester.com/gamepad) is really helpful in debugging this
+
+![](images/usage/gamepad.png){ loading=lazy, width=45% }
+
+#### Perspective
+
+Whether in keyboard control or in gamepad control, you can select the viewpoint around which the robot orbits.
+In any of these perspective, forward moves away from you without changing height, back moves towards you.
+Left orbits you counterclockwise, right orbits you clockwise.
+
+You can set the viewpoint to be any camera, the 3D viewport, or the seat tag, which is an Apriltag you can place anywhere in the room, such as near your seat.
+
+![](images/usage/perspective.png){ loading=lazy, width=45% }
+
+#### Stop motion tasks
+
+The STOP button can be pressed at any time to cause a soft stop. This means any task which is generating motion commands will be cancelled and all motors will be commanded to stop. After a soft stop the robot can continue to move again as soon as any task or control input is given.
+
+![](images/usage/stop.png){ loading=lazy, width=45% }
+
+#### Targets
+
+The Targets panel shows all targets that can be seen from the overhead cameras, whether identified automatically or added manually.
+You can select any target by clicking on it in the list or on it's square in any camera view where it appears to delete it.
+
+You can add new targets by clicking twice anywhere in a camera feed (except the gripper camera for now)
 
 ## Robot components
 
-The interface shows the position of each robot component and the lines that connect them. Each anchor has a switch inside used to detect whether a line is tight and the this is indicated in the control panel by either drawing the line as straight or curved. if the line is not tight, it is not possible for us to know by how much, thus the amount of curve drawn has no bearing on what it may look like in reality.
+The interface shows the position of each robot component and the lines that connect them. Each anchor can determine whether a line is tight and the this is indicated in the control panel by either drawing the line as straight or curved. if the line is not tight, it is not possible for us to know by how much, thus the amount of curve drawn has no bearing on what it may look like in reality.
 
-Any component can be clicked on to open a context menu with more information pertaining to that component.
-
-You can show and hide the video feed from that component with the video feed button. When showing the anchor video feeds, they are rendered in space from the perspective of that anchor and are on billboards that are invisible from the back face so you may have to orbit your camera to see them.
-
-You can also manually reel in or out any line from the component's context menu.
+The gripper at it's estimated position in the room. the position estimation is a combination of two factors
+ * The visual factor (RED). This is where the display box appears to be based on recent visual observations of the april tags.
+ * The hang factor (BLUE). This is where the gantry should be hanging based on how long the lines are right now.
 
 ### Diagnostics
 
@@ -64,41 +98,14 @@ If cameras are connected but no detections are made, the robot may just be too h
 
 The distance detected by the laser rangefinder on the gripper is indicated with a red rectangle. You should expect to see this near the floor if calibration is accurate.
 
-## Gamepad Operation
-
-Any HID gamepad connected to your computer should be recognized by the control panel.
-To show the gamepad controls, select the option in the main menu.
-There is no method of re-mapping them right now.
-
-![](images/usage/gamepad.png){ loading=lazy, width=45% }
-
-#### Seat orbit mode
-
-Lateral motion from the gamepad is performed relative to the point where the user is assumed to be sitting. left/right orbits the user and up/down moves closer or further from the user. currently this point is a hard coded constant in [ursina_entities.py](https://github.com/nhnifong/cranebot3-firmware/blob/9b41e60f2b6d3332647eed6fa4e6d73aab3a3436/ursina_entities.py#L486) but there is an [open issue](https://github.com/nhnifong/cranebot3-firmware/issues/22) to determine the user's position in the room with an apriltag.
-
-Open and close the gripper by holding either the A or B button respectively.
-
 ## AI Control
 
-All lerobot integration is accessed via the "train" mode. Including inference. this is liable to change in the future.
-First calibrate the robot and confirm you can move it normally with the gamepad. then put the system in train mode. this starts an RPC server which external lerobot scripts can connect to.
+When the motion controller started, it downloaded the latest models for target recognition and gripper centering. Targets will be recognized more frequently if the motion controller is running on a machine with AI acceleration.
 
-In another terminal, from the cranebot3-firmware root, activate the same virtual env,
-and log into huggingface
+In the main menu, select `Pick and drop targets`. Stringman will repeatedly select a target, move over it, center it's gripper, attempt an automated grasp, and take the target to a destination. At this time, all targets are carried to the hamper. this is 20cm in front of wherever you clip the hamper tag.
 
-    source venv/bin/activate
-    huggingface-cli login
+At any time, you can press `stop` to end AI control. 
 
-Start recording episodes with
+!!! Note
 
-	python -m trainer.stringman_record_loop
-
-Teleoperation must be performed with the gamepad.
-begin and end an episode with the start button on the gamepad.
-To end all recording, either close the control panel, or end the recording script with ctrl-c
-
-To perform inference with a model
-
-    python -m trainer.stringman_run_policy
-
-AI based control of Stringman is currently in a very early stage of development. This interface is not polished and relies on some hard coded constants at the moment, but if you are using it, please do not hesitate to send me a message directly on discord and I'd be happy to help.
+    AI control is only decent right now for the Pilot version gripper. For Arpeggio, it is actively being developed but not very useful at the moment.

@@ -60,6 +60,7 @@ async def read_page(page_name: str):
         "control_panel": "playroom.html",
         "playroom": "playroom.html",
         "stringman-pilot": "stringman-pilot.html",
+        "stringman-arpeggio-pilot": "stringman-arpeggio-pilot.html",
         "company": "company.html",
         "future": "future.html"
     }

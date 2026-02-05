@@ -1,8 +1,10 @@
-# Final Installation Guide
+# Physical Installation Guide
 
-Hardware Version: Pilot
+Anchor Hardware Version: Pilot
 
-Hardware installation of a preassembled or diy assembled Stringman robot.
+Hardware installation of a preassembled or diy assembled Stringman pilot robot.
+
+Covers either pilot or arpeggio gripper
 
 Tools needed:  
 
@@ -94,7 +96,13 @@ You can now move the ladder to the next corner.
 
 Unpack the gripper and gantry, which are attached, and place them somewhere near the anchor with the power line. pull the line out enough to reach and temporarily plug in the gripper for the connection test step.
 
-![](images/install/image21.png){ loading=lazy, width=45% }
+=== "Pilot Gripper"
+
+    ![](images/install/image21.png){ loading=lazy, width=45% }
+
+=== "Arpeggio Gripper"
+
+    ![](images/install/image21.png){ loading=lazy, width=45% }
 
 ## Pre Tie-up Connection Test
 
@@ -133,12 +141,24 @@ Place the gripper and gantry on the floor in the center of the room. Pull all fo
 
 ![](images/install/image11.png){ loading=lazy, width=45% }
 
-Thread each eyelet into the closest hole in the side of the gantry and clip it onto one of the speed clips. Do not cross lines, and select the right speed clip for each line so that they form a clean cross in the center.
+=== "Pilot Gripper"
 
-![](images/install/image12.png){ loading=lazy, width=45% }
-![](images/install/image13.png){ loading=lazy, width=45% }
+	Thread each eyelet into the closest hole in the side of the gantry and clip it onto one of the speed clips. Do not cross lines, and select the right speed clip for each line so that they form a clean cross in the center.
 
-When you get to the power line, pass the JST connector through the hole as well. Attach the swivel to the corresponding clip, and plug the gripper's JST connector into the socket on the end of the power line. the conductors are longer than the fishing line, making them slack so the fishing line should bear all the weight. If for some reason the conductor is bearing any weight, retie the power line's swivel back 10 cm.
+	![](images/install/image12.png){ loading=lazy, width=45% }
+	![](images/install/image13.png){ loading=lazy, width=45% }
+
+	When you get to the power line, pass the JST connector through the hole as well. Attach the swivel to the corresponding clip, and plug the gripper's JST connector into the socket on the end of the power line. the conductors are longer than the fishing line, making them slack so the fishing line should bear all the weight. If for some reason the conductor is bearing any weight, retie the power line's swivel back 10 cm.
+
+=== "Arpeggio Gripper"
+
+	Thread each eyelet/speed clip into the closest hole in the side of the gantry and attach it to the keyring. Do not cross lines, and select the right speed clip for each line so that they form a clean cross in the center
+
+	For the power line, thread both fishing line and power through the hole.
+
+	finally plug in the power connector.
+
+	The fishing line should bear all the weight. If for some reason the conductor is bearing any weight, retie the power line's swivel back 10 cm.
 
 ## Power on
 
@@ -164,7 +184,13 @@ Unfortunately self-park functionality is still a work in progress.
 In order to manually park the robot, use the gamepad to drive it fairly close to the parking saddle, which you can mount on any wall about 2 feet below the level of the anchors.
 While holding the gripper in one hand, turn off all power to the anchors. the lines should then have some give to them so you can place the gripper on the saddle and gently pull the lines until you can place the gantry on top of the gripper. In this position the lines should be safely out of your way while the robot is powered off.
 
-![](images/install/image24.png){ loading=lazy, width=45% }
+=== "Pilot Gripper"
+
+	![](images/install/image24.png){ loading=lazy, width=45% }
+
+=== "Arpeggio Gripper"
+
+	![](images/install/image24.png){ loading=lazy, width=45% }
 
 ### Learn when to use the kill switch
 
