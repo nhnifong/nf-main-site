@@ -392,6 +392,79 @@
         letter-spacing: 0.5px;
       }
 
+      /* --- COMPONENT STATUS MENU STYLES --- */
+      .component-menu-container {
+        position: relative;
+      }
+
+      .component-status-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: left;
+        padding: 4px 6px;
+        margin: -4px -6px; /* offset padding to maintain alignment */
+        transition: background 0.2s, border-color 0.2s;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      .component-status-btn:hover {
+        background: rgba(255, 255, 255, 0.4);
+        border-color: rgba(0, 0, 0, 0.1);
+      }
+
+      /* Re-using .run-menu-content for the pop-up shape, adding overrides */
+      .component-list-popup {
+        min-width: 320px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .comp-row {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .comp-row:last-child {
+        border-bottom: none;
+      }
+
+      .comp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        font-size: 0.95rem;
+        color: #333;
+      }
+
+      .comp-details {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .comp-status-good {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+      
+      .comp-status-bad {
+        color: #d32f2f;
+        font-weight: bold;
+      }
+      /* --- END COMPONENT STATUS MENU --- */
+
       /* --- Perspective Buttons Styling --- */
       .perspective-container {
         display: flex;
@@ -412,7 +485,7 @@
 
       .perspective-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         grid-template-rows: 1fr 1fr;
         gap: 6px;
       }
@@ -623,9 +696,16 @@
              <span class="label-muted">Robot ID</span>
              <strong>Robot_0</strong>
            </div>
-           <div class="stat-line">
-             <span class="label-muted">Mode</span>
-             <strong>IDLE</strong>
+           <!-- Component Status -->
+           <div class="component-menu-container">
+               <button id="component-status-btn" class="component-status-btn">
+                 <!-- <span class="label-muted">Status</span> -->
+                 <strong id="component-status-text">Anchors (0/0)</strong>
+               </button>
+               <div id="component-menu" class="run-menu-content component-list-popup">
+                 <!-- Populated by JS -->
+                 <div class="menu-item disabled">Waiting for telemetry...</div>
+               </div>
            </div>
         </div>
 
@@ -639,6 +719,7 @@
               <button id="btn-top" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 1</button>
               <button id="btn-person" class="perspective-button perspective-button-selected"><img src="assets/orbit_icon.png" class="orbit-image"/>Seat Tag</button>
               <button id="btn-bottom" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 2</button>
+              <button id="btn-gripper" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Gripper</button>
            </div>
         </div>
 

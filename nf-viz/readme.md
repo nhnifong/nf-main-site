@@ -2,11 +2,12 @@
 
 ### Setup for frontend
 
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    source ~/.bashrc
+    nvm install 22
+    nvm use 22
     cd nf-viz
     npm install
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install nf_robot
     npm run build
 
 ### Run locally

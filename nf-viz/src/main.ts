@@ -25,7 +25,8 @@ const perspViewport = 0;
 const perspPerson = 1;
 const perspTop = 2;
 const perspBottom = 3;
-let currentPerspective: number = perspPerson;
+const perspGripper = 5;
+let currentPerspective: number = perspGripper; // control the initial selection
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -184,9 +185,9 @@ function connect() {
         else if (update.vidStats) {
           handleVidStats(update.vidStats);
         }
-        // else if (update.componentConnStatus) {
-        //   handleComponentConnStatus(update.componentConnStatus);
-        // }
+        else if (update.componentConnStatus) {
+          handleComponentConnStatus(update.componentConnStatus);
+        }
         else if (update.targetList) {
           handleTargetList(update.targetList);
         }
@@ -314,9 +315,100 @@ function handleVidStats(data: nf.telemetry.IVidStats) {
   }
 }
 
-// function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
-//   // tells us the status of the connection between observer and indibidual robot components.
-// }
+// Track state of all components since updates arrive one by one
+interface ComponentState {
+  name: string;
+  type: 'Anchor' | 'Gripper';
+  status: number;
+  ip: string;
+}
+const componentStates = new Map<string, ComponentState>();
+
+function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
+  // Identify Component Name & Type
+  let name = "Unknown";
+  let type: 'Anchor' | 'Gripper' = 'Anchor';
+
+  if (data.isGripper) {
+    type = 'Gripper';
+    if (data.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_ARPEGGIO) {
+      name = "Arpeggio Gripper";
+    } else {
+      name = "Pilot Gripper";
+    }
+  } else {
+    type = 'Anchor';
+    name = `Anchor ${data.anchorNum}`;
+  }
+
+  // Update Map
+  componentStates.set(name, {
+    name: name,
+    type: type,
+    status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
+    ip: data.ipAddress ?? ""
+  });
+
+  // Recalculate Totals
+  let anchorCount = 4; // TODO from another message we should be told the expected total based on the model of installed anchor
+  let anchorConnected = 0;
+  let gripperCount = 1;
+  let gripperConnected = 0;
+
+  componentStates.forEach(comp => {
+    const isConnected = comp.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+    
+    if (comp.type === 'Anchor') {
+      if (isConnected) anchorConnected++;
+    } else if (comp.type === 'Gripper') {
+      if (isConnected) gripperConnected++;
+    }
+  });
+
+  // Update Button Text
+  const btnText = document.getElementById('component-status-text');
+  if (btnText) {
+    btnText.textContent = `Anchors (${anchorConnected}/${anchorCount}) Gripper (${gripperConnected}/${gripperCount})`;
+  }
+
+  // Update Popup List
+  const menu = document.getElementById('component-menu');
+  if (menu) {
+    menu.innerHTML = '';
+    
+    // Sort keys alphabetically for consistent display
+    const sortedKeys = Array.from(componentStates.keys()).sort();
+
+    if (sortedKeys.length === 0) {
+      menu.innerHTML = '<div class="menu-item disabled">Waiting for telemetry...</div>';
+      return;
+    }
+
+    sortedKeys.forEach(key => {
+      const comp = componentStates.get(key)!;
+      const row = document.createElement('div');
+      row.className = 'comp-row';
+
+      const isConnected = comp.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+      const statusClass = isConnected ? 'comp-status-good' : 'comp-status-bad';
+      const statusText = isConnected ? 'Connected' : 'Disconnected';
+      const ip = comp.ip || 'Unknown IP';
+      
+      // Use placeholder span for the second line detail
+      row.innerHTML = `
+        <div class="comp-header">
+          <span>${comp.name}</span>
+          <span class="${statusClass}">${statusText}</span>
+        </div>
+        <div class="comp-details">
+          <span>${ip}</span>
+          <span></span> 
+        </div>
+      `;
+      menu.appendChild(row);
+    });
+  }
+}
 
 function handleTargetList(data: nf.telemetry.ITargetList) {
   const targets = data.targets ?? [];
@@ -432,6 +524,9 @@ function onPerspectiveChanged(mode: number) {
       }
       break;
 
+    case perspGripper:
+      gamepad.setSeatOrbitMode(false);
+
   }
 }
 
@@ -445,7 +540,8 @@ function setPerspective(mode: number) {
         [perspViewport]: 'btn-viewport',
         [perspPerson]: 'btn-person',
         [perspTop]: 'btn-top',
-        [perspBottom]: 'btn-bottom'
+        [perspBottom]: 'btn-bottom',
+        [perspGripper]: 'btn-gripper'
     };
 
     // Remove 'perspective-button-selected' from all buttons
@@ -466,6 +562,7 @@ function initPerspectiveControls() {
     document.getElementById('btn-person')?.addEventListener('click', () => setPerspective(perspPerson));
     document.getElementById('btn-top')?.addEventListener('click', () => setPerspective(perspTop));
     document.getElementById('btn-bottom')?.addEventListener('click', () => setPerspective(perspBottom));
+    document.getElementById('btn-gripper')?.addEventListener('click', () => setPerspective(perspGripper));
     
     setPerspective(currentPerspective);
 }
@@ -581,3 +678,25 @@ function initRunMenu() {
 
 // Initialize run menu listeners
 initRunMenu();
+
+// Component Status Menu
+function initComponentMenu() {
+  const compBtn = document.getElementById('component-status-btn');
+  const compMenu = document.getElementById('component-menu');
+
+  if (compBtn && compMenu) {
+    compBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      compMenu.classList.toggle('show');
+    });
+  }
+
+  // Close menu when clicking outside (shares logic with run menu if needed, or specific listener)
+  document.addEventListener('click', () => {
+    if (compMenu && compMenu.classList.contains('show')) {
+      compMenu.classList.remove('show');
+    }
+  });
+}
+
+initComponentMenu();
