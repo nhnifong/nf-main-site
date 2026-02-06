@@ -10,7 +10,7 @@ I do not yet have a bundled release of the control panel. It can be run accordin
 
 === "Pilot Gripper"
 
-	### STLs for 3D printing
+	#### STLs for 3D printing
 
 	 * **[Download STLs](assets/stringman_pilot_stls.zip)**
 	 * **[Print Guide](print_guide.md)**
@@ -28,8 +28,6 @@ I do not yet have a bundled release of the control panel. It can be run accordin
 === "Arpeggio Gripper"
 
 	#### STLs for 3D printing
-
-	#### Arpeggio gripper, Pilot Anchors
 
 	 * **[Download STLs](assets/stringman_arp_gripper_pilot_anchors_stls.zip)**
 

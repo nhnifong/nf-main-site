@@ -25,8 +25,8 @@ def on_page_markdown(markdown, page, config, files):
         # Ensure we don't have double slashes if the path starts with /
         clean_path = original_path.lstrip('/')
         
-        # We append /guides/ to match where sync-assets puts them in GCS
-        new_url = f"{ASSET_BUCKET_URL}/guides/{clean_path}"
+        # We append /docs/ to match where sync-assets puts them in GCS
+        new_url = f"{ASSET_BUCKET_URL}/docs/{clean_path}"
         
         log.info(f"URL Replacer: {original_path} -> {new_url}")
         return f"{match.group(1)}{new_url}{match.group(3)}"
