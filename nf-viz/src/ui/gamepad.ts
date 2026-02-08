@@ -196,10 +196,15 @@ export class GamepadController {
     // Set an object to use as the orbit center for control inputs
     public setOrbitCenter(orbitObj: THREE.Object3D) {
         this.orbitObj = orbitObj
+        this.setSeatOrbitMode(true);
     }
 
     public setRobotPosition(x: number, y: number) {
         this.robotPosition = { x, y };
+    }
+
+    public setSeatOrbitMode(seatOrbit: boolean) {
+        this.seatOrbitMode = seatOrbit;
     }
 
     /**
@@ -258,6 +263,9 @@ export class GamepadController {
         const dt = now - this.lastUpdateT;
 
         // Calculate Vector (Left Stick + Triggers)
+        // If left unchanged, this is the axis aligned movement perspective
+        // Since the gripper's camera is stabilized and reprojected in the room's frame of reference,
+        // it is also a motion vector that aligns with the gripper's perspective.
         const netTrigger = input.buttons.rt - input.buttons.lt;
         let vx = input.leftStick.x;
         let vy = input.leftStick.y;
@@ -373,7 +381,8 @@ export class GamepadController {
 
         // nothing is mapped to dpad down at the moment
 
-        // Select/back - stop all
+        // Select/back - stop all.
+        // TODO Lerobot abandon episode EPCOMMAND_ABANDON
         if (input.buttons.select && !this.selectWasHeld) {
             messages.push(nf.control.ControlItem.create({
                 command: { name: nf.control.Command.COMMAND_STOP_ALL }
@@ -381,6 +390,11 @@ export class GamepadController {
         }
         this.selectWasHeld = input.buttons.select;
 
+        // TODO
+        // Start button - lerobot start/complete episode 
+        // messages.push(nf.control.ControlItem.create({
+        //     episode_control: { command: nf.common.EpCommand.EPCOMMAND_START_OR_COMPLETE }
+        // }));
 
         // Movement Message (Throttled/Changed)
         

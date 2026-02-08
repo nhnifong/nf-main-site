@@ -40,7 +40,9 @@ FRONTEND_DIST = "nf-viz/dist"
 
 # Mount the docs (MkDocs output)
 # 'html=True' makes /docs/install/ serve /docs/install/index.html automatically.
-app.mount("/docs", StaticFiles(directory=f"{FRONTEND_DIST}/docs", html=True), name="docs")
+DOCS_PATH = f"{FRONTEND_DIST}/docs"
+if os.path.exists(DOCS_PATH):
+    app.mount("/docs", StaticFiles(directory=DOCS_PATH, html=True), name="docs")
 
 # Mount Assets (Only needed for local dev, in prod all image elements point to absolute bucket urls)
 # We use a conditional check so we don't need these files in the production container

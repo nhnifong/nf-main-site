@@ -38,7 +38,7 @@ const perspPerson = 1;
 const perspTop = 2;
 const perspBottom = 3;
 const perspGripper = 5;
-let currentPerspective: number = perspGripper; 
+let currentPerspective: number = perspGripper; // control the initial selection
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -878,7 +878,7 @@ function initRunMenu() {
 // Initialize run menu listeners
 initRunMenu();
 
-// --- Component Status Menu ---
+// Component Status Menu
 function initComponentMenu() {
   const compBtn = document.getElementById('component-status-btn');
   const compMenu = document.getElementById('component-menu');
