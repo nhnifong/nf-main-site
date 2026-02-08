@@ -1,36 +1,40 @@
-# Local UI LAN-mode Guide
+# LAN mode
 
-This guide covers the use of the Ursina-based Local UI for operating Stringman in a lan-only mode
+This guide covers operation of Stringman in a LAN-only mode.
 
-If the stringman motion controller is run from the local UI, It will not transmit anything outside of your home.
-However, this local UI can only be run from source
+If `stringman-headless` is run without the --telemetry_env arugment, It will not transmit anything outside of your local network.
+It only listens on port 4254 for a User Interface (or other compatible controller)
 
-### Run from source
+## Run motion controller in lan mode
 
-    git clone https://github.com/nhnifong/cranebot3-firmware
-    cd cranebot3-firmware/local_ui
+Set up virtualenv
+
     python3 -m virtualenv venv
     source venv/bin/activate
-    pip install -r requirements.txt
-    python3 main.py
+    pip install "nf_robot[host]"
 
-### Connection status
+Run
 
-Whether starting the control panel first, or powering on the robot components first, the control panel should discover and connect to every component automatically. The status of the connection to each component is displayed above it.
+    stringman-headless
 
-![](images/usage/image1.png){ loading=lazy, width=45% }
+the calibration will be saved at a default location of `configuration.json`
 
-After making the initial connection to a component, the control panel will attempt to connect to the video stream as well. The status of all video stream connections is indicated in the bottom left. An unconnected video stream is indicated by a hollow monitor icon, and a connected stream is indicated by a filled monitor icon.
+## Connect from the UI
 
-![](images/usage/image2.png){ loading=lazy, width=45% }
+Although the web UI is served from [**neufangled.com/control_panel**](http://neufangled.com/control_panel), in LAN mode, it makes no outside connections and you don't have to log in.
 
-If some components don't connect, please refer to the [Troubleshooting](quality_assurance.md) page.
-Or ask for help on our [Discord](https://discord.gg/T5HEvxVgbA).
+Just select LAN mode and it will make a connection to `localhost:4254`
 
-#### Status bar
+![](images/usage/lanmode.png){ loading=lazy, width=45% }
 
-The bar at the bottom of the screen shows various system health measurements such as video latency and error messages.
+It doesn't matter whether you start the UI first or `stringman-headless` first.
 
-The STOP button can be pressed at any time to cause a soft stop. this means any task which is generating motion commands will be cancelled and all motors will be commanded to stop. After a soft stop the robot can continue to move again as soon as any task or control input is given.
+## Privacy
 
-![](images/usage/image3.png){ loading=lazy, width=45% }
+The video flow from your robot components (anchors and gripper) in LAN mode is as follows.
+
+When idle the cameras are inactive. When `stringman-headless` connects to the components, the cameras start, and video is streamed within your wifi network to the `stringman-headless` process where it is used for locating the markers and performing target identifaction then immediately discarded. Nothing is saved to disk or sent to the cloud. The only data from the video that remains after processing is the location of the robot's marker box, and the locations of any objects which it identified for pick up.
+
+In the cloud mode, which is activated by running `stringman-headless --telemetry_env=production`, the video is sent to a relay server at neufangled.com, where it is passed directly to the UI, only when you're connected. Only you have authorization to view that video and control your robot. Neufangled Robotics does not save your video on it's servers.
+
+In either mode, video and robot control are secure and only accessible by you.

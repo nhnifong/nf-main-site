@@ -30,7 +30,7 @@ export class Gripper {
     private async loadSharedModel() {
         if (!Gripper.modelPromise) {
             const loader = new GLTFLoader();
-            Gripper.modelPromise = loader.loadAsync('/assets/models/gripper.glb');
+            Gripper.modelPromise = loader.loadAsync(import.meta.env.VITE_ASSET_BUCKET_URL+'/assets/models/gripper.glb');
         }
         
         try {

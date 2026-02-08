@@ -1,0 +1,58 @@
+# To save money, for the time being, the VM will be used for any service which is needed
+# but for which a managed instance is too costly to justify
+
+# Currently it is running
+# 1. A mediaMTX server
+# 2. Prod postgres server
+# 3. Staging postgres server
+
+
+services:
+  # Media Gateway
+  media-mtx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: media-mtx
+    restart: always
+    ports:
+      - "8554:8554"     # RTSP
+      - "1935:1935"     # RTMP
+      - "8888:8888"     # HLS
+      - "8889:8889"     # WebRTC
+      - "8189:8189/udp" # WebRTC UDP
+    environment:
+      CONTROL_PLANE_API_URL: "https://neufangled.com"
+      WEBRTC_USE_HTTPS: "yes"
+      WEBRTC_ADDITIONAL_HOSTS: "[media.neufangled.com]"
+    volumes:
+      - /etc/letsencrypt/live/media.neufangled.com/fullchain.pem:/https/fullchain.pem:ro
+      - /etc/letsencrypt/live/media.neufangled.com/privkey.pem:/https/privkey.pem:ro
+
+  # Production Database
+  postgres-prod:
+    image: postgres:16-alpine
+    container_name: postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: neufangled_prod
+      POSTGRES_USER: prod_user
+      POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/prod:/var/lib/postgresql/data
+
+  # Staging Database
+  postgres-staging:
+    image: postgres:16-alpine
+    container_name: postgres-staging
+    restart: always
+    environment:
+      POSTGRES_DB: neufangled_staging
+      POSTGRES_USER: staging_user
+      POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD}
+    ports:
+      - "5433:5432" # Exposed on 5433 to avoid conflict with prod
+    volumes:
+      - ./data/staging:/var/lib/postgresql/data

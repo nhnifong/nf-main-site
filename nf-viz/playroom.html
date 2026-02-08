@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="icon" type="image/png" href="%VITE_ASSET_BUCKET_URL%/assets/favicon.png" />
     <title>nf-viz</title>
     <style>
       body {
@@ -787,17 +787,17 @@
       <!-- Right Panel: Video Feeds -->
       <aside id="panel-right" class="panel">
         <div class="video-feed feed-16-9" id="firstOverhead">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png" onended="this.load()"></video>
+          <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 01</div>
         </div>
         <div class="video-feed feed-16-9" id="secondOverhead">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video.png" onended="this.load()"></video>
+          <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 02</div>
         </div>
         <div class="video-feed feed-1-1" id="gripper">
-          <video class="feed-video" autoplay muted playsinline poster="assets/waiting_for_video_square.png" onended="this.load()"></video>
+          <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video_square.png" onended="this.load()"></video>
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">GRIPPER - STABILIZED</div>
         </div>
@@ -857,11 +857,11 @@
         <div class="perspective-container">
            <div class="perspective-label">Motion<br>Perspective</div>
            <div class="perspective-grid">
-              <button id="btn-viewport" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Viewport</button>
-              <button id="btn-top" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 1</button>
-              <button id="btn-person" class="perspective-button perspective-button-selected"><img src="assets/orbit_icon.png" class="orbit-image"/>Seat Tag</button>
-              <button id="btn-bottom" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Anchor 2</button>
-              <button id="btn-gripper" class="perspective-button"><img src="assets/orbit_icon.png" class="orbit-image"/>Gripper</button>
+              <button id="btn-viewport" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Viewport</button>
+              <button id="btn-top" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Anchor 1</button>
+              <button id="btn-person" class="perspective-button perspective-button-selected"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Seat Tag</button>
+              <button id="btn-bottom" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Anchor 2</button>
+              <button id="btn-gripper" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Gripper</button>
            </div>
         </div>
 
