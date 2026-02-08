@@ -382,7 +382,7 @@ export class GamepadController {
         // nothing is mapped to dpad down at the moment
 
         // Select/back - stop all.
-        // TODO Lerobot abandon episode
+        // TODO Lerobot abandon episode EPCOMMAND_ABANDON
         if (input.buttons.select && !this.selectWasHeld) {
             messages.push(nf.control.ControlItem.create({
                 command: { name: nf.control.Command.COMMAND_STOP_ALL }
