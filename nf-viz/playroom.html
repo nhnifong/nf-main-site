@@ -33,6 +33,108 @@
         gap: 20px;
       }
 
+      /* Landing Layer (Login / LAN selection) */
+      #landing-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 20; /* Above UI layer */
+        background: rgba(40, 40, 40, 0.95);
+        backdrop-filter: blur(15px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+      }
+
+      .landing-panel {
+        background: #333;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        border: 1px solid #555;
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+      }
+
+      .landing-title {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+        color: #eee;
+      }
+
+      .landing-btn {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        margin-bottom: 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.1s, box-shadow 0.2s;
+      }
+
+      .btn-lan {
+        background-color: #555;
+        color: #eee;
+        border: 1px solid #777;
+      }
+      .btn-lan:hover { background-color: #666; }
+
+      .btn-cloud {
+        background-color: #4CAF50;
+        color: white;
+      }
+      .btn-cloud:hover { background-color: #43a047; }
+
+      .landing-hint {
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-top: 10px;
+      }
+
+      .robot-list {
+        margin-top: 20px;
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .robot-list-item {
+        background: #444;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid transparent;
+      }
+
+      .robot-list-item:hover {
+        background: #505050;
+        border-color: #666;
+      }
+
+      .robot-name { font-weight: bold; font-size: 1.1em; }
+      .robot-id { font-size: 0.8em; color: #888; font-family: monospace; }
+      
+      .status-badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #666;
+        color: #ccc;
+      }
+      .status-online { background: #1b5e20; color: #a5d6a7; }
+
       /* Common styles for all panels */
       .panel {
         background: rgba(155, 155, 145, 0.85);
@@ -541,6 +643,35 @@
   </head>
   <body>
     <!-- The 3D Canvas will be appended here by main.ts (z-index auto/0) -->
+
+    <!-- Landing Layer (Login / LAN selection) -->
+    <div id="landing-layer" class="hidden">
+      <div class="landing-panel" id="landing-options">
+        <div class="landing-title">Select Connection Mode</div>
+        
+        <button id="btn-lan-mode" class="landing-btn btn-lan">
+          LAN only mode
+          <div class="landing-hint">Connect to robot controller on localhost</div>
+        </button>
+
+        <button id="btn-cloud-mode" class="landing-btn btn-cloud">
+          Log in
+          <div class="landing-hint">Manage your cloud-connected robots</div>
+        </button>
+        
+        <div class="landing-hint">
+          <a href="#" style="color:#aaa" onclick="alert('LAN mode connects directly to ws://localhost:4245 without authentication.')">Learn more about LAN mode</a>
+        </div>
+      </div>
+
+      <div class="landing-panel hidden" id="robot-list-panel">
+        <div class="landing-title">Select a Robot</div>
+        <div id="robot-list-container" class="robot-list">
+          <!-- Robot items will be injected here -->
+          <div style="color: #888; padding: 20px;">Loading robots...</div>
+        </div>
+      </div>
+    </div>
 
     <!-- UI Overlay Layer (z-index 10) -->
     <div id="ui-layer">

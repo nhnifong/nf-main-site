@@ -17,24 +17,28 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
+// Firebase imports (lazy loaded logic below)
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup, 
   onAuthStateChanged,
+  Auth
 } from "firebase/auth";
 
-
+// --- GLOBAL VARIABLES ---
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
-const urlRobotId: string = urlParams.get('robotid') ?? 'playroom';
+// If robotid is set in URL, we force cloud login. Otherwise we start the landing UI.
+let currentRobotId: string | null = urlParams.get('robotid'); 
 
 // Motion perspective modes
 const perspViewport = 0; 
 const perspPerson = 1;
 const perspTop = 2;
 const perspBottom = 3;
-let currentPerspective: number = perspPerson;
+const perspGripper = 5;
+let currentPerspective: number = perspGripper; 
 
 // Scene Setup
 const scene = new THREE.Scene();
@@ -83,7 +87,6 @@ const room = new DynamicRoom(scene);
 const gamepad = new GamepadController();
 
 // Anchors
-// default poses for four anchors. nf.common.Pose in specified in Z up coordinate system
 const acoords = [
   { x: 2.5,  y: -2.5, rotZ: -Math.PI / 4 },
   { x: 2.5,  y: 2.5,  rotZ: -3 * Math.PI / 4 },
@@ -158,36 +161,112 @@ targetListManager.onTargetSelect = () => {
     secondOverheadVideo.refresh();
 };
 
-// ------ Authorization and websocket connection ------
+// ------ Authorization and Connection Logic ------
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
-  authDomain: "nf-web-480214.firebaseapp.com",
-  projectId: "nf-web-480214",
-  storageBucket: "nf-web-480214.firebasestorage.app",
-  messagingSenderId: "690802609278",
-  appId: "1:690802609278:web:8165450202df8179029c2f"
-};
+let auth: Auth | null = null;
+let socket: WebSocket;
+let isLanMode = false; // Track mode to handle manual "online" status
 
-const googleapp = initializeApp(firebaseConfig);
-const auth = getAuth(googleapp);
-const provider = new GoogleAuthProvider();
+// Entry Point
+function initApp() {
+  if (currentRobotId) {
+    // URL param set -> Force cloud flow
+    updateRobotIdUI(currentRobotId);
+    startCloudFlow(currentRobotId);
+  } else {
+    // No URL param -> Show landing page
+    const landing = document.getElementById('landing-layer');
+    if (landing) landing.classList.remove('hidden');
 
-/**
- * Ensures the user is logged in and returns their current ID token.
- * If not logged in, it triggers the Google popup.
- */
+    // Bind landing buttons
+    document.getElementById('btn-lan-mode')?.addEventListener('click', startLanFlow);
+    document.getElementById('btn-cloud-mode')?.addEventListener('click', handleCloudLogin);
+  }
+}
+
+// LAN Mode Flow
+function startLanFlow() {
+  isLanMode = true;
+  document.getElementById('landing-layer')?.classList.add('hidden');
+  updateRobotIdUI("Localhost");
+  
+  // Connect directly without auth or path
+  connect("ws://localhost:4245");
+}
+
+// Cloud Mode Flow
+async function handleCloudLogin() {
+  // Initialize Firebase (Lazy)
+  initFirebase();
+  
+  try {
+    const token = await getAuthToken();
+    
+    // Switch to list view in landing panel
+    document.getElementById('landing-options')?.classList.add('hidden');
+    const listPanel = document.getElementById('robot-list-panel');
+    listPanel?.classList.remove('hidden');
+
+    // Fetch robot list
+    const robots = await fetchRobotList(token);
+    renderRobotList(robots);
+
+  } catch (error) {
+    console.error("Login failed:", error);
+    alert("Login failed. Check console for details.");
+  }
+}
+
+async function startCloudFlow(robotId: string) {
+  // Ensure firebase is ready
+  initFirebase();
+  
+  try {
+    const token = await getAuthToken();
+    
+    // Hide landing if visible
+    document.getElementById('landing-layer')?.classList.add('hidden');
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/control/${robotId}?token=${encodeURIComponent(token)}`;
+    
+    connect(wsUrl);
+  } catch (error) {
+    console.error("Cloud connection failed:", error);
+  }
+}
+
+// --- Firebase Helpers ---
+
+function initFirebase() {
+  if (auth) return; // Already initialized
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
+    authDomain: "nf-web-480214.firebaseapp.com",
+    projectId: "nf-web-480214",
+    storageBucket: "nf-web-480214.firebasestorage.app",
+    messagingSenderId: "690802609278",
+    appId: "1:690802609278:web:8165450202df8179029c2f"
+  };
+
+  const googleapp = initializeApp(firebaseConfig);
+  auth = getAuth(googleapp);
+}
+
 async function getAuthToken(): Promise<string> {
+  if (!auth) throw new Error("Auth not initialized");
+  const provider = new GoogleAuthProvider();
+
   return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth!, async (user) => {
       unsubscribe();
       if (user) {
-        // Force refresh ensures the token hasn't expired since the last check
         const token = await user.getIdToken(true);
         resolve(token);
       } else {
         try {
-          const result = await signInWithPopup(auth, provider);
+          const result = await signInWithPopup(auth!, provider);
           const token = await result.user.getIdToken();
           resolve(token);
         } catch (error) {
@@ -198,99 +277,151 @@ async function getAuthToken(): Promise<string> {
   });
 }
 
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-let socket: WebSocket;
+// --- List Logic ---
 
-async function connect() {
-  try {
-    // Get the token from Firebase before attempting connection
-    const token = await getAuthToken();
-    
-    // Append the token as a query parameter for the backend to verify
-    // Using URLSearchParams ensures special characters are escaped correctly
-    const wsUrl = `${protocol}//${window.location.host}/control/${urlRobotId}?token=${encodeURIComponent(token)}`;
-
-    socket = new WebSocket(wsUrl);
-    socket.binaryType = 'arraybuffer';
-
-    socket.onopen = () => {
-      console.log('Connected to telemetry stream');
-    };
-
-    socket.onmessage = (event: MessageEvent) => {
-      try {
-        // Decode binary data into a message object
-        const data = new Uint8Array(event.data as ArrayBuffer);
-        const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
-
-        for (const update of batch.updates) {
-          if (update.newAnchorPoses) {
-            handleNewAnchorPoses(update.newAnchorPoses);
-          }
-          else if (update.posEstimate) {
-            handlePosEstimate(update.posEstimate);
-          }
-          else if (update.posFactorsDebug) {
-            handlePosFactorsDebug(update.posFactorsDebug);
-          }
-          else if (update.lastCommandedVel) {
-            handleLastCommandedVel(update.lastCommandedVel);
-          }
-          else if (update.vidStats) {
-            handleVidStats(update.vidStats);
-          }
-          // else if (update.componentConnStatus) {
-          //   handleComponentConnStatus(update.componentConnStatus);
-          // }
-          else if (update.targetList) {
-            handleTargetList(update.targetList);
-          }
-          else if (update.gantrySightings) {
-            sightingsManager.handleSightings(update.gantrySightings);
-          }
-          else if (update.popMessage) {
-            showPopup(update.popMessage);
-          }
-          else if (update.namedPosition) {
-            handleNamedPosition(update.namedPosition);
-          }
-          else if (update.videoReady) {
-            handleVideoReady(update.videoReady);
-          }
-          else if (update.uplinkStatus) {
-            handleUplinkStatus(update.uplinkStatus);
-          }
-          else if (update.gripCamPreditions) { // intentional mispelling
-            gripperVideo.setGripperPredictions(update.gripCamPreditions);
-          }
-
-
-        }
-      } catch (err) {
-        console.error("Decode error:", err);
-      }
-    };
-
-    socket.onclose = (event) => {
-      if (event.code === 1008) {
-        console.error("Authentication failed. Not retrying automatically.");
-        // Redirect to login or show error UI
-      } else {
-        console.warn("Disconnected. Retrying in 2s...");
-        setTimeout(connect, 2000);
-      }
-    };
-    
-    socket.onerror = (err) => {
-      console.error("WebSocket Error:", err);
-    };
-
-  } catch (err) {
-    console.error("Failed to authenticate or connect:", err);
-  }
+interface RobotInfo {
+  nickname: string;
+  robotid: string;
+  online: boolean;
 }
 
-connect();
+async function fetchRobotList(token: string): Promise<RobotInfo[]> {
+  const response = await fetch('/listrobots/', {
+    headers: { 'Authorization': token }
+  });
+  if (!response.ok) throw new Error("Failed to fetch robot list");
+  return await response.json();
+}
+
+function renderRobotList(robots: RobotInfo[]) {
+  const container = document.getElementById('robot-list-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (robots.length === 0) {
+    container.innerHTML = '<div style="padding:20px; color:#aaa">No robots found.</div>';
+    return;
+  }
+
+  robots.forEach(bot => {
+    const el = document.createElement('div');
+    el.className = 'robot-list-item';
+    el.innerHTML = `
+      <div>
+        <div class="robot-name">${bot.nickname || 'Unnamed Robot'}</div>
+        <div class="robot-id">${bot.robotid}</div>
+      </div>
+      <div class="status-badge ${bot.online ? 'status-online' : ''}">
+        ${bot.online ? 'ONLINE' : 'OFFLINE'}
+      </div>
+    `;
+    el.onclick = () => {
+      currentRobotId = bot.robotid;
+      updateRobotIdUI(currentRobotId);
+      // Update URL without reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('robotid', currentRobotId);
+      window.history.pushState({}, '', newUrl);
+      
+      startCloudFlow(currentRobotId);
+    };
+    container.appendChild(el);
+  });
+}
+
+function updateRobotIdUI(id: string) {
+  const el = document.getElementById('ui-robot-id');
+  if (el) el.textContent = id;
+}
+
+// --- WebSocket Logic ---
+
+function connect(wsUrl: string) {
+  if (socket) {
+    socket.close();
+  }
+
+  console.log("Connecting to:", wsUrl);
+  socket = new WebSocket(wsUrl);
+  socket.binaryType = 'arraybuffer';
+
+  socket.onopen = () => {
+    console.log('Connected to telemetry stream');
+    
+    // In LAN mode, we don't get UplinkStatus, so we assume online immediately
+    if (isLanMode) {
+      updateOnlineStatus(true, true);
+    }
+  };
+
+  socket.onmessage = (event: MessageEvent) => {
+    try {
+      const data = new Uint8Array(event.data as ArrayBuffer);
+      const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
+
+      for (const update of batch.updates) {
+        if (update.newAnchorPoses) {
+          handleNewAnchorPoses(update.newAnchorPoses);
+        }
+        else if (update.posEstimate) {
+          handlePosEstimate(update.posEstimate);
+        }
+        else if (update.posFactorsDebug) {
+          handlePosFactorsDebug(update.posFactorsDebug);
+        }
+        else if (update.lastCommandedVel) {
+          handleLastCommandedVel(update.lastCommandedVel);
+        }
+        else if (update.vidStats) {
+          handleVidStats(update.vidStats);
+        }
+        else if (update.componentConnStatus) {
+          handleComponentConnStatus(update.componentConnStatus);
+        }
+        else if (update.targetList) {
+          handleTargetList(update.targetList);
+        }
+        else if (update.gantrySightings) {
+          sightingsManager.handleSightings(update.gantrySightings);
+        }
+        else if (update.popMessage) {
+          showPopup(update.popMessage);
+        }
+        else if (update.namedPosition) {
+          handleNamedPosition(update.namedPosition);
+        }
+        else if (update.videoReady) {
+          handleVideoReady(update.videoReady);
+        }
+        else if (update.uplinkStatus) {
+          handleUplinkStatus(update.uplinkStatus);
+        }
+        else if (update.gripCamPreditions) {
+          gripperVideo.setGripperPredictions(update.gripCamPreditions);
+        }
+      }
+    } catch (err) {
+      console.error("Decode error:", err);
+    }
+  };
+
+  socket.onclose = (event) => {
+    if (event.code === 1008) {
+      console.error("Authentication failed. Not retrying automatically.");
+    } else {
+      console.warn("Disconnected. Retrying in 2s...");
+      updateOnlineStatus(false, isLanMode);
+      setTimeout(() => connect(wsUrl), 2000);
+    }
+  };
+  
+  socket.onerror = (err) => {
+    console.error("WebSocket Error:", err);
+  };
+}
+
+// Start the app
+initApp();
 
 function sendGamepad() {
   const items = gamepad.checkInputsAndCreateControlItems();
@@ -382,9 +513,100 @@ function handleVidStats(data: nf.telemetry.IVidStats) {
   }
 }
 
-// function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
-//   // tells us the status of the connection between observer and indibidual robot components.
-// }
+// Track state of all components since updates arrive one by one
+interface ComponentState {
+  name: string;
+  type: 'Anchor' | 'Gripper';
+  status: number;
+  ip: string;
+}
+const componentStates = new Map<string, ComponentState>();
+
+function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
+  // Identify Component Name & Type
+  let name = "Unknown";
+  let type: 'Anchor' | 'Gripper' = 'Anchor';
+
+  if (data.isGripper) {
+    type = 'Gripper';
+    if (data.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_ARPEGGIO) {
+      name = "Arpeggio Gripper";
+    } else {
+      name = "Pilot Gripper";
+    }
+  } else {
+    type = 'Anchor';
+    name = `Anchor ${data.anchorNum}`;
+  }
+
+  // Update Map
+  componentStates.set(name, {
+    name: name,
+    type: type,
+    status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
+    ip: data.ipAddress ?? ""
+  });
+
+  // Recalculate Totals
+  let anchorCount = 4; // TODO from another message we should be told the expected total based on the model of installed anchor
+  let anchorConnected = 0;
+  let gripperCount = 1;
+  let gripperConnected = 0;
+
+  componentStates.forEach(comp => {
+    const isConnected = comp.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+    
+    if (comp.type === 'Anchor') {
+      if (isConnected) anchorConnected++;
+    } else if (comp.type === 'Gripper') {
+      if (isConnected) gripperConnected++;
+    }
+  });
+
+  // Update Button Text
+  const btnText = document.getElementById('component-status-text');
+  if (btnText) {
+    btnText.textContent = `Anchors (${anchorConnected}/${anchorCount}) Gripper (${gripperConnected}/${gripperCount})`;
+  }
+
+  // Update Popup List
+  const menu = document.getElementById('component-menu');
+  if (menu) {
+    menu.innerHTML = '';
+    
+    // Sort keys alphabetically for consistent display
+    const sortedKeys = Array.from(componentStates.keys()).sort();
+
+    if (sortedKeys.length === 0) {
+      menu.innerHTML = '<div class="menu-item disabled">Waiting for telemetry...</div>';
+      return;
+    }
+
+    sortedKeys.forEach(key => {
+      const comp = componentStates.get(key)!;
+      const row = document.createElement('div');
+      row.className = 'comp-row';
+
+      const isConnected = comp.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+      const statusClass = isConnected ? 'comp-status-good' : 'comp-status-bad';
+      const statusText = isConnected ? 'Connected' : 'Disconnected';
+      const ip = comp.ip || 'Unknown IP';
+      
+      // Use placeholder span for the second line detail
+      row.innerHTML = `
+        <div class="comp-header">
+          <span>${comp.name}</span>
+          <span class="${statusClass}">${statusText}</span>
+        </div>
+        <div class="comp-details">
+          <span>${ip}</span>
+          <span></span> 
+        </div>
+      `;
+      menu.appendChild(row);
+    });
+  }
+}
 
 function handleTargetList(data: nf.telemetry.ITargetList) {
   const targets = data.targets ?? [];
@@ -450,10 +672,10 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
 }
 
 function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
-  // Indicates whether the robot is connected to control_plane
-  // update the indicator dot
-  const online = data.online;
+  updateOnlineStatus(data.online ?? false, false);
+}
 
+function updateOnlineStatus(online: boolean, lan: boolean) {
   const statusDot = document.getElementById('status-dot-el');
   const statusText = document.getElementById('status-text');
   const runBtn = document.getElementById('run-btn');
@@ -461,7 +683,7 @@ function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
   if (statusDot && statusText && runBtn) {
     if (online) {
       statusDot.classList.remove('status-offline');
-      statusText.textContent = 'Online';
+      statusText.textContent = lan ? 'Online (Local)' : 'Online';
       runBtn.classList.remove('disabled');
     } else {
       statusDot.classList.add('status-offline');
@@ -500,6 +722,9 @@ function onPerspectiveChanged(mode: number) {
       }
       break;
 
+    case perspGripper:
+      gamepad.setSeatOrbitMode(false);
+
   }
 }
 
@@ -513,7 +738,8 @@ function setPerspective(mode: number) {
         [perspViewport]: 'btn-viewport',
         [perspPerson]: 'btn-person',
         [perspTop]: 'btn-top',
-        [perspBottom]: 'btn-bottom'
+        [perspBottom]: 'btn-bottom',
+        [perspGripper]: 'btn-gripper'
     };
 
     // Remove 'perspective-button-selected' from all buttons
@@ -534,12 +760,12 @@ function initPerspectiveControls() {
     document.getElementById('btn-person')?.addEventListener('click', () => setPerspective(perspPerson));
     document.getElementById('btn-top')?.addEventListener('click', () => setPerspective(perspTop));
     document.getElementById('btn-bottom')?.addEventListener('click', () => setPerspective(perspBottom));
+    document.getElementById('btn-gripper')?.addEventListener('click', () => setPerspective(perspGripper));
     
     setPerspective(currentPerspective);
 }
 
 initPerspectiveControls();
-
 
 window.addEventListener('resize', () => {
     // Update Composer
@@ -564,8 +790,10 @@ initPopup();
 
 // Send a list of ControlItems immediately
 function sendControl(items: Array<nf.control.ControlItem>) {
+  // If we are in LAN mode, we don't need the robotId, but we can send "LAN" or similar.
+  // The backend might ignore it for direct LAN connections.
   const batchData = nf.control.ControlBatchUpdate.create({
-    robotId: urlRobotId,
+    robotId: isLanMode ? "local" : currentRobotId ?? "unknown",
     updates: items
   });
 
@@ -626,7 +854,7 @@ function initRunMenu() {
     // Bind all menu actions
     const Command = nf.control.Command;
 
-    bindCommand('action-pick-drop',      Command.COMMAND_PICK_AND_DROP);
+    bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
     bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
     bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
     bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
@@ -649,3 +877,25 @@ function initRunMenu() {
 
 // Initialize run menu listeners
 initRunMenu();
+
+// --- Component Status Menu ---
+function initComponentMenu() {
+  const compBtn = document.getElementById('component-status-btn');
+  const compMenu = document.getElementById('component-menu');
+
+  if (compBtn && compMenu) {
+    compBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      compMenu.classList.toggle('show');
+    });
+  }
+
+  // Close menu when clicking outside (shares logic with run menu if needed, or specific listener)
+  document.addEventListener('click', () => {
+    if (compMenu && compMenu.classList.contains('show')) {
+      compMenu.classList.remove('show');
+    }
+  });
+}
+
+initComponentMenu();
