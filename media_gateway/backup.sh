@@ -3,7 +3,7 @@
 # Configuration
 BUCKET_NAME="neufangled-db-backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_DIR="/home/admin/backups"
+BACKUP_DIR="/home/nhn/backups"
 ENV_FILE="$(dirname "$0")/.env"
 
 # Load environment variables from .env file if it exists
