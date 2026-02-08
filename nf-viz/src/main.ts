@@ -24,7 +24,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   onAuthStateChanged,
-  Auth
+  type Auth
 } from "firebase/auth";
 
 // --- GLOBAL VARIABLES ---
@@ -165,7 +165,8 @@ targetListManager.onTargetSelect = () => {
 
 let auth: Auth | null = null;
 let socket: WebSocket;
-let isLanMode = false; // Track mode to handle manual "online" status
+let isLanMode = false; 
+let isSimMode = false; // Track simulator mode
 
 // Entry Point
 function initApp() {
@@ -180,6 +181,7 @@ function initApp() {
 
     // Bind landing buttons
     document.getElementById('btn-lan-mode')?.addEventListener('click', startLanFlow);
+    document.getElementById('btn-sim-mode')?.addEventListener('click', startSimFlow);
     document.getElementById('btn-cloud-mode')?.addEventListener('click', handleCloudLogin);
   }
 }
@@ -194,27 +196,33 @@ function startLanFlow() {
   connect("ws://localhost:4245");
 }
 
+// Sim Mode Flow
+function startSimFlow() {
+  isSimMode = true;
+  document.getElementById('landing-layer')?.classList.add('hidden');
+  updateRobotIdUI("Simulated Pilot");
+  
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${protocol}//${window.location.host}/simulated/pilot`;
+  
+  connect(wsUrl);
+}
+
 // Cloud Mode Flow
 async function handleCloudLogin() {
   // Initialize Firebase (Lazy)
   initFirebase();
   
-  try {
-    const token = await getAuthToken();
-    
-    // Switch to list view in landing panel
-    document.getElementById('landing-options')?.classList.add('hidden');
-    const listPanel = document.getElementById('robot-list-panel');
-    listPanel?.classList.remove('hidden');
+  const token = await getAuthToken();
+  
+  // Switch to list view in landing panel
+  document.getElementById('landing-options')?.classList.add('hidden');
+  const listPanel = document.getElementById('robot-list-panel');
+  listPanel?.classList.remove('hidden');
 
-    // Fetch robot list
-    const robots = await fetchRobotList(token);
-    renderRobotList(robots);
-
-  } catch (error) {
-    console.error("Login failed:", error);
-    alert("Login failed. Check console for details.");
-  }
+  // Fetch robot list
+  const robots = await fetchRobotList(token);
+  renderRobotList(robots);
 }
 
 async function startCloudFlow(robotId: string) {
@@ -286,11 +294,12 @@ interface RobotInfo {
 }
 
 async function fetchRobotList(token: string): Promise<RobotInfo[]> {
-  const response = await fetch('/listrobots/', {
-    headers: { 'Authorization': token }
+  const response = await fetch('/listrobots', {
+    headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!response.ok) throw new Error("Failed to fetch robot list");
-  return await response.json();
+  let result = await response.json();
+  return result['bots']; // top level element to contain the list of bots
 }
 
 function renderRobotList(robots: RobotInfo[]) {
@@ -348,9 +357,9 @@ function connect(wsUrl: string) {
   socket.onopen = () => {
     console.log('Connected to telemetry stream');
     
-    // In LAN mode, we don't get UplinkStatus, so we assume online immediately
-    if (isLanMode) {
-      updateOnlineStatus(true, true);
+    // In LAN/Sim mode, we don't get UplinkStatus, so we assume online immediately
+    if (isLanMode || isSimMode) {
+      updateOnlineStatus(true);
     }
   };
 
@@ -410,7 +419,7 @@ function connect(wsUrl: string) {
       console.error("Authentication failed. Not retrying automatically.");
     } else {
       console.warn("Disconnected. Retrying in 2s...");
-      updateOnlineStatus(false, isLanMode);
+      updateOnlineStatus(false);
       setTimeout(() => connect(wsUrl), 2000);
     }
   };
@@ -672,10 +681,10 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
 }
 
 function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
-  updateOnlineStatus(data.online ?? false, false);
+  updateOnlineStatus(data.online ?? false);
 }
 
-function updateOnlineStatus(online: boolean, lan: boolean) {
+function updateOnlineStatus(online: boolean) {
   const statusDot = document.getElementById('status-dot-el');
   const statusText = document.getElementById('status-text');
   const runBtn = document.getElementById('run-btn');
@@ -683,7 +692,12 @@ function updateOnlineStatus(online: boolean, lan: boolean) {
   if (statusDot && statusText && runBtn) {
     if (online) {
       statusDot.classList.remove('status-offline');
-      statusText.textContent = lan ? 'Online (Local)' : 'Online';
+      
+      let text = 'Online';
+      if (isLanMode) text = 'Online (Local)';
+      if (isSimMode) text = 'Online (Sim)';
+      
+      statusText.textContent = text;
       runBtn.classList.remove('disabled');
     } else {
       statusDot.classList.add('status-offline');
@@ -790,10 +804,13 @@ initPopup();
 
 // Send a list of ControlItems immediately
 function sendControl(items: Array<nf.control.ControlItem>) {
-  // If we are in LAN mode, we don't need the robotId, but we can send "LAN" or similar.
-  // The backend might ignore it for direct LAN connections.
+  // Determine robot ID context
+  let rId = currentRobotId ?? "unknown";
+  if (isLanMode) rId = "local";
+  if (isSimMode) rId = "simulated";
+
   const batchData = nf.control.ControlBatchUpdate.create({
-    robotId: isLanMode ? "local" : currentRobotId ?? "unknown",
+    robotId: rId,
     updates: items
   });
 
@@ -878,7 +895,7 @@ function initRunMenu() {
 // Initialize run menu listeners
 initRunMenu();
 
-// Component Status Menu
+// --- Component Status Menu ---
 function initComponentMenu() {
   const compBtn = document.getElementById('component-status-btn');
   const compMenu = document.getElementById('component-menu');

@@ -93,9 +93,15 @@
       }
       .btn-cloud:hover { background-color: #43a047; }
 
+      .btn-sim {
+        background-color: #2196F3;
+        color: white;
+      }
+      .btn-sim:hover { background-color: #1976D2; }
+
       .landing-hint {
         font-size: 0.85rem;
-        color: #aaa;
+        color: #CCC;
         margin-top: 10px;
       }
 
@@ -727,13 +733,18 @@
           <div class="landing-hint">Connect to robot controller on localhost</div>
         </button>
 
+        <button id="btn-sim-mode" class="landing-btn btn-sim">
+          Explore simulated robot
+          <div class="landing-hint">Interact with a virtual Stringman (pilot version)</div>
+        </button>
+
         <button id="btn-cloud-mode" class="landing-btn btn-cloud">
           Log in
           <div class="landing-hint">Manage your cloud-connected robots</div>
         </button>
         
         <div class="landing-hint">
-          <a href="#" style="color:#aaa" onclick="alert('LAN mode connects directly to ws://localhost:4245 without authentication.')">Learn more about LAN mode</a>
+          <a href="/docs/lan_only_guide/" style="color:#aaa">Learn more about Stringman data privacy</a>
         </div>
       </div>
 
