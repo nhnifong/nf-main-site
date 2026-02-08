@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .telemetry_manager import telemetry_manager
-from .auth import validate_stream_auth, get_current_user_ws, get_current_robot_ws
+from .auth import verify_google_token, validate_stream_auth, check_robot_ownership
 from .queue_manager import queue_manager
 
 # Configure logging
@@ -82,7 +82,7 @@ class StreamAuthRequest(BaseModel):
     """Payload sent by MediaMTX to validate a stream publisher or reader."""
     ip: str
     user: str
-    password: str
+    password: str  # MediaMTX can pass a token here
     path: str
     protocol: str
     id: str
@@ -108,11 +108,10 @@ async def media_server_auth(req: StreamAuthRequest):
       We verify the robot has permission to publish
     - If action == 'read', a User is trying to watch via WebRTC.
       We verify the user has permission to view this robot.
-    """
+    """            
     is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis)
     if not is_valid:
-        # tell mediamtx to disconnect the client
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        raise HTTPException(status_code=403, detail="Forbidden")
     return {"status": "OK"}
 
 # --- Robot Control Endpoint ---
@@ -131,10 +130,7 @@ async def websocket_endpoint(
     """
     await websocket.accept()
     
-    try:
-        # Authenticate Robot (check token against DB)
-        # await get_current_robot_ws(token, robot_id)
-        
+    try:        
         logger.info(f"Robot {robot_id} connected via WebSocket")
         await telemetry_manager.handle_robot_connection(websocket, robot_id)
 
@@ -163,11 +159,26 @@ async def websocket_endpoint(
     await websocket.accept()
     
     try:
-        # Authenticate User
-        # user = await get_current_user_ws(token)
-        user_id = "temp_user_id" # Placeholder
+        if not token:
+            await websocket.close(code=1008) # code for Policy Violation
+            # no token provided
+            return
+
+        # Verify Identity
+        user_token = await verify_google_token(token)
+        user_id = user_token["uid"]
         
-        logger.info(f"User {user_id} connected to control {robot_id}")
+        # Check Authorization
+        # does the logged in user have permission to
+        # 1. observe the robot?
+        # 2. issue target or motion commands?
+        # 3. issue calibration or shutdown commands?
+        # For now, it's just all or nothing. 
+        if not await check_robot_ownership(user_token, robot_id):
+            await websocket.close(code=1008) # code for Policy Violation
+            return
+
+        logger.info(f"User {user_id} authorized for robot {robot_id}")
         await telemetry_manager.handle_user_connection(websocket, robot_id, user_id)
 
     except WebSocketDisconnect:

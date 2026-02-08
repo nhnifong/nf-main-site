@@ -8,3 +8,4 @@ app/__pycache__/
 nf-viz/.vite/
 nf-viz/venv/
 nf-viz/src/temp_protos/
+service-account.json

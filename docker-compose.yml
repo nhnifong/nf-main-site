@@ -10,6 +10,10 @@ services:
     environment:
       # In Docker Compose, hostnames are service names.
       - REDIS_URL=redis://redis:6379
+      - GOOGLE_CLOUD_PROJECT=nf-web-480214
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+    volumes:
+      - $HOME/.config/gcloud/application_default_credentials.json:/app/service-account.json
     depends_on:
       - redis
 

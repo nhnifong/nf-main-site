@@ -3,11 +3,13 @@ Homepage for Neufangled Robotics
 
 ## Run locally
 
+login once
+
+    gcloud auth application-default login
+
 Run all components (control_plane, media_gateway, redis) at once with docker compose
 
-```
-docker compose up --build
-```
+    docker compose up --build
 
 ### Run media gateway in isolation
 

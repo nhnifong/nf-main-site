@@ -17,6 +17,15 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
+import { initializeApp } from "firebase/app";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  onAuthStateChanged,
+} from "firebase/auth";
+
+
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 const urlRobotId: string = urlParams.get('robotid') ?? 'playroom';
 
@@ -149,77 +158,136 @@ targetListManager.onTargetSelect = () => {
     secondOverheadVideo.refresh();
 };
 
-// Connection to backend
+// ------ Authorization and websocket connection ------
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
+  authDomain: "nf-web-480214.firebaseapp.com",
+  projectId: "nf-web-480214",
+  storageBucket: "nf-web-480214.firebasestorage.app",
+  messagingSenderId: "690802609278",
+  appId: "1:690802609278:web:8165450202df8179029c2f"
+};
+
+const googleapp = initializeApp(firebaseConfig);
+const auth = getAuth(googleapp);
+const provider = new GoogleAuthProvider();
+
+/**
+ * Ensures the user is logged in and returns their current ID token.
+ * If not logged in, it triggers the Google popup.
+ */
+async function getAuthToken(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+      if (user) {
+        // Force refresh ensures the token hasn't expired since the last check
+        const token = await user.getIdToken(true);
+        resolve(token);
+      } else {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const token = await result.user.getIdToken();
+          resolve(token);
+        } catch (error) {
+          reject(error);
+        }
+      }
+    });
+  });
+}
+
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}/control/${urlRobotId}`;
 let socket: WebSocket;
 
-function connect() {
-  socket = new WebSocket(wsUrl);
-  socket.binaryType = 'arraybuffer';
+async function connect() {
+  try {
+    // Get the token from Firebase before attempting connection
+    const token = await getAuthToken();
+    
+    // Append the token as a query parameter for the backend to verify
+    // Using URLSearchParams ensures special characters are escaped correctly
+    const wsUrl = `${protocol}//${window.location.host}/control/${urlRobotId}?token=${encodeURIComponent(token)}`;
 
-  socket.onopen = () => {
-    console.log('Connected to telemetry stream');
-  };
+    socket = new WebSocket(wsUrl);
+    socket.binaryType = 'arraybuffer';
 
-  socket.onmessage = (event: MessageEvent) => {
-    try {
-      // Decode binary data into a message object
-      const data = new Uint8Array(event.data as ArrayBuffer);
-      const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
+    socket.onopen = () => {
+      console.log('Connected to telemetry stream');
+    };
 
-      for (const update of batch.updates) {
-        if (update.newAnchorPoses) {
-          handleNewAnchorPoses(update.newAnchorPoses);
-        }
-        else if (update.posEstimate) {
-          handlePosEstimate(update.posEstimate);
-        }
-        else if (update.posFactorsDebug) {
-          handlePosFactorsDebug(update.posFactorsDebug);
-        }
-        else if (update.lastCommandedVel) {
-          handleLastCommandedVel(update.lastCommandedVel);
-        }
-        else if (update.vidStats) {
-          handleVidStats(update.vidStats);
-        }
-        // else if (update.componentConnStatus) {
-        //   handleComponentConnStatus(update.componentConnStatus);
-        // }
-        else if (update.targetList) {
-          handleTargetList(update.targetList);
-        }
-        else if (update.gantrySightings) {
-          sightingsManager.handleSightings(update.gantrySightings);
-        }
-        else if (update.popMessage) {
-          showPopup(update.popMessage);
-        }
-        else if (update.namedPosition) {
-          handleNamedPosition(update.namedPosition);
-        }
-        else if (update.videoReady) {
-          handleVideoReady(update.videoReady);
-        }
-        else if (update.uplinkStatus) {
-          handleUplinkStatus(update.uplinkStatus);
-        }
-        else if (update.gripCamPreditions) { // intentional mispelling
-          gripperVideo.setGripperPredictions(update.gripCamPreditions);
-        }
+    socket.onmessage = (event: MessageEvent) => {
+      try {
+        // Decode binary data into a message object
+        const data = new Uint8Array(event.data as ArrayBuffer);
+        const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
+
+        for (const update of batch.updates) {
+          if (update.newAnchorPoses) {
+            handleNewAnchorPoses(update.newAnchorPoses);
+          }
+          else if (update.posEstimate) {
+            handlePosEstimate(update.posEstimate);
+          }
+          else if (update.posFactorsDebug) {
+            handlePosFactorsDebug(update.posFactorsDebug);
+          }
+          else if (update.lastCommandedVel) {
+            handleLastCommandedVel(update.lastCommandedVel);
+          }
+          else if (update.vidStats) {
+            handleVidStats(update.vidStats);
+          }
+          // else if (update.componentConnStatus) {
+          //   handleComponentConnStatus(update.componentConnStatus);
+          // }
+          else if (update.targetList) {
+            handleTargetList(update.targetList);
+          }
+          else if (update.gantrySightings) {
+            sightingsManager.handleSightings(update.gantrySightings);
+          }
+          else if (update.popMessage) {
+            showPopup(update.popMessage);
+          }
+          else if (update.namedPosition) {
+            handleNamedPosition(update.namedPosition);
+          }
+          else if (update.videoReady) {
+            handleVideoReady(update.videoReady);
+          }
+          else if (update.uplinkStatus) {
+            handleUplinkStatus(update.uplinkStatus);
+          }
+          else if (update.gripCamPreditions) { // intentional mispelling
+            gripperVideo.setGripperPredictions(update.gripCamPreditions);
+          }
 
 
+        }
+      } catch (err) {
+        console.error("Decode error:", err);
       }
-    } catch (err) {
-      console.error("Decode error:", err);
-    }
-  };
+    };
 
-  socket.onclose = () => {
-    console.warn("Disconnected. Retrying in 2s...");
-    setTimeout(connect, 2000);
-  };
+    socket.onclose = (event) => {
+      if (event.code === 1008) {
+        console.error("Authentication failed. Not retrying automatically.");
+        // Redirect to login or show error UI
+      } else {
+        console.warn("Disconnected. Retrying in 2s...");
+        setTimeout(connect, 2000);
+      }
+    };
+    
+    socket.onerror = (err) => {
+      console.error("WebSocket Error:", err);
+    };
+
+  } catch (err) {
+    console.error("Failed to authenticate or connect:", err);
+  }
 }
 
 connect();

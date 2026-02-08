@@ -7,7 +7,6 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "npm run proto && tsc && vite build",
-    
     "//comment": "Run python sync and build JS from the temp_protos folder.",
     "proto": "python3 sync_protos.py && mkdir -p src/generated && pbjs -t static-module -w es6 -p src/temp_protos -o src/generated/proto_bundle.js src/temp_protos/*.proto && pbts -o src/generated/proto_bundle.d.ts src/generated/proto_bundle.js"
   },
@@ -18,6 +17,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "firebase": "^12.9.0",
     "protobufjs": "^7.5.4",
     "three": "^0.182.0"
   }
