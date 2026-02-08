@@ -8,11 +8,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .telemetry_manager import telemetry_manager
 from .auth import verify_google_token, validate_stream_auth, check_robot_ownership
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
+from .database import init_db, get_db, RobotOwnership
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +38,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-token_in_header = HTTPBearer()
+token_auth_scheme = HTTPBearer()
+
+@app.on_event("startup")
+async def startup_event():
+    await telemetry_manager.connect()
+    # Create the SQL tables on the VM database if they don't exist
+    await init_db()
 
 # --- STATIC FILE SERVING ---
 
@@ -156,9 +165,10 @@ async def ui_websocket_endpoint(
         # 1. observe the robot?
         # 2. issue target or motion commands?
         # 3. issue calibration or shutdown commands?
-        # For now, it's just all or nothing. 
-        if not await check_robot_ownership(user_token, robot_id):
-            await websocket.close(code=1008) # code for Policy Violation
+        # For now, it's just all or nothing.
+        if not await check_robot_ownership(user_token["uid"], robot_id):
+            logger.warning(f"Unauthorized access attempt to {robot_id}")
+            await websocket.close(code=1008)
             return
 
         logger.info(f"User {user_id} authorized for robot {robot_id}")
@@ -193,23 +203,97 @@ async def simulator(
         await websocket.close(code=1011)
         raise e # raise so trace can be seen in logs
 
-@app.get("/listrobots")
-async def list_robots(credentials: Annotated[HTTPAuthorizationCredentials, Depends(token_in_header)]):
-    token = credentials.credentials
-    if token is None:
-        return {'bots':[]}
-
-    user_token = await verify_google_token(token)
+@app.post("/bind/{robot_id}")
+async def bind_robot(
+    robot_id: str, 
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    nickname: Optional[str] = "Stringman",
+    db: AsyncSession = Depends(get_db)
+):
+    """Links a robot to a user if it's currently unowned."""
+    user_token = await verify_google_token(creds.credentials)
     user_id = user_token["uid"]
 
-    return {
-        'bots': list([
-            {
-                'robotid': f'12345_{i}',
-                'online': True,
-                'nickname': 'room name',
-            } for i in range(3)])
-    }
+    # Check if the robot is already owned by ANYONE
+    existing = await db.execute(
+        select(RobotOwnership).where(RobotOwnership.robot_id == robot_id)
+    )
+    ownership = existing.scalar_one_or_none()
+
+    if ownership:
+        if ownership.user_id == user_id:
+            # If the user already owns it, we allow them to update the nickname
+            ownership.nickname = nickname
+            await db.commit()
+            return {"status": "nickname_updated", "nickname": nickname}
+        raise HTTPException(status_code=403, detail="Robot is owned by another user")
+
+    # Claim the robot with the provided nickname
+    new_owner = RobotOwnership(user_id=user_id, robot_id=robot_id, nickname=nickname)
+    db.add(new_owner)
+    await db.commit()
+    
+    return {"status": "bound", "robot_id": robot_id, "nickname": nickname}
+
+@app.post("/unbind/{robot_id}")
+async def unbind_robot(
+    robot_id: str,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Removes a robot from the user's ownership list."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    # Only the owner should be allowed to unbind the robot
+    result = await db.execute(
+        delete(RobotOwnership).where(
+            RobotOwnership.user_id == user_id,
+            RobotOwnership.robot_id == robot_id
+        )
+    )
+    
+    if result.rowcount == 0:
+        # Check if it was owned by someone else or just didn't exist
+        existing = await db.execute(
+            select(RobotOwnership).where(RobotOwnership.robot_id == robot_id)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=403, detail="Thats not your robot")
+        raise HTTPException(status_code=404, detail="Robot not found")
+
+    await db.commit()
+    return {"status": "unbound", "robot_id": robot_id}
+
+@app.get("/listrobots")
+async def list_robots(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns all robots owned by the logged-in user."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    result = await db.execute(
+        select(RobotOwnership).where(RobotOwnership.user_id == user_id)
+    )
+    owned_bots = result.scalars().all()
+
+    # We fetch the online status for each robot from Redis
+    # The telemetry_manager maintains these states as the robots connect/disconnect
+    bots_with_status = []
+    for b in owned_bots:
+        # Fetch the hash containing the online flag for this specific robot
+        up_status = await telemetry_manager.decoding_redis.hgetall(f"robot:{b.robot_id}:uplink_state")
+        is_online = up_status.get('online') == 'true' if up_status else False
+        
+        bots_with_status.append({
+            'robotid': b.robot_id,
+            'nickname': b.nickname or "Unnamed Robot",
+            'online': is_online
+        })
+
+    return {'bots': bots_with_status}
 
 
 # by putting this at the end, it is matched with a lower priority.

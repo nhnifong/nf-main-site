@@ -4,6 +4,8 @@ import firebase_admin
 from firebase_admin import auth, credentials
 from fastapi import HTTPException, status, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
+from .database import async_session, RobotOwnership
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +42,16 @@ async def verify_google_token(token: str) -> dict:
             detail="Invalid authentication credentials",
         )
 
-async def check_robot_ownership(user_token, robot_id):
-    return True
+async def check_robot_ownership(user_id: str, robot_id: str) -> bool:
+    """Queries Postgres to see if this specific user owns this robot."""
+    async with async_session() as session:
+        result = await session.execute(
+            select(RobotOwnership).where(
+                RobotOwnership.user_id == user_id,
+                RobotOwnership.robot_id == robot_id
+            )
+        )
+        return result.scalar_one_or_none() is not None
 
 async def validate_stream_auth(req, redis_conn) -> bool:
     """

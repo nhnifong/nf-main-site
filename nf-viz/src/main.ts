@@ -31,6 +31,7 @@ import {
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 // If robotid is set in URL, we force cloud login. Otherwise we start the landing UI.
 let currentRobotId: string | null = urlParams.get('robotid'); 
+let detectedRobotId: string | null = null; // Stored from incoming telemetry
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -183,6 +184,15 @@ function initApp() {
     document.getElementById('btn-lan-mode')?.addEventListener('click', startLanFlow);
     document.getElementById('btn-sim-mode')?.addEventListener('click', startSimFlow);
     document.getElementById('btn-cloud-mode')?.addEventListener('click', handleCloudLogin);
+    
+    // Bind binding panel buttons
+    document.getElementById('btn-cancel-bind')?.addEventListener('click', () => {
+      document.getElementById('landing-layer')?.classList.add('hidden');
+      document.getElementById('bind-robot-panel')?.classList.add('hidden');
+      document.getElementById('landing-options')?.classList.remove('hidden');
+    });
+    
+    document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
   }
 }
 
@@ -191,6 +201,9 @@ function startLanFlow() {
   isLanMode = true;
   document.getElementById('landing-layer')?.classList.add('hidden');
   updateRobotIdUI("Localhost");
+  
+  // Show the Bind button since we are in LAN mode
+  document.getElementById('action-bind')?.classList.remove('hidden');
   
   // Connect directly without auth or path
   connect("ws://localhost:4245");
@@ -241,6 +254,68 @@ async function startCloudFlow(robotId: string) {
     connect(wsUrl);
   } catch (error) {
     console.error("Cloud connection failed:", error);
+  }
+}
+
+// --- Binding Logic ---
+
+async function handleBindAction() {
+  // Ensure we have the robot ID from telemetry
+  if (!detectedRobotId) {
+    alert("Cannot bind: Robot ID not yet received from telemetry.");
+    return;
+  }
+
+  // Force Login (if not already)
+  initFirebase();
+  try {
+    await getAuthToken();
+    
+    // 3. Show Bind Panel
+    const landing = document.getElementById('landing-layer');
+    const options = document.getElementById('landing-options');
+    const bindPanel = document.getElementById('bind-robot-panel');
+    
+    if (landing && options && bindPanel) {
+      landing.classList.remove('hidden');
+      options.classList.add('hidden');
+      bindPanel.classList.remove('hidden');
+    }
+  } catch (error) {
+    console.error("Login required for binding:", error);
+    alert("You must log in to bind a robot.");
+  }
+}
+
+async function executeBind() {
+  const nicknameInput = document.getElementById('bind-nickname') as HTMLInputElement;
+  const nickname = nicknameInput?.value || "Stringman";
+  
+  if (!detectedRobotId) return;
+
+  try {
+    const token = await getAuthToken();
+    const encodedNick = encodeURIComponent(nickname);
+    
+    const response = await fetch(`/bind/${detectedRobotId}?nickname=${encodedNick}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Binding failed: ${response.statusText}`);
+    }
+
+    // Success
+    document.getElementById('landing-layer')?.classList.add('hidden');
+    document.getElementById('bind-robot-panel')?.classList.add('hidden');
+    
+    // Show nice confirmation
+    showPopup({message: "Success! Robot bound to your account.\n\nPlease restart the robot for it to switch to Cloud Mode."});
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to bind robot. See console.");
   }
 }
 
@@ -367,6 +442,15 @@ function connect(wsUrl: string) {
     try {
       const data = new Uint8Array(event.data as ArrayBuffer);
       const batch = nf.telemetry.TelemetryBatchUpdate.decode(data);
+
+      // Capture ID from telemetry stream if available
+      if (batch.robotId && batch.robotId !== detectedRobotId) {
+        detectedRobotId = batch.robotId;
+        console.log("Telemetry from Robot ID:", detectedRobotId);
+        if (isLanMode) {
+          updateRobotIdUI(detectedRobotId);
+        }
+      }
 
       for (const update of batch.updates) {
         if (update.newAnchorPoses) {

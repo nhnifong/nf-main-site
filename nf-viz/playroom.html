@@ -141,6 +141,23 @@
       }
       .status-online { background: #1b5e20; color: #a5d6a7; }
 
+      /* Input styles for bind panel */
+      .input-text {
+        width: 100%;
+        padding: 12px;
+        margin: 15px 0;
+        background: #222;
+        border: 1px solid #555;
+        color: white;
+        border-radius: 6px;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      .input-text:focus {
+        border-color: #4CAF50;
+        outline: none;
+      }
+
       /* Common styles for all panels */
       .panel {
         background: rgba(155, 155, 145, 0.85);
@@ -755,6 +772,25 @@
           <div style="color: #888; padding: 20px;">Loading robots...</div>
         </div>
       </div>
+
+      <div class="landing-panel hidden" id="bind-robot-panel">
+        <div class="landing-title">Bind Robot</div>
+        
+        <p style="color: #ccc; margin-bottom: 20px;">
+          Give this robot a nickname to identify it in your cloud dashboard. (e.g. "bedroom")
+        </p>
+
+        <input type="text" id="bind-nickname" class="input-text" placeholder="e.g. Living Room Bot" value="Stringman">
+
+        <button id="btn-confirm-bind" class="landing-btn btn-cloud">
+          Bind to my account
+          <div class="landing-hint">This robot will become accessible in cloud mode.</div>
+        </button>
+
+        <button id="btn-cancel-bind" class="landing-btn btn-lan">
+          Cancel
+        </button>
+      </div>
     </div>
 
     <!-- UI Overlay Layer (z-index 10) -->
@@ -823,6 +859,8 @@
             <div id="action-grasp" class="menu-item">Auto Grasp Here (D-right)</div>
             <div id="action-dataset" class="menu-item">Add targets to dataset</div>
             <div id="action-collect-images" class="menu-item">Collect Gripper Images</div>
+            <div id="action-bind" class="menu-item hidden" style="border-top: 1px solid #ccc; color: #007fff; font-weight: bold;">Bind to account</div>
+
           </div>
         </div>
 
