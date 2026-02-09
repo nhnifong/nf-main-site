@@ -17,15 +17,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
-// Firebase imports (lazy loaded logic below)
-import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  onAuthStateChanged,
-  type Auth
-} from "firebase/auth";
+// Auth Manager
+import * as AuthManager from './auth.ts';
 
 // --- GLOBAL VARIABLES ---
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
@@ -164,13 +157,24 @@ targetListManager.onTargetSelect = () => {
 
 // ------ Authorization and Connection Logic ------
 
-let auth: Auth | null = null;
 let socket: WebSocket;
 let isLanMode = false; 
 let isSimMode = false; // Track simulator mode
 
 // Entry Point
 function initApp() {
+  // Always init firebase to check auth state for button label
+  AuthManager.initAuth((user) => {
+    const btn = document.getElementById('btn-cloud-mode');
+    if (btn) {
+      if (user) {
+        btn.innerHTML = `My Robots<div class="landing-hint">Manage your cloud-connected robots</div>`;
+      } else {
+        btn.innerHTML = `Log in<div class="landing-hint">Manage your cloud-connected robots</div>`;
+      }
+    }
+  });
+
   if (currentRobotId) {
     // URL param set -> Force cloud flow
     updateRobotIdUI(currentRobotId);
@@ -193,12 +197,6 @@ function initApp() {
     });
     
     document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
-
-    // Bind robot list back button
-    document.getElementById('btn-robot-list-back')?.addEventListener('click', () => {
-      document.getElementById('robot-list-panel')?.classList.add('hidden');
-      document.getElementById('landing-options')?.classList.remove('hidden');
-    });
   }
 }
 
@@ -229,27 +227,31 @@ function startSimFlow() {
 
 // Cloud Mode Flow
 async function handleCloudLogin() {
-  // Initialize Firebase (Lazy)
-  initFirebase();
+  // Ensure Auth init is called (lazy)
+  AuthManager.initAuth();
   
-  const token = await getAuthToken();
-  
-  // Switch to list view in landing panel
-  document.getElementById('landing-options')?.classList.add('hidden');
-  const listPanel = document.getElementById('robot-list-panel');
-  listPanel?.classList.remove('hidden');
+  try {
+    const token = await AuthManager.getAuthToken();
+    
+    // Switch to list view in landing panel
+    document.getElementById('landing-options')?.classList.add('hidden');
+    const listPanel = document.getElementById('robot-list-panel');
+    listPanel?.classList.remove('hidden');
 
-  // Fetch robot list
-  const robots = await fetchRobotList(token);
-  renderRobotList(robots);
+    // Fetch robot list
+    const robots = await AuthManager.apiListRobots(token);
+    renderRobotList(robots);
+  } catch (error) {
+    console.error("Login failed:", error);
+    alert("Login failed. Check console for details.");
+  }
 }
 
 async function startCloudFlow(robotId: string) {
-  // Ensure firebase is ready
-  initFirebase();
+  AuthManager.initAuth();
   
   try {
-    const token = await getAuthToken();
+    const token = await AuthManager.getAuthToken();
     
     // Hide landing if visible
     document.getElementById('landing-layer')?.classList.add('hidden');
@@ -263,7 +265,7 @@ async function startCloudFlow(robotId: string) {
   }
 }
 
-// --- Binding Logic (user claiming ownership of particular robot id) ---
+// --- Binding Logic ---
 
 async function handleBindAction() {
   // Ensure we have the robot ID from telemetry
@@ -273,9 +275,9 @@ async function handleBindAction() {
   }
 
   // Force Login (if not already)
-  initFirebase();
+  AuthManager.initAuth();
   try {
-    await getAuthToken();
+    await AuthManager.getAuthToken();
     
     // Show Bind Panel
     const landing = document.getElementById('landing-layer');
@@ -300,17 +302,9 @@ async function executeBind() {
   if (!detectedRobotId) return;
 
   try {
-    const token = await getAuthToken();
-    const encodedNick = encodeURIComponent(nickname);
+    const token = await AuthManager.getAuthToken();
     
-    const response = await fetch(`/bind/${detectedRobotId}?nickname=${encodedNick}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Binding failed: ${response.statusText}`);
-    }
+    await AuthManager.apiBindRobot(detectedRobotId, nickname, token);
 
     // Success
     document.getElementById('landing-layer')?.classList.add('hidden');
@@ -368,17 +362,12 @@ function handleUnbindClick(e: Event, robotId: string) {
 
 async function executeUnbind(robotId: string) {
   try {
-    const token = await getAuthToken();
+    const token = await AuthManager.getAuthToken();
     
-    const response = await fetch(`/unbind/${robotId}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) throw new Error("Unbind failed");
+    await AuthManager.apiUnbindRobot(robotId, token);
 
     // Refresh list
-    const robots = await fetchRobotList(token);
+    const robots = await AuthManager.apiListRobots(token);
     renderRobotList(robots);
 
   } catch (error) {
@@ -387,65 +376,9 @@ async function executeUnbind(robotId: string) {
   }
 }
 
-// --- Firebase Helpers ---
-
-function initFirebase() {
-  if (auth) return; // Already initialized
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
-    authDomain: "nf-web-480214.firebaseapp.com",
-    projectId: "nf-web-480214",
-    storageBucket: "nf-web-480214.firebasestorage.app",
-    messagingSenderId: "690802609278",
-    appId: "1:690802609278:web:8165450202df8179029c2f"
-  };
-
-  const googleapp = initializeApp(firebaseConfig);
-  auth = getAuth(googleapp);
-}
-
-async function getAuthToken(): Promise<string> {
-  if (!auth) throw new Error("Auth not initialized");
-  const provider = new GoogleAuthProvider();
-
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(auth!, async (user) => {
-      unsubscribe();
-      if (user) {
-        const token = await user.getIdToken(true);
-        resolve(token);
-      } else {
-        try {
-          const result = await signInWithPopup(auth!, provider);
-          const token = await result.user.getIdToken();
-          resolve(token);
-        } catch (error) {
-          reject(error);
-        }
-      }
-    });
-  });
-}
-
 // --- List Logic ---
 
-interface RobotInfo {
-  nickname: string;
-  robotid: string;
-  online: boolean;
-}
-
-async function fetchRobotList(token: string): Promise<RobotInfo[]> {
-  const response = await fetch('/listrobots', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (!response.ok) throw new Error("Failed to fetch robot list");
-  let result = await response.json();
-  return result['bots']; // top level element to contain the list of bots
-}
-
-function renderRobotList(robots: RobotInfo[]) {
+function renderRobotList(robots: AuthManager.RobotInfo[]) {
   const container = document.getElementById('robot-list-container');
   if (!container) return;
   container.innerHTML = '';
@@ -872,7 +805,7 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
     let token: string | undefined;
     if (!isSimMode) {
       try {
-        token = await getAuthToken();
+        token = await AuthManager.getAuthToken();
       } catch (e) {
         console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
       }
@@ -1095,8 +1028,8 @@ function initRunMenu() {
     bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
     // bindCommand('action-park',           Command.COMMAND_PARK);
     // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
-
-    // bind the bind robot action
+    
+    // Bind bind action
     const bindAction = document.getElementById('action-bind');
     if (bindAction) {
       bindAction.addEventListener('click', () => {
