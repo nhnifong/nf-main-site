@@ -40,7 +40,11 @@ services:
       POSTGRES_USER: prod_user
       POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
     ports:
-      - "10.142.0.2:5432:5432" # bind only on VM's internal IP
+      - target: 5432
+        published: 5432
+        host_ip: 10.142.0.2 # bind only on VM's internal IP
+        protocol: tcp
+        mode: host
     volumes:
       - ./data/prod:/var/lib/postgresql/data
 
@@ -55,6 +59,10 @@ services:
       POSTGRES_USER: staging_user
       POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD}
     ports:
-      - "10.142.0.25433:5432" # Exposed on 5433 to avoid conflict with prod
+      - target: 5432
+        published: 5433
+        host_ip: 10.142.0.2
+        protocol: tcp
+        mode: host
     volumes:
       - ./data/staging:/var/lib/postgresql/data
