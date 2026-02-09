@@ -257,7 +257,7 @@ async function startCloudFlow(robotId: string) {
   }
 }
 
-// --- Binding Logic ---
+// --- Binding Logic (user claiming ownership of particular robot id) ---
 
 async function handleBindAction() {
   // Ensure we have the robot ID from telemetry
@@ -271,7 +271,7 @@ async function handleBindAction() {
   try {
     await getAuthToken();
     
-    // 3. Show Bind Panel
+    // Show Bind Panel
     const landing = document.getElementById('landing-layer');
     const options = document.getElementById('landing-options');
     const bindPanel = document.getElementById('bind-robot-panel');
@@ -316,6 +316,68 @@ async function executeBind() {
   } catch (error) {
     console.error(error);
     alert("Failed to bind robot. See console.");
+  }
+}
+
+// --- Unbind Logic ---
+
+// Callback storage for the confirmation dialog
+let pendingConfirmAction: (() => void) | null = null;
+
+function initConfirmDialog() {
+  const overlay = document.getElementById('confirm-overlay');
+  const yesBtn = document.getElementById('confirm-yes');
+  const noBtn = document.getElementById('confirm-no');
+
+  if (yesBtn) {
+    yesBtn.addEventListener('click', () => {
+      if (pendingConfirmAction) pendingConfirmAction();
+      overlay?.classList.add('hidden');
+      pendingConfirmAction = null;
+    });
+  }
+
+  if (noBtn) {
+    noBtn.addEventListener('click', () => {
+      overlay?.classList.add('hidden');
+      pendingConfirmAction = null;
+    });
+  }
+}
+initConfirmDialog();
+
+function handleUnbindClick(e: Event, robotId: string) {
+  e.stopPropagation(); // prevent selecting the robot
+  
+  const overlay = document.getElementById('confirm-overlay');
+  const msg = document.getElementById('confirm-message');
+  
+  if (overlay && msg) {
+    msg.textContent = `Unlink robot ${robotId} from your account?`;
+    overlay.classList.remove('hidden');
+    
+    pendingConfirmAction = () => executeUnbind(robotId);
+  }
+}
+
+async function executeUnbind(robotId: string) {
+  try {
+    const token = await getAuthToken();
+    
+    const response = await fetch(`/unbind/${robotId}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error("Unbind failed");
+
+    // Refresh list
+    const robots = await fetchRobotList(token);
+    renderRobotList(robots);
+
+  } catch (error) {
+    console.error("Unbind error:", error);
+    alert("Failed to unlink robot.");
   }
 }
 
@@ -390,15 +452,37 @@ function renderRobotList(robots: RobotInfo[]) {
   robots.forEach(bot => {
     const el = document.createElement('div');
     el.className = 'robot-list-item';
-    el.innerHTML = `
-      <div>
+    
+    // Create inner structure manually to bind events cleanly
+    const infoDiv = document.createElement('div');
+    infoDiv.style.flexGrow = '1';
+    infoDiv.innerHTML = `
         <div class="robot-name">${bot.nickname || 'Unnamed Robot'}</div>
         <div class="robot-id">${bot.robotid}</div>
-      </div>
-      <div class="status-badge ${bot.online ? 'status-online' : ''}">
-        ${bot.online ? 'ONLINE' : 'OFFLINE'}
-      </div>
     `;
+    
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `status-badge ${bot.online ? 'status-online' : ''}`;
+    statusDiv.textContent = bot.online ? 'ONLINE' : 'OFFLINE';
+
+    // Unbind button with SVG icon (Broken Link)
+    const unbindBtn = document.createElement('button');
+    unbindBtn.className = 'btn-unbind';
+    unbindBtn.title = 'Unlink Robot';
+    unbindBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        <line x1="14" y1="11" x2="10" y2="13" stroke="currentColor" stroke-width="2" stroke-dasharray="2"></line> <!-- Simulating broken link with dash -->
+      </svg>
+    `;
+    
+    unbindBtn.onclick = (e) => handleUnbindClick(e, bot.robotid);
+
+    el.appendChild(infoDiv);
+    el.appendChild(statusDiv);
+    el.appendChild(unbindBtn);
+
     el.onclick = () => {
       currentRobotId = bot.robotid;
       updateRobotIdUI(currentRobotId);
@@ -420,8 +504,25 @@ function updateRobotIdUI(id: string) {
 
 // --- WebSocket Logic ---
 
+function disconnect() {
+  if (socket) {
+    // Disable the onclose handler so it doesn't try to reconnect
+    socket.onclose = null;
+    socket.close();
+  }
+  updateOnlineStatus(false);
+  
+  // Reset modes
+  isLanMode = false;
+  isSimMode = false;
+  updateRobotIdUI("Unknown");
+}
+
 function connect(wsUrl: string) {
   if (socket) {
+    // Clear onclose to prevent the old socket from triggering a reconnect loop
+    // or interfering with the new connection
+    socket.onclose = null;
     socket.close();
   }
 
@@ -552,6 +653,12 @@ function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
       anchors[i].setPose(apose)
     });
   }
+
+  // redraw cables
+  cables.forEach((cable, i) => {
+    cable.update(anchors[i].grommet_pos, gantry.position, 0.0);
+  });
+  winchCable.update(gantry.position, gripper.grommet_pos, 0.0);
 }
 
 function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
@@ -559,9 +666,9 @@ function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
     gantry.setPosition(data.gantryPosition);
     // redraw cables
     cables.forEach((cable, i) => {
-      cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0)
+      cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0);
     });
-    winchCable.update(gantry.position, gripper.grommet_pos, 0.0)
+    winchCable.update(gantry.position, gripper.grommet_pos, 0.0);
     // Inform input controller so it can calculate input orbits
     gamepad.setRobotPosition(data.gantryPosition.x!, data.gantryPosition.y!);
   }
@@ -738,7 +845,7 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
   }
 }
 
-function handleVideoReady(data: nf.telemetry.IVideoReady) {
+async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   if (!data.streamPath) {
     console.error("Got VideoReady update but it doesn't contain a streamPath");
     return;
@@ -750,7 +857,17 @@ function handleVideoReady(data: nf.telemetry.IVideoReady) {
   }
   const cam_num = parseInt(parts[2]); // Note that this is not anchor num in stringman pilot.
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
-  videoManager.connect(data.streamPath);
+  
+  let token: string | undefined;
+  if (!isLanMode && !isSimMode) {
+    try {
+      token = await getAuthToken();
+    } catch (e) {
+      console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
+    }
+  }
+
+  videoManager.connect(data.streamPath, token, isLanMode);
   if (!data.isGripper && data.anchorNum != null) {
     videoManager.assign(data.anchorNum); // anchor num is here
     if (anchors[data.anchorNum].camera) {
@@ -967,6 +1084,15 @@ function initRunMenu() {
     // bindCommand('action-park',           Command.COMMAND_PARK);
     // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
 
+    // bind the bind robot action
+    const bindAction = document.getElementById('action-bind');
+    if (bindAction) {
+      bindAction.addEventListener('click', () => {
+        handleBindAction();
+        runMenu?.classList.remove('show');
+      });
+    }
+
     // stop
     if (stopBtn) {
         stopBtn.addEventListener('click', () => {
@@ -978,6 +1104,21 @@ function initRunMenu() {
 
 // Initialize run menu listeners
 initRunMenu();
+
+// --- Header Menu ---
+function initHeader() {
+  document.getElementById('btn-header-back')?.addEventListener('click', () => {
+    // Disconnect and stop reconnection loops
+    disconnect();
+    // Show landing layer
+    document.getElementById('landing-layer')?.classList.remove('hidden');
+    // Ensure we are on the main options screen, not the robot list or bind screen
+    document.getElementById('landing-options')?.classList.remove('hidden');
+    document.getElementById('robot-list-panel')?.classList.add('hidden');
+    document.getElementById('bind-robot-panel')?.classList.add('hidden');
+  });
+}
+initHeader();
 
 // --- Component Status Menu ---
 function initComponentMenu() {

@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .telemetry_manager import telemetry_manager
@@ -82,13 +82,6 @@ class StreamAuthRequest(BaseModel):
     query: str
 
 # --- HTTP Endpoints ---
-
-@app.on_event("startup")
-async def startup_event():
-    # Initialize Redis connections in the managers
-    await telemetry_manager.connect()
-    # await queue_manager.connect()
-    pass
 
 @app.post("/internal/auth")
 async def media_server_auth(req: StreamAuthRequest):

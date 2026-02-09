@@ -257,11 +257,23 @@ export class VideoFeed {
     }
 
     // --- WebRTC ---
-    public async connect(streamPath: string) {
-        // MediaMTX WHEP endpoint
-        let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
-        if (window.location.host.includes("localhost")) {
-            whepUrl = `http://localhost:8889/${streamPath}/whep`;
+    public async connect(streamPath: string, token?: string, isLanMode: boolean) {
+        // Connect to the production MediaMTX WHEP endpoint
+        // Unless the UI is running in LAN mode
+        if (isLanMode) {
+
+        } else {
+            let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
+            // for when the whole stack is running locally
+            if (window.location.host.includes("localhost")) {
+                whepUrl = `http://localhost:8889/${streamPath}/whep`;
+            }
+
+            // Append credentials to URL
+            if (token) {
+                const separator = whepUrl.includes('?') ? '&' : '?';
+                whepUrl += `${separator}token=${encodeURIComponent(token)}`;
+            }
         }
 
         try {
@@ -282,6 +294,7 @@ export class VideoFeed {
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
 
+            // Note: No custom Authorization header here to avoid CORS preflight rejection
             const response = await fetch(whepUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/sdp' },

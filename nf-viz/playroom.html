@@ -26,8 +26,9 @@
 
         display: grid;
         grid-template-columns: 312px 1fr 520px; 
-        grid-template-rows: minmax(0, 1fr) auto; 
+        grid-template-rows: auto minmax(0, 1fr) auto; /* Added auto row for header */
         grid-template-areas: 
+          "header header header"
           "left center right"
           "footer footer footer";
         gap: 20px;
@@ -101,7 +102,7 @@
 
       .landing-hint {
         font-size: 0.85rem;
-        color: #CCC;
+        color: #aaa;
         margin-top: 10px;
       }
 
@@ -140,6 +141,23 @@
         color: #ccc;
       }
       .status-online { background: #1b5e20; color: #a5d6a7; }
+
+      .btn-unbind {
+        background: transparent;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        padding: 8px;
+        margin-left: 10px;
+        font-size: 1.2em;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-unbind:hover {
+        color: #f44336; /* Red on hover */
+      }
 
       /* Input styles for bind panel */
       .input-text {
@@ -183,6 +201,56 @@
       .panel {
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
+      }
+
+      /* Header Panel */
+      #panel-header {
+        grid-area: header;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 20px;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .header-title {
+        margin: 0;
+        padding: 0;
+        border: none;
+        font-size: 1.1rem;
+        color: #000;
+        font-weight: 700;
+      }
+
+      .header-link {
+        color: #000;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-left: 20px;
+        transition: color 0.2s;
+      }
+      .header-link:hover { color: white; }
+
+      .header-back-btn {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #eee;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+      }
+      .header-back-btn:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.5);
       }
 
       /* Left Panel: Tasks */
@@ -358,7 +426,6 @@
       #panel-footer {
         grid-area: footer;
         height: auto;
-        min-height: 90px;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -590,6 +657,7 @@
       }
       /* --- END COMPONENT STATUS MENU --- */
 
+
       /* --- Perspective Buttons Styling --- */
       .perspective-container {
         display: flex;
@@ -670,7 +738,7 @@
 
       .stop-button:active {
         transform: translateY(1px);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        box-shadow: 1px 2px rgba(0,0,0,0.2);
       }
 
       .hidden {
@@ -690,6 +758,19 @@
           align-items: center;
       }
 
+      #confirm-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          z-index: 9999;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
       .popup-box {
           background: #2a2a2a;
           border: 1px solid #444;
@@ -700,7 +781,7 @@
           min-width: 300px;
       }
 
-      #popup-message {
+      #popup-message, #confirm-message {
           color: #fff;
           font-size: 1.1em;
           margin-bottom: 20px;
@@ -795,14 +876,21 @@
 
     <!-- UI Overlay Layer (z-index 10) -->
     <div id="ui-layer">
+
+      <!-- HEADER -->
+      <header id="panel-header" class="panel">
+        <div class="header-left">
+          <h2 class="header-title">Stringman Control Panel</h2>
+          <button id="btn-header-back" class="header-back-btn">Change Robot</button>
+        </div>
+        <div class="header-right">
+          <a href="/" class="header-link">HOME</a>
+          <a href="/docs/usage_guide/" class="header-link">GUIDE</a>
+        </div>
+      </header>
       
       <!-- Left Panel: Task & Targets -->
       <aside id="panel-left" class="panel">
-<!--         <h2>Task</h2>
-        <div class="task-item active">
-          Idle
-        </div> -->
-        
         <h2>Targets</h2>
         <div id="target-list">
           <div class="task-item status-selected">
@@ -874,7 +962,7 @@
            </div>
            <div class="stat-line">
              <span class="label-muted">Robot ID</span>
-             <strong>Robot_0</strong>
+             <strong id="ui-robot-id">Unknown</strong>
            </div>
            <!-- Component Status -->
            <div class="component-menu-container">
@@ -945,6 +1033,17 @@
       <div class="popup-box">
         <p id="popup-message">Default Message</p>
         <button id="popup-ok">OK</button>
+      </div>
+    </div>
+
+    <!-- Confirmation Overlay -->
+    <div id="confirm-overlay" class="hidden">
+      <div class="popup-box">
+        <p id="confirm-message">Are you sure?</p>
+        <div style="display:flex; justify-content:center; gap:10px;">
+          <button id="confirm-yes" class="run-button">Yes</button>
+          <button id="confirm-no" class="run-button" style="background:#555">No</button>
+        </div>
       </div>
     </div>
 
