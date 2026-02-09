@@ -160,6 +160,8 @@ steps:
   - 'redis-connector'
   - '--set-env-vars'
   - 'REDIS_URL=redis://10.83.184.211:6379'
+  - '--set-secrets'
+  - 'DATABASE_URL=STAGING_DATABASE_URL:latest'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com'
   waitFor: ['push-image']

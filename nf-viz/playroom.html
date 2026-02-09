@@ -52,6 +52,7 @@
       }
 
       .landing-panel {
+        position: relative; /* Context for absolute children like back button */
         background: #333;
         padding: 40px;
         border-radius: 16px;
@@ -157,6 +158,24 @@
       }
       .btn-unbind:hover {
         color: #f44336; /* Red on hover */
+      }
+
+      /* Panel Back Arrow */
+      .panel-back-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: transparent;
+        border: none;
+        color: #888;
+        font-size: 2.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.2s;
+      }
+      .panel-back-btn:hover {
+        color: white;
       }
 
       /* Input styles for bind panel */
@@ -847,6 +866,7 @@
       </div>
 
       <div class="landing-panel hidden" id="robot-list-panel">
+        <button id="btn-robot-list-back" class="panel-back-btn" title="Back">‹</button>
         <div class="landing-title">Select a Robot</div>
         <div id="robot-list-container" class="robot-list">
           <!-- Robot items will be injected here -->

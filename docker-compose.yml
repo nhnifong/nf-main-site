@@ -14,7 +14,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
       - DATABASE_URL=postgresql+asyncpg://local_user:tension_is_all_you_need@postgres:5432/neufangled_local
     volumes:
-      - $HOME/.config/gcloud/application_default_credentials.json:/app/service-account.json
+      - ${HOME}/.config/gcloud/application_default_credentials.json:/app/service-account.json
     depends_on:
       - redis
       - postgres

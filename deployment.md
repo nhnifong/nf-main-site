@@ -6,7 +6,7 @@ To be run in repo root in cloud shell
 Increase the tag version number and build and deploy to staging
 
 ```
-gcloud builds submit --config=cloudbuild-step1.yaml --substitutions=_TAG=2.1.1 .
+gcloud builds submit --config=cloudbuild-step1.yaml --substitutions=_TAG=2.1.2 .
 ```
 
 Verify staging looks fine https://nf-site-monolith-staging-690802609278.us-east1.run.app/
@@ -14,7 +14,7 @@ Verify staging looks fine https://nf-site-monolith-staging-690802609278.us-east1
 Deploy to production
 
 ```
-gcloud builds submit --config=cloudbuild-step2.yaml --substitutions=_TAG=2.1.1 .
+gcloud builds submit --config=cloudbuild-step2.yaml --substitutions=_TAG=2.1.2 .
 ```
 
 ## Set up redis

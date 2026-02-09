@@ -4,7 +4,7 @@ import os
 import logging
 from typing import Optional, List, Tuple
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("NF_FastAPI")
 
 class QueueManager:
     """

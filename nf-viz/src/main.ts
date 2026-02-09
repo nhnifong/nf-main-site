@@ -193,6 +193,12 @@ function initApp() {
     });
     
     document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
+
+    // Bind robot list back button
+    document.getElementById('btn-robot-list-back')?.addEventListener('click', () => {
+      document.getElementById('robot-list-panel')?.classList.add('hidden');
+      document.getElementById('landing-options')?.classList.remove('hidden');
+    });
   }
 }
 
@@ -445,7 +451,7 @@ function renderRobotList(robots: RobotInfo[]) {
   container.innerHTML = '';
 
   if (robots.length === 0) {
-    container.innerHTML = '<div style="padding:20px; color:#aaa">No robots found.</div>';
+    container.innerHTML = '<div style="padding:20px; color:#aaa">No robots found. You must first connect in LAN mode and select Bind from the run menu.</div>';
     return;
   }
 
@@ -858,25 +864,31 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   const cam_num = parseInt(parts[2]); // Note that this is not anchor num in stringman pilot.
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
   
-  let token: string | undefined;
-  if (!isLanMode && !isSimMode) {
-    try {
-      token = await getAuthToken();
-    } catch (e) {
-      console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
+  if (isLanMode && data.localUri) {
+    // Connect to the video streams at the local UDP address for this camera. example udp:127.0.0.1:1234
+    videoManager.connectLocal(data.localUri);
+  } else {
+    // Connect with WebRTC to the production server at data.streamPath
+    let token: string | undefined;
+    if (!isSimMode) {
+      try {
+        token = await getAuthToken();
+      } catch (e) {
+        console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
+      }
     }
-  }
 
-  videoManager.connect(data.streamPath, token, isLanMode);
-  if (!data.isGripper && data.anchorNum != null) {
-    videoManager.assign(data.anchorNum); // anchor num is here
-    if (anchors[data.anchorNum].camera) {
-      videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
+    videoManager.connectWebRTC(data.streamPath, token);
+    if (!data.isGripper && data.anchorNum != null) {
+      videoManager.assign(data.anchorNum); // anchor num is here
+      if (anchors[data.anchorNum].camera) {
+        videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
 
-      // When the mouse moves on this video feed and a ray intersects the floor
-      videoManager.onFloorPoint = (point) => {
-        room.setReticule(point)
-      };
+        // When the mouse moves on this video feed and a ray intersects the floor
+        videoManager.onFloorPoint = (point) => {
+          room.setReticule(point)
+        };
+      }
     }
   }
 }

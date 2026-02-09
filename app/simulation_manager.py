@@ -14,13 +14,6 @@ from nf_robot.generated.nf import telemetry, common, control
 
 logger = logging.getLogger(__name__)
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger("SimRobot")
-
 # Constants
 ROOM_SIZE_X = 5.0
 ROOM_SIZE_Y = 5.0

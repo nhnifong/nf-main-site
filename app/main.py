@@ -18,7 +18,7 @@ from .simulation_manager import simulation_manager
 from .database import init_db, get_db, RobotOwnership
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(

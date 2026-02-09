@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     host: "0.0.0.0", // allow lan connections so we can test on mobile
     proxy: {
-      // Any request starting with /telemetry goes to local control_plane
+      // List of paths that should be forwarded to the local docker telemetry server instead of being handled by vite
       '/telemetry': {
         target: 'ws://127.0.0.1:8080',
         ws: true,

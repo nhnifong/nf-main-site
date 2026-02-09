@@ -256,24 +256,24 @@ export class VideoFeed {
         this.newItemIsHovered = dx <= HALF_SIZE && dy <= HALF_SIZE;
     }
 
+    public async connectLocal(uri: string) {
+        // Connect to the local video stream
+        this.video.src = uri;
+    }
+
     // --- WebRTC ---
-    public async connect(streamPath: string, token?: string, isLanMode: boolean) {
+    public async connectWebRTC(streamPath: string, token?: string) {
         // Connect to the production MediaMTX WHEP endpoint
-        // Unless the UI is running in LAN mode
-        if (isLanMode) {
+        let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
+        // for when the whole stack is running locally
+        if (window.location.host.includes("localhost")) {
+            whepUrl = `http://localhost:8889/${streamPath}/whep`;
+        }
 
-        } else {
-            let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
-            // for when the whole stack is running locally
-            if (window.location.host.includes("localhost")) {
-                whepUrl = `http://localhost:8889/${streamPath}/whep`;
-            }
-
-            // Append credentials to URL
-            if (token) {
-                const separator = whepUrl.includes('?') ? '&' : '?';
-                whepUrl += `${separator}token=${encodeURIComponent(token)}`;
-            }
+        // Append credentials to URL
+        if (token) {
+            const separator = whepUrl.includes('?') ? '&' : '?';
+            whepUrl += `${separator}token=${encodeURIComponent(token)}`;
         }
 
         try {
