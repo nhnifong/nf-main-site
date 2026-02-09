@@ -30,7 +30,7 @@ services:
       - /etc/letsencrypt/live/media.neufangled.com/privkey.pem:/https/privkey.pem:ro
 
   # Production Database
-  # postgresql+asyncpg://prod_user:<password>@10.142.0.2:5433/neufangled_prod
+  # postgresql+asyncpg://prod_user:<password>@10.142.0.2:5432/neufangled_prod
   postgres-prod:
     image: postgres:16-alpine
     container_name: postgres-prod
@@ -40,16 +40,12 @@ services:
       POSTGRES_USER: prod_user
       POSTGRES_PASSWORD: ${PROD_DB_PASSWORD}
     ports:
-      - target: 5432
-        published: 5432
-        host_ip: 10.142.0.2 # bind only on VM's internal IP
-        protocol: tcp
-        mode: host
+      - "10.142.0.2:5432:5432"
     volumes:
-      - ./data/prod:/var/lib/postgresql/data
+      - /opt/data/prod:/var/lib/postgresql/data
 
   # Staging Database
-  # postgresql+asyncpg://staging_user:<password>@10.142.0.2:5432/neufangled_staging
+  # postgresql+asyncpg://staging_user:<password>@10.142.0.2:5433/neufangled_staging
   postgres-staging:
     image: postgres:16-alpine
     container_name: postgres-staging
@@ -59,10 +55,6 @@ services:
       POSTGRES_USER: staging_user
       POSTGRES_PASSWORD: ${STAGING_DB_PASSWORD}
     ports:
-      - target: 5432
-        published: 5433
-        host_ip: 10.142.0.2
-        protocol: tcp
-        mode: host
+      - "10.142.0.2:5433:5432" # Exposed on 5433 to avoid conflict with prod
     volumes:
-      - ./data/staging:/var/lib/postgresql/data
+      - /opt/data/staging:/var/lib/postgresql/data
