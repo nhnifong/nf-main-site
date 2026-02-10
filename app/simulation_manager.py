@@ -236,7 +236,8 @@ class SimulatedRobot:
                 simulated_pressure = random.uniform(0.5, 1.5)
 
             grip_sensors = telemetry.GripperSensors(
-                range=range_to_floor + random.uniform(-0.005, 0.005), # Range from palm to floor
+                # subtract 3cm for the "rug"
+                range=range_to_floor -0.03 + random.uniform(-0.005, 0.005), # Range from palm to floor
                 angle=self.state.finger_angle,
                 pressure=simulated_pressure, 
                 wrist=self.state.wrist_angle

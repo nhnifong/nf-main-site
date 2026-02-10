@@ -35,4 +35,9 @@ sudo usermod -aG docker "$USER"
 # build and run the MediaMTX container
 git clone https://github.com/nhnifong/nf-main-site.git
 
+sudo mkdir /opt/data
+sudo chown nhn /opt/data
+mkdir /opt/data/prod
+mkdir /opt/data/staging
+
 ./boot-script.sh

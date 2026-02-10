@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { nf } from '../generated/proto_bundle.js';
+import { SightingsManager } from '../objects/sightings_manager.ts'
 
 export class Gripper {
     // single copy of the geometry
@@ -11,11 +12,13 @@ export class Gripper {
     public ready: Promise<void>;
     public grommet_pos: THREE.Vector3;
     private grommet: THREE.Object3D | undefined;
+    private tempVec = new THREE.Vector3();
 
     // Animation Properties
     private mixer: THREE.AnimationMixer | undefined;
     private action: THREE.AnimationAction | undefined;
     private clipDuration: number = 0;
+
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
@@ -132,5 +135,18 @@ export class Gripper {
             // (pass 0 delta time since we set absolute time manually)
             this.mixer.update(0);
         }
+    }
+
+    public setSensorValues(data: nf.telemetry.IGripperSensors, laserTrace: SightingsManager) {
+      if (data.angle) {
+        this.setJawState(1-(data.angle + 90)/180)
+      }
+      if (data.range){
+        // The laser points down the local negative Y axis of the gripper in Three.js
+        // We project a point 'range' meters away into world space.
+        this.tempVec.set(0, -data.range, 0);
+        this.root.localToWorld(this.tempVec);
+        laserTrace.addSingleItem(this.tempVec.x, this.tempVec.y, this.tempVec.z);
+      }
     }
 }

@@ -132,6 +132,8 @@ scene.add(gantryHangCube);
 
 // gantry sightings manager
 const sightingsManager = new SightingsManager(scene);
+// laser rangefinder feedback re-uses sightings manager class
+const laserReadings = new SightingsManager(scene, {color: 0xFF0000, radius: 0.005});
 
 const targetListManager = new TargetListManager();
 
@@ -311,7 +313,7 @@ async function executeBind() {
     document.getElementById('bind-robot-panel')?.classList.add('hidden');
     
     // Show nice confirmation
-    showPopup({message: "Success! Robot bound to your account.\n\nPlease restart the robot for it to switch to Cloud Mode."});
+    showPopup({message: "Success! Robot bound to your account.\n\nPlease restart stringman-headless with --telemetry_env=production"});
 
   } catch (error) {
     console.error(error);
@@ -529,6 +531,9 @@ function connect(wsUrl: string) {
         else if (update.uplinkStatus) {
           handleUplinkStatus(update.uplinkStatus);
         }
+        else if (update.gripSensors) {
+          handleGripSensors(update.gripSensors);
+        }
         else if (update.gripCamPreditions) {
           gripperVideo.setGripperPredictions(update.gripCamPreditions);
         }
@@ -568,6 +573,7 @@ function animate() {
   requestAnimationFrame(animate);
   controls.update();
   sightingsManager.update();
+  laserReadings.update();
   composer.render();
   sendGamepad();
 }
@@ -821,7 +827,11 @@ function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
   updateOnlineStatus(data.online ?? false);
 }
 
-function updateOnlineStatus(online: boolean) {
+function handleGripSensors(data: nf.telemetry.IGripperSensors) {
+  gripper.setSensorValues(data, laserReadings);
+}
+
+function updateOnlineStatus(online: boolean) {``
   const statusDot = document.getElementById('status-dot-el');
   const statusText = document.getElementById('status-text');
   const runBtn = document.getElementById('run-btn');

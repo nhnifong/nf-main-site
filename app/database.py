@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Optional, Annotated
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
@@ -6,6 +7,7 @@ from sqlalchemy import String, select
 
 # Format: postgresql+asyncpg://user:password@host:port/dbname
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+logger = logging.getLogger(__name__)
 
 engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -25,6 +27,7 @@ class RobotOwnership(Base):
 
 async def init_db():
     async with engine.begin() as conn:
+        logger.info(f"init_db {conn}")
         # Create tables if they don't exist
         await conn.run_sync(Base.metadata.create_all)
 
