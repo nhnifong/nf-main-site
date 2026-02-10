@@ -9,6 +9,7 @@ const HALF_SIZE = TARGET_SIZE / 2;
 export class VideoFeed {
     private container: HTMLElement;
     private video: HTMLVideoElement;
+    private img: HTMLImageElement;
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     public anchorNum: number | null = null;
@@ -47,6 +48,7 @@ export class VideoFeed {
         
         // Find video and canvas elements
         this.video = this.container.querySelector('video')!;
+        this.img = this.container.querySelector('img')!;
         this.canvas = this.container.querySelector('canvas')!;
         this.canvasSize = new THREE.Vector2(this.canvas.width, this.canvas.height);
 
@@ -257,20 +259,30 @@ export class VideoFeed {
     }
 
     public async connectLocal(uri: string) {
-        // Connect to the local video stream
-        this.video.src = uri;
+        if (this.peerConnection) {
+            this.peerConnection.close();
+            this.peerConnection = null;
+        }
+        this.video.classList.add('hidden');
+        
+        this.img.src = uri;
+        this.img.classList.remove('hidden');
     }
 
     // --- WebRTC ---
     public async connectWebRTC(streamPath: string, token?: string) {
-        // Connect to the production MediaMTX WHEP endpoint
+        // Ensure image mode is off
+        this.img.classList.add('hidden');
+        this.img.src = '';
+        this.video.classList.remove('hidden');
+
+        // MediaMTX WHEP endpoint
         let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
-        // for when the whole stack is running locally
         if (window.location.host.includes("localhost")) {
             whepUrl = `http://localhost:8889/${streamPath}/whep`;
         }
 
-        // Append credentials to URL
+        // Append credentials to URL in query param as "token"
         if (token) {
             const separator = whepUrl.includes('?') ? '&' : '?';
             whepUrl += `${separator}token=${encodeURIComponent(token)}`;
@@ -362,7 +374,10 @@ export class VideoFeed {
         // Clear frame
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (!this.video.srcObject) { return; }
+        // Only draw on top if there is video
+        const hasVideo = !!this.video.srcObject;
+        const hasImg = !this.img.classList.contains('hidden') && this.img.src.length > 0;
+        if (!hasVideo && !hasImg) { return; }
 
         if (this.targetListManager) { 
             // drawing for anchor cams.

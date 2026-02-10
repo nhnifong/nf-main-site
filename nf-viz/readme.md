@@ -13,6 +13,8 @@
     pip install nf_robot
     npm run build
 
+If you need to build against protos that have not been comitted to pypi yet, then install an editable version of the nf_robot module in the venv where you run `npm run build` the only reason for that venv is to extract the protos.
+
 ### Run locally
 
 The frontend server can be run in isolation but stil forwards requests for API endpoints to the control_plane

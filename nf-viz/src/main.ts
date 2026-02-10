@@ -785,22 +785,13 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
 }
 
 async function handleVideoReady(data: nf.telemetry.IVideoReady) {
-  if (!data.streamPath) {
-    console.error("Got VideoReady update but it doesn't contain a streamPath");
-    return;
-  }
-  const parts: string[] = data.streamPath.split("/");
-  if (parts.length != 3) {
-    console.error(`Got VideoReady update but streamPath could not be parsed ${data.streamPath}`);
-    return;
-  }
-  const cam_num = parseInt(parts[2]); // Note that this is not anchor num in stringman pilot.
-  const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][cam_num];
+  const feedNumber = data.feedNumber!; // Note that this is not anchor num in stringman pilot.
+  const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][feedNumber];
   
   if (isLanMode && data.localUri) {
     // Connect to the video streams at the local UDP address for this camera. example udp:127.0.0.1:1234
     videoManager.connectLocal(data.localUri);
-  } else {
+  } else if (data.streamPath) {
     // Connect with WebRTC to the production server at data.streamPath
     let token: string | undefined;
     if (!isSimMode) {

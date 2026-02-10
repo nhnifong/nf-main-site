@@ -93,14 +93,7 @@ async def validate_stream_auth(req, redis_conn) -> bool:
 
     # Verify user owns the robot before allowing WebRTC stream read or write
     query_params = parse_qs(req.query)
-    if not 'token' in query_params:
-        logger.info('Rejecting auth request from mediaMTX because there was no token in the query params')
-        return False
-    token = query_params['token'][0]
-    user_token = await verify_google_token(token)
-    if not await check_robot_ownership(user_token['uid'], robot_id):
-        logger.info('Rejecting auth request from mediaMTX because the user doenst appear to own this robot')
-        raise HTTPException(status_code=403, detail="Forbidden")
+
 
     if req.action == 'publish':
         # in order to stream, a robot with this id must already be sending telemetry.
@@ -116,6 +109,15 @@ async def validate_stream_auth(req, redis_conn) -> bool:
         return False
 
     elif req.action == 'read':
+        if not 'token' in query_params:
+            logger.info('Rejecting auth request from mediaMTX because there was no token in the query params')
+            return False
+        token = query_params['token'][0]
+        user_token = await verify_google_token(token)
+        if not await check_robot_ownership(user_token['uid'], robot_id):
+            logger.info('Rejecting auth request from mediaMTX because the user doenst appear to own this robot')
+            raise HTTPException(status_code=403, detail="Forbidden 1")
         return True
 
+    logger.info(f'Rejecting auth request. nothing matched {req}')
     return False

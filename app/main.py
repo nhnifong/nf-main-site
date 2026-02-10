@@ -18,7 +18,7 @@ from .simulation_manager import simulation_manager
 from .database import init_db, get_db, RobotOwnership
 
 # Configure logging
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -96,7 +96,8 @@ async def media_server_auth(req: StreamAuthRequest):
     """            
     is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis)
     if not is_valid:
-        raise HTTPException(status_code=403, detail="Forbidden")
+        logger.info(f"is_valid = {is_valid}")
+        raise HTTPException(status_code=403, detail="Forbidden 2")
     return {"status": "OK"}
 
 # --- Robot Control Endpoint ---

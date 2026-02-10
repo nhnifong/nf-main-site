@@ -399,7 +399,7 @@
         flex-shrink: 0; /* Prevent videos from squishing */
       }
 
-      .video-feed video {
+      .video-feed video, .video-feed img.mjpeg-feed {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -932,16 +932,19 @@
       <aside id="panel-right" class="panel">
         <div class="video-feed feed-16-9" id="firstOverhead">
           <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video.png" onended="this.load()"></video>
+          <img src="" class="mjpeg-feed hidden" /><!-- Tag used for LAN mjpeg stream -->
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 01</div>
         </div>
         <div class="video-feed feed-16-9" id="secondOverhead">
           <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video.png" onended="this.load()"></video>
+          <img src="" class="mjpeg-feed hidden" />
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">ANCHOR 02</div>
         </div>
         <div class="video-feed feed-1-1" id="gripper">
           <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video_square.png" onended="this.load()"></video>
+          <img src="" class="mjpeg-feed hidden" />
           <canvas class="feed-canvas"></canvas>
           <div class="feed-label">GRIPPER - STABILIZED</div>
         </div>

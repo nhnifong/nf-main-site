@@ -349,7 +349,7 @@ export class GamepadController {
         // Start Button -> Episode Start/Stop
         if (input.buttons.start && !this.startWasHeld) {
             messages.push(nf.control.ControlItem.create({
-                episodeControl: { events: ['episode_start_stop'] }
+                episodeControl: { command: nf.common.EpCommand.EPCOMMAND_START_OR_COMPLETE }
             }));
         }
         this.startWasHeld = input.buttons.start;
@@ -389,12 +389,6 @@ export class GamepadController {
             }));
         }
         this.selectWasHeld = input.buttons.select;
-
-        // TODO
-        // Start button - lerobot start/complete episode 
-        // messages.push(nf.control.ControlItem.create({
-        //     episode_control: { command: nf.common.EpCommand.EPCOMMAND_START_OR_COMPLETE }
-        // }));
 
         // Movement Message (Throttled/Changed)
         
