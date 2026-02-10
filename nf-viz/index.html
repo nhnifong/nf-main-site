@@ -100,29 +100,41 @@
             /*opacity: 0.9;*/
         }
 
-        .hero-learn-more {
+        .button-row {
             position: absolute;
             bottom: 8vh;
             left: 50%;
             transform: translateX(-50%);
-            color: white;
+            min-height: 10vh;
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            text-align: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-button {
+            color: #222;
             border: 2px solid rgba(255, 255, 255, 0.8);
             padding: 12px 35px;
             border-radius: 30px;
             font-size: 1.2rem;
-            font-weight: 500;
+            font-weight: 700;
             text-decoration: none;
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.3s ease;
-            background: rgba(0, 0, 0, 0.2);
+            background: white;
             backdrop-filter: blur(4px);
         }
 
-        .hero-learn-more:hover {
-            background: white;
-            color: #222;
-            transform: translateX(-50%) translateY(-3px);
+        .hero-button:hover {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            transform: translateY(-2px) scale(1.02);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
@@ -303,7 +315,10 @@
             <p>Cable-driven room-scale organization robot</p>
         </div>
 
-        <a href="stringman-pilot" class="hero-learn-more">learn more</a>
+        <div class="button-row">
+            <a href="stringman-pilot" class="hero-button">learn more</a>
+            <a href="control_panel/" class="hero-button">run simulator</a>
+        </div>
     </section>
 
     <section class="feature-section">

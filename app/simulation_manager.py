@@ -148,14 +148,14 @@ class SimulatedRobot:
         )
         
         await self.websocket.send_bytes(bytes(update))
-        await asyncio.sleep(3.0)
+        await asyncio.sleep(1.5)
 
         # Phase 2: Websocket Connected
         status_msg.websocket_status = telemetry.ConnStatus.CONNECTED
         update.updates[0].component_conn_status = status_msg
         
         await self.websocket.send_bytes(bytes(update))
-        await asyncio.sleep(3.0) # visible delay before video comes online
+        await asyncio.sleep(1.0) # visible delay before video comes online
 
         # Phase 3: Video Connected
         status_msg.video_status = telemetry.ConnStatus.CONNECTED
@@ -348,7 +348,7 @@ class SimulatedRobot:
         # 4 Anchors
         for i in range(4):
             # Stagger startup slightly
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(0.25)
             self.tasks.append(asyncio.create_task(self._simulate_component_connection(is_gripper=False, anchor_num=i)))
         # Gripper
         self.tasks.append(asyncio.create_task(self._simulate_component_connection(is_gripper=True)))

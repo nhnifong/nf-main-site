@@ -69,6 +69,12 @@ export class GamepadController {
 
         window.addEventListener('keydown', (e) => this.handleKey(e, true));
         window.addEventListener('keyup', (e) => this.handleKey(e, false));
+
+
+        const container = document.getElementById('how-to');
+        if (container) {
+            container.textContent = "Use WASDQE to move or connect a gamepad. Space-LShift to grasp. ZX for wrist/winch.";
+        }
     }
 
     private handleKey(e: KeyboardEvent, isDown: boolean) {
@@ -76,6 +82,11 @@ export class GamepadController {
         const active = document.activeElement;
         if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
             return;
+        }
+
+        const container = document.getElementById('how-to');
+        if (container) {
+            container.textContent = "";
         }
 
         if (isDown) {
