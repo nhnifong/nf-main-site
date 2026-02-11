@@ -265,7 +265,10 @@ export class VideoFeed {
         }
         this.video.classList.add('hidden');
         
-        this.img.src = uri;
+        // Append timestamp to force browser to load new stream
+        const separator = uri.includes('?') ? '&' : '?';
+        this.img.src = `${uri}${separator}t=${Date.now()}`;
+
         this.img.classList.remove('hidden');
     }
 
@@ -358,8 +361,16 @@ export class VideoFeed {
         if (this.peerConnection) {
             this.peerConnection.close();
         }
+        
+        // Reset Video
         this.video.srcObject = null;
         this.video.load();
+        this.video.classList.remove('hidden');
+
+        // Reset Image tag (where mjpeg is displayed)
+        this.img.src = '';
+        this.img.removeAttribute('src'); // Stop stream
+        this.img.classList.add('hidden');
     }
 
     public setGripperPredictions(data: nf.telemetry.IGripCamPredictions) {

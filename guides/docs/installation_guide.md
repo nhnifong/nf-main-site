@@ -108,7 +108,7 @@ Unpack the gripper and gantry, which are attached, and place them somewhere near
 
 Ensure the control panel can run on your host machine and connect to the robot components.
 
-Following the instructions in the [Desktop Setup Guide](desktop_setup_guide.md) start up the Stringman controller. It begins searching for components on the network.
+Following the instructions in the [Usage Guide](usage_guide.md) start up the Stringman controller. It begins searching for components on the network.
 
 !!! note "Only one complete stringman robot may be on the network during this step"
     In order for the controller to discover which components belong to this particula robot, If you own another stringman, turn it off.

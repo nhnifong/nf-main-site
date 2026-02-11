@@ -2,11 +2,11 @@
 
 ## Controller Software
 
-The source for both the servers which run on the raspberri pi's in the robot components, and the desktop control panel are contained in the same repository.
+The source for both the servers which run on the raspberri pi's in the robot components, and the external host machine are contained in the same repository.
 
 **[cranebot-firmware on Github](https://github.com/nhnifong/cranebot3-firmware)**
 
-I do not yet have a bundled release of the control panel. It can be run according to the instructions in the [Desktop Setup Guide](desktop_setup_guide.md)
+The UI is web based an accessed at [neufanged.com/control_panel](http://neufangled.com/control_panel)
 
 === "Pilot Gripper"
 

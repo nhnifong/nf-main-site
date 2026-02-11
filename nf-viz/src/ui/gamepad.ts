@@ -17,9 +17,6 @@ export class GamepadController {
     private orbitObj: THREE.Object3D | null = null;
     private robotPosition: { x: number, y: number } | null = null;
 
-    private fingerAngle = 0;
-    private wristAngle = 0;
-    private lastUpdateT = 0;
     private lastSendT = 0;
 
     private seenValidTriggers = false;
@@ -271,7 +268,6 @@ export class GamepadController {
         
         const messages: nf.control.ControlItem[] = [];
         const now = Date.now() / 1000;
-        const dt = now - this.lastUpdateT;
 
         // Calculate Vector (Left Stick + Triggers)
         // If left unchanged, this is the axis aligned movement perspective
@@ -330,18 +326,14 @@ export class GamepadController {
             speed = 0.25 * mag;
         }
 
-        // Finger Control (A/B)
-        let gripChange = 0;
+        // Finger Control A/B
+        let fingerChange = 0;
         if (input.buttons.a) {
-            gripChange = this.GAMEPAD_GRIP_DEG_PER_SEC;
+            fingerChange = this.GAMEPAD_GRIP_DEG_PER_SEC;
         } else if (input.buttons.b) {
-            gripChange = -this.GAMEPAD_GRIP_DEG_PER_SEC;
+            fingerChange = -this.GAMEPAD_GRIP_DEG_PER_SEC;
         }
         
-        this.fingerAngle += (gripChange * dt);
-        // clamp to [-90, 90]
-        this.fingerAngle = Math.max(-90, Math.min(90, this.fingerAngle));
-
         // Winch Control (X/Y)
         let lineSpeed = 0;
         if (input.buttons.y) {
@@ -352,8 +344,6 @@ export class GamepadController {
 
         // Wrist Control (Right stick X)
         let wristChange = input.rightStick.x * this.GAMEPAD_WRIST_DEG_PER_SEC;
-        this.wristAngle += wristChange * dt
-        this.wristAngle = Math.max(-360*3, Math.min(360*3, this.wristAngle));
 
         // Rising Edge Detectors for Events
 
@@ -393,7 +383,7 @@ export class GamepadController {
         // nothing is mapped to dpad down at the moment
 
         // Select/back - stop all.
-        // TODO Lerobot abandon episode EPCOMMAND_ABANDON
+        // also triggers Lerobot EPCOMMAND_ABANDON
         if (input.buttons.select && !this.selectWasHeld) {
             messages.push(nf.control.ControlItem.create({
                 command: { name: nf.control.Command.COMMAND_STOP_ALL }
@@ -405,10 +395,10 @@ export class GamepadController {
         
         // Construct current action array for comparison: [vx, vy, vz, speed, winch, finger]
         // Note: We only care about direction if magnitude > 0
-        const currentAction = [vx, vy, vz, speed, lineSpeed, this.fingerAngle, this.wristAngle];
+        const currentAction = [vx, vy, vz, speed, lineSpeed, fingerChange, wristChange];
         
         const hasChanged = !this.arraysEqual(currentAction, this.lastAction);
-        const isMoving = mag > 1e-3;
+        const isMoving = mag > 1e-3 || Math.abs(wristChange) > 1.0 || Math.abs(fingerChange) > 1.0 || Math.abs(lineSpeed) > 1e-3;
         const timeSinceSend = now - this.lastSendT;
 
         // Send a movement if: Data changed OR (we are moving AND it's been > 50ms)
@@ -418,20 +408,17 @@ export class GamepadController {
                 move: {
                     direction: { x: vx, y: vy, z: vz },
                     speed: speed,
-                    finger: this.fingerAngle,
+                    fingerSpeed: fingerChange,
                     winch: lineSpeed,
-                    wrist: this.wristAngle,
+                    wristSpeed: wristChange,
                 }
             }));
-
-            console.log(this.wristAngle);
 
             // Update state
             for(let i=0; i<7; i++) this.lastAction[i] = currentAction[i];
             this.lastSendT = now;
         }
 
-        this.lastUpdateT = now;
         return messages;
     }
 

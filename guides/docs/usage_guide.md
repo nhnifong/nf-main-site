@@ -1,16 +1,86 @@
 # Usage Guide
 
-This guide covers the use of the web based control panel.
+This guide covers installation of the headless server and the use of the web based control panel.
 
-For installation and startup of the motion controller, refer to [Desktop Setup Guide](desktop_setup_guide.md)
+## Installing and running the motion controller
 
-For the LAN-only local UI based on Ursina, see the [LAN-only guide](lan_only_guide.md)
+The motion controller for stringman must be run on a PC on the same network as the robot components.
+If the motion controller is not running, the anchors simply hold position and transmit nothing.
 
-## Getting Started
+The brain of the robot is `stringman-headless` which is installed with pip. The components themselves are just light video streaming devices and motor command issuers. In other worfds, Stringman Pilot's compute is *external*.
+
+The motion controller is a headless process, and the user interface is browser based and accessed at [neufangled.com/control_panel](http://neufangled.com/control_panel) whether in lan mode or cloud mode.
+
+### Installation
+
+=== "Linux"
+
+        sudo apt install python3-pip python3-virtualenv
+        python3 -m virtualenv venv
+        source venv/bin/activate
+        pip3 install "nf_robot[host]"
+   
+=== "Windows"
+   
+    Installing Python via the Microsoft store is probably the easiest way to integrate it into your system without conflicting installations.
+    Type "Microsft Store" in the start menu.  
+    Search for python  
+    Install python 3.11
+    
+    ![](images/desktop/image1.png){ loading=lazy, width=45% }
+    
+    Open Powershell
+    
+        python -m virtualenv venv
+        .\venv\Scripts\activate.bat
+        pip3 install "nf_robot[host]"
+
+=== "Mac"
+
+        python3 -m virtualenv venv
+        source venv/bin/activate
+        pip3 install "nf_robot[host]"
+
+### Run Stringman
+
+Run stringman's motion controller from the virtualenv you set up during install
+
+=== "Linux"
+
+        venv/bin/stringman-headless
+
+=== "Windows"
+
+        .\venv\Scripts\stringman-headless.sh
+
+=== "Mac"
+
+        venv/bin/stringman-headless
+
+With no args, it runs in LAN mode, meaning it will listen for a UI connection on port 4245. Open the [Control Panel](http://neufangled.com/control_panel) and select LAN mode to connect to the `stringman-headless` process your local machine.
+
+![](images/usage/lanmode.png){ loading=lazy, width=45% } 
+
+If no configuration file is specified with `--config=<filename.json>` one will be created at `configuration.json` this will be where your specific robot's calibration parameters are stored and where your randomly generated robot id will be stored. if it is deleted, the id will change.
+
+### Connecting 
+
+Whether starting the motion controller first, or powering on the robot components first, the motion controller should discover and connect to every component automatically.
+
+After making the initial connection to a component, the motion controller will attempt to connect to the video stream as well. The status of all component connections is indicated in the bottom left. It is possible that a component may be connected, but it's video connection is only established a few seconds later. This is normal.
+
+![](images/usage/connections.png){ loading=lazy, width=45% } 
+
+If some components don't connect, please refer to the [Troubleshooting](quality_assurance.md) page.
+Or ask for help on our [Discord](https://discord.gg/T5HEvxVgbA).
+
+## First movment
 
 The first thing you need to do after hanging up stringman and connecting to it, is raise it off the floor.
 
 First tension all lines. In the **RUN** menu, select **Tension all lines** or press `1`
+
+![](images/usage/tension.png){ loading=lazy, width=45% } 
 
 Then briefly tap the `E` key to move upwards. Briefly hold it enough to raise the gripper to a unobtrusive height.
 
@@ -82,7 +152,7 @@ You can select any target by clicking on it in the list or on it's square in any
 
 You can add new targets by clicking twice anywhere in a camera feed (except the gripper camera for now)
 
-## Robot components
+### Robot components
 
 The interface shows the position of each robot component and the lines that connect them. Each anchor can determine whether a line is tight and the this is indicated in the control panel by either drawing the line as straight or curved. if the line is not tight, it is not possible for us to know by how much, thus the amount of curve drawn has no bearing on what it may look like in reality.
 
@@ -97,6 +167,16 @@ Visual detections of the gantry are rendered as white cubes. any time a new dete
 If cameras are connected but no detections are made, the robot may just be too high to be in view of any camera, or too far down in the corner of the room. It may aslo just be too dark. The control panel will still try to make an estimate of it's position from last known line lengths, but if this estimate is wrong, you may just have manually move the gantry into a spot where the cameras can see it and then perform a quick calibration.
 
 The distance detected by the laser rangefinder on the gripper is indicated with a red rectangle. You should expect to see this near the floor if calibration is accurate.
+
+## Cloud mode
+
+You can connect your stringman robot to your account at Neufangled.com in order to access it from anywhere as long as `stringman-headless` is running at home
+
+While connected in LAN mode, from the RUN menu, select `Bind to Account`. You will be asked to log in with Google or Github. Give the robot a nickname, and click bind.
+
+![](images/usage/bind_action.png){ loading=lazy, width=45% } 
+![](images/usage/bind_dialog.png){ loading=lazy, width=45% } 
+![](images/usage/myrobots.png){ loading=lazy, width=45% } 
 
 ## AI Control
 

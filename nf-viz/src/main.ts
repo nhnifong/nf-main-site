@@ -163,6 +163,17 @@ let socket: WebSocket;
 let isLanMode = false; 
 let isSimMode = false; // Track simulator mode
 
+// Helpers to sync URL
+function setUrlParam(id: string | null) {
+  const url = new URL(window.location.href);
+  if (id) {
+    url.searchParams.set('robotid', id);
+  } else {
+    url.searchParams.delete('robotid');
+  }
+  window.history.pushState({}, '', url);
+}
+
 // Entry Point
 function initApp() {
   // Always init firebase to check auth state for button label
@@ -177,7 +188,11 @@ function initApp() {
     }
   });
 
-  if (currentRobotId) {
+  if (currentRobotId === 'lan') {
+    startLanFlow();
+  } else if (currentRobotId === 'sim') {
+    startSimFlow();
+  } else if (currentRobotId) {
     // URL param set -> Force cloud flow
     updateRobotIdUI(currentRobotId);
     startCloudFlow(currentRobotId);
@@ -205,6 +220,7 @@ function initApp() {
 // LAN Mode Flow
 function startLanFlow() {
   isLanMode = true;
+  setUrlParam('lan');
   document.getElementById('landing-layer')?.classList.add('hidden');
   updateRobotIdUI("Localhost");
   
@@ -218,6 +234,7 @@ function startLanFlow() {
 // Sim Mode Flow
 function startSimFlow() {
   isSimMode = true;
+  setUrlParam('sim');
   document.getElementById('landing-layer')?.classList.add('hidden');
   updateRobotIdUI("Simulated Pilot");
   
@@ -807,18 +824,19 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
         console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
       }
     }
-
     videoManager.connectWebRTC(data.streamPath, token);
-    if (!data.isGripper && data.anchorNum != null) {
-      videoManager.assign(data.anchorNum); // anchor num is here
-      if (anchors[data.anchorNum].camera) {
-        videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
+  }
 
-        // When the mouse moves on this video feed and a ray intersects the floor
-        videoManager.onFloorPoint = (point) => {
-          room.setReticule(point)
-        };
-      }
+  // Assign the feed's anchor num and vitual camera for target overlay math
+  if (!data.isGripper && data.anchorNum != null) {
+    videoManager.assign(data.anchorNum); // anchor num is here
+    if (anchors[data.anchorNum].camera) {
+      videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
+
+      // When the mouse moves on this video feed and a ray intersects the floor
+      videoManager.onFloorPoint = (point) => {
+        room.setReticule(point)
+      };
     }
   }
 }
@@ -1062,6 +1080,13 @@ function initHeader() {
     document.getElementById('landing-options')?.classList.remove('hidden');
     document.getElementById('robot-list-panel')?.classList.add('hidden');
     document.getElementById('bind-robot-panel')?.classList.add('hidden');
+  });
+
+  // robot list back button
+  document.getElementById('btn-robot-list-back')?.addEventListener('click', () => {
+    document.getElementById('robot-list-panel')?.classList.add('hidden');
+    document.getElementById('landing-layer')?.classList.remove('hidden');
+    document.getElementById('landing-options')?.classList.remove('hidden');
   });
 }
 initHeader();

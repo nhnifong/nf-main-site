@@ -76,7 +76,7 @@ export class Gripper {
             const mesh = new THREE.Mesh( 
                 new THREE.BoxGeometry(0.1, 0.1, 0.1), 
                 new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-            );
+                );
             this.root.add(mesh);
         }
     }
@@ -93,7 +93,7 @@ export class Gripper {
                 (pose.position.x ?? 0),
                 (pose.position.z ?? 0),
                 -(pose.position.y ?? 0)
-            );
+                );
 
             // Rotation (Rodrigues Vector)
             const rx = (pose.rotation.x ?? 0);
@@ -138,15 +138,18 @@ export class Gripper {
     }
 
     public setSensorValues(data: nf.telemetry.IGripperSensors, laserTrace: SightingsManager) {
-      if (data.angle) {
-        this.setJawState(1-(data.angle + 90)/180)
-      }
-      if (data.range){
-        // The laser points down the local negative Y axis of the gripper in Three.js
-        // We project a point 'range' meters away into world space.
-        this.tempVec.set(0, -data.range, 0);
-        this.root.localToWorld(this.tempVec);
-        laserTrace.addSingleItem(this.tempVec.x, this.tempVec.y, this.tempVec.z);
-      }
+        if (data.angle) {
+            this.setJawState(1-(data.angle + 90)/180)
+        }
+        if (data.wrist) {
+            
+        }
+        if (data.range){
+            // The laser points down the local negative Y axis of the gripper in Three.js
+            // We project a point 'range' meters away into world space.
+            this.tempVec.set(0, -data.range, 0);
+            this.root.localToWorld(this.tempVec);
+            laserTrace.addSingleItem(this.tempVec.x, this.tempVec.y, this.tempVec.z);
+        }
     }
 }

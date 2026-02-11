@@ -10,9 +10,8 @@ These guides serve to explain how to install and use Stringman, as well as how t
 
 If you have [purchased a Stringman robot](https://neufangled.com/stringman-arpeggio-pilot) from Neufangled Robotics, and are ready to install it,
 
- * Start with the [Desktop Setup Guide](desktop_setup_guide.md) to make sure you can run the software before you hang anything.
- * Followed by the [Installation Guide](installation_guide.md) to put mount the anchors on the wall and hang the robot.
- * And finally the [Usage Guide](usage_guide.md) for a walkthough of your first use of Stringman.
+ * Start with the [Usage Guide](usage_guide.md) to make sure you can run the motion controller and connect the web ui on your computer.
+ * Follow the [Installation Guide](installation_guide.md) to put mount the anchors on the wall and hang the robot.
 
 ## Building a Stringman Robot
 
