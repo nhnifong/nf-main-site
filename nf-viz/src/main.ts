@@ -474,6 +474,7 @@ function disconnect() {
   isLanMode = false;
   isSimMode = false;
   updateRobotIdUI("Unknown");
+  setUrlParam();
 }
 
 function connect(wsUrl: string) {
@@ -554,6 +555,9 @@ function connect(wsUrl: string) {
         else if (update.gripCamPreditions) {
           gripperVideo.setGripperPredictions(update.gripCamPreditions);
         }
+        else if (update.operationProgress) {
+          handleOperationProgress(update.operationProgress);
+        }
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -573,6 +577,29 @@ function connect(wsUrl: string) {
   socket.onerror = (err) => {
     console.error("WebSocket Error:", err);
   };
+}
+
+function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
+  const container = document.getElementById('op-progress-container');
+  const nameEl = document.getElementById('op-name');
+  const actionEl = document.getElementById('op-action');
+  const fillEl = document.getElementById('op-bar-fill');
+
+  if (!container || !nameEl || !actionEl || !fillEl) return;
+
+  // 100% Logic
+  if ((data.percentComplete ?? 0) >= 100) {
+    container.classList.add('hidden');
+    // Use data.name and data.currentAction for the popup
+    showPopup({ message: `${data.name ?? 'Operation'} Complete\n${data.currentAction ?? ''}` });
+    return;
+  }
+
+  // Show and Update
+  container.classList.remove('hidden');
+  nameEl.textContent = data.name ?? 'Operation';
+  actionEl.textContent = data.currentAction ?? '';
+  fillEl.style.width = `${Math.max(0, Math.min(100, data.percentComplete ?? 0))}%`;
 }
 
 // Start the app
@@ -1047,6 +1074,7 @@ function initRunMenu() {
     bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
     // bindCommand('action-park',           Command.COMMAND_PARK);
     // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+    // bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
     
     // Bind bind action
     const bindAction = document.getElementById('action-bind');

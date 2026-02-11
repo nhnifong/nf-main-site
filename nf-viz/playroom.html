@@ -272,6 +272,50 @@
         border-color: rgba(255,255,255,0.5);
       }
 
+      /* Progress Bar in Header */
+      #op-progress-container {
+        flex-grow: 1;
+        max-width: 900px;
+        margin: 0 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+      }
+      
+      .op-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #ddd;
+        line-height: 1.2;
+      }
+      
+      #op-name {
+        font-weight: bold;
+        color: black;
+      }
+      
+      #op-action {
+        font-family: monospace;
+        color: black;
+      }
+
+      .op-bar-bg {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      #op-bar-fill {
+        height: 100%;
+        background-color: #007fff; /* Matches theme blue */
+        width: 0%;
+        transition: width 0.2s ease-out;
+        box-shadow: 0 0 10px rgba(0, 127, 255, 0.5);
+      }
+
       /* Left Panel: Tasks */
       #panel-left {
         grid-area: left;
@@ -903,6 +947,15 @@
           <h2 class="header-title">Stringman Control Panel</h2>
           <button id="btn-header-back" class="header-back-btn">Change Robot</button>
         </div>
+        <div id="op-progress-container" class="hidden">
+          <div class="op-info">
+            <span id="op-name">Operation</span>
+            <span id="op-action">Initializing...</span>
+          </div>
+          <div class="op-bar-bg">
+            <div id="op-bar-fill"></div>
+          </div>
+        </div>
         <div class="header-right">
           <a href="/" class="header-link">HOME</a>
           <a href="/docs/usage_guide/" class="header-link">GUIDE</a>
@@ -971,6 +1024,7 @@
             <div id="action-dataset" class="menu-item">Add targets to dataset</div>
             <div id="action-collect-images" class="menu-item">Collect Gripper Images</div>
             <div id="action-bind" class="menu-item hidden" style="border-top: 1px solid #ccc; color: #007fff; font-weight: bold;">Bind to account</div>
+            <div id="action-update-firmware" class="menu-item">Update Firmware on Components</div>
 
           </div>
         </div>
