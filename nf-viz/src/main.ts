@@ -474,7 +474,7 @@ function disconnect() {
   isLanMode = false;
   isSimMode = false;
   updateRobotIdUI("Unknown");
-  setUrlParam();
+  setUrlParam(null);
 }
 
 function connect(wsUrl: string) {
