@@ -1074,7 +1074,7 @@ function initRunMenu() {
     bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
     // bindCommand('action-park',           Command.COMMAND_PARK);
     // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
-    // bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
+    bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
     
     // Bind bind action
     const bindAction = document.getElementById('action-bind');

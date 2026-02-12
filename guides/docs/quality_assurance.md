@@ -25,6 +25,10 @@
 
     **Solution:** Check if /boot/firmware/cmdline.txt is empty. if so this is a sign of filesystem corruption. reflash the card. according to [raspi setup](raspi_setup.md)
 
+??? example "Calibration results are garbage"
+
+    **Solution:** Make sure you don't have any stray april tags or aruco tags in the room, or on any tags on computer screens which are visible to the robot. Use the maximum intensity of lighting available during calibraiton and operation.
+
 
 ## Anchor Post Assembly Quality Checks
 

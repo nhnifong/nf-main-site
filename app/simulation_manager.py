@@ -71,7 +71,7 @@ class RobotState:
     target_vel: np.ndarray # [x, y, z]
     
     # Gripper state
-    wrist_angle: float = 0.0
+    wrist_angle: float = 540.0
     finger_angle: float = 0.0 # -90 to 90
     
     last_update: float = 0.0
@@ -313,12 +313,12 @@ class SimulatedRobot:
                                 pass 
 
                         # Update Finger
-                        if move.finger is not None:
-                            self.state.finger_angle = move.finger
+                        if move.finger_speed is not None:
+                            self.state.finger_angle = np.clip(self.state.finger_angle + move.finger_speed*DT, -90, 90)
                             
                         # Update Wrist
-                        if move.wrist is not None:
-                            self.state.wrist_angle = move.wrist
+                        if move.wrist_speed is not None:
+                            self.state.wrist_angle = np.clip(self.state.wrist_angle + move.wrist_speed*DT, 0, 1080)
 
                     else:
                         # Log other commands but do nothing
