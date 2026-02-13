@@ -1063,7 +1063,7 @@ function initRunMenu() {
     // Bind all menu actions
     const Command = nf.control.Command;
 
-    bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
+    bindCommand('action-pick-drop',      Command.COMMAND_PICK_AND_DROP);
     bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
     bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
     bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
@@ -1072,8 +1072,9 @@ function initRunMenu() {
     // bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
     // bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
     bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
-    // bindCommand('action-park',           Command.COMMAND_PARK);
-    // bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+    bindCommand('action-record-park',    Command.COMMAND_RECORD_PARK);
+    bindCommand('action-park',           Command.COMMAND_PARK);
+    bindCommand('action-unpark',         Command.COMMAND_UNPARK);
     bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
     
     // Bind bind action
