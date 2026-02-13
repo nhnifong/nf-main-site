@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Optional, Annotated
+from typing import Optional
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, select
@@ -9,7 +9,16 @@ from sqlalchemy import String, select
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 logger = logging.getLogger(__name__)
 
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(
+    DATABASE_URL,
+    # 'pool_pre_ping' verifies the connection is alive before handing it to the app.
+    pool_pre_ping=True,
+    # 'pool_recycle' closes and recreates connections after they reach a certain age (seconds).
+    pool_recycle=1800,
+    pool_size=5,
+    max_overflow=10
+)
+
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 class Base(DeclarativeBase):
@@ -27,8 +36,6 @@ class RobotOwnership(Base):
 
 async def init_db():
     async with engine.begin() as conn:
-        logger.info(f"init_db {conn}")
-        # Create tables if they don't exist
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_db():

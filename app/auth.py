@@ -46,9 +46,6 @@ async def verify_google_token(token: str) -> dict:
 async def check_robot_ownership(user_id: str, robot_id: str) -> bool:
     """Queries Postgres to see if this specific user owns this robot."""
     async with async_session() as session:
-        # We execute the query and fetch the result immediately. 
-        # Using .scalar_one_or_none() directly on the execution result 
-        # is the most efficient way to get a single object or None.
         result = await session.execute(
             select(RobotOwnership).where(
                 RobotOwnership.user_id == user_id,
