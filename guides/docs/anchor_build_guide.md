@@ -284,4 +284,4 @@ Splice a female JST 1.25 2P connector onto the wires with solder and heat shrink
 
 ![](images/ag/image58.jpg){ loading=lazy, width=45% }
 
-The anchor is complete! during [installation](insallation_guide.md) you will temporarily remove the cover, screw it to the wall, then snap the cover back on and secure it with a single M2.5x10 screw in the bottom. You can put that screw in now as a way to not lose it.
+The anchor is complete! during [installation](installation_guide.md) you will temporarily remove the cover, screw it to the wall, then snap the cover back on and secure it with a single M2.5x10 screw in the bottom. You can put that screw in now as a way to not lose it.

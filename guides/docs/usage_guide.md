@@ -27,8 +27,6 @@ The motion controller is a headless process, and the user interface is browser b
     Search for python  
     Install python 3.11
     
-    ![](images/desktop/image1.png){ loading=lazy, width=45% }
-    
     Open Powershell
     
         python -m virtualenv venv

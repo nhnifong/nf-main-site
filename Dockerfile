@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
 
 # Install latest nf_robot for the proto files
 # This ensures sync_protos.py can find 'nf_robot' in the site-packages
-RUN pip install --no-cache-dir nf_robot==3.3.1
+RUN pip install --no-cache-dir nf_robot==3.3.3
 
 # Setup Frontend Directory
 WORKDIR /app/nf-viz

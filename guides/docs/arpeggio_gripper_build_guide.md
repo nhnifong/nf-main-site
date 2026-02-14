@@ -13,6 +13,7 @@ First you should have printed the parts according to the [print guide](print_gui
  - Soldering iron
  - [Cross locking tweezers](https://www.amazon.com/dp/B001BU9MLG)
  - Super glue ([loctite super glue “professional liquid”](https://www.amazon.com/dp/B07VL6MP94?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1&th=1) recommended)
+ - exacto/hobby knife
 
 ## Fingers
 
@@ -33,23 +34,39 @@ Tighten and then back off just until the mechanism moves freely. Repeat with the
 ![](images/grip_arp/PXL_20260202_232326116.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260202_232502475.jpg){ loading=lazy, width=45% }
 
-Locate the pressure sense connector. It is a two pin 2.54 pitch female molex plug with about 20cm of wire ends.
+Stick a pressure sensitive resistor onto the finger with the wire channel holes. Its no harder or easier to solder to it while it's stuck to the finger in my opinion, but you can do it either way. If you don't stick it on, you need something to hold it.
 
-Select the finger with the wire channel. Feed the wires through the small hole starting at the gear and leading down towards the finger joint. Push them down the channel, till they pop out of the face near the joint, thenput them all they way through.
+![](images/grip_arp/PXL_20260213_004449829.jpg){ loading=lazy, width=45% }
 
-Place a very small piece of heat shrink on each wire.
-Strip the ends of the wires, solder the pressure sense resistor to the wires in such a way that they are not twisted. there is no polarity, but there is not enough room for a twist.
-Remove the adhesive backing and stick the sensor in the center of the finger pad, feeding any excess wire back through the channel.
+Locate the pressure sense connector. It is a 2-pin 1.00mm pitch male JST-SH connector with 20cm wire ends.
 
-![](images/grip_arp/PXL_20260202_233628696.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_234837799.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_235006310.jpg){ loading=lazy, width=45% }
+Select the finger with the wire channel. Feed the bare wire ends through the small hole starting at the gear and leading down towards the finger joint. Push them down the channel, till they pop out of the face near the joint, then pull plenty of slack through.
 
-Cover the face of the finger in adhesive backed foam and trim it to size.
-When trimming the foam, you don’t have to be very precise, and it doesn't have to go exactly to the edge.
+![](images/grip_arp/PXL_20260213_004511005.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_004519045.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_004536727.jpg){ loading=lazy, width=45% }
 
-![](images/grip_arp/PXL_20260202_235130566.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_235538809.jpg){ loading=lazy, width=45% }
+Place a small length of heat shrink on each wire lead and solder them to the pressure sensitive resistor's leads, shrink the protective tubing while being careful not to melt the plastic. To make this easier, gently bend the leads away from the part while soldering. Polarity is irrelevant.
+
+!!! warning "Danger"
+
+    PLA is flammable. Don't hold a lighter up to it, angle the part so the heat rises past the plastic.
+
+![](images/grip_arp/PXL_20260213_004808856.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_004941544.jpg){ loading=lazy, width=45% }
+
+Cover the flat face of the finger with a strip of adhesive backed foam. Start from the top edge of the finger (nearest the gear) make one end of the foam meet this edge, stick down the foam and you will have about 10mm sticking off the end. Fold it over the edge.
+Press the finger flat against a desk to firmly stick it down everywhere. Then with an exacto knife, cut the foam right down the crack where the two finger peices slide past eachother as pictured. finally, Cut a relief slit on both sides where finger pad curves and narrows so you can fold the remaining foam around the sides.
+
+Repeat with the other finger.
+
+![](images/grip_arp/PXL_20260213_005100134.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_005140781.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_005143687.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_005303717.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260213_005448442.jpg){ loading=lazy, width=45% }
+
+Don't worry if it's not too precise. Foam grip tape is cheap and should be replaced at regular intervals anyway.
 
 ## Motors
 
@@ -61,13 +78,17 @@ Attach the aluminum servo horns to both motors with the included M3x6 center scr
 
 Snap two m3x6 screws into the finger drive gear from the sides. For this you cannot use the phillips head screws that come with the STS3215 you need to use the black hex screws that have a thinner head.
 
+!!! tip "Print Settings"
+
+    The drive gear will not have sufficient strength if printed with PLA. PCTG is known to work, but only at a higher than usual nozzle tempurature of 265°C.
+
 ![](images/grip_arp/PXL_20260203_000259321.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000335130.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000403398.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000448440.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000606648.jpg){ loading=lazy, width=45% }
 
-Plug a three wire SPOX cable into each motor.
+Plug a three wire SPOX cable into each motor. (The wire that comes in the box with the motor)
 
 ## Body Assembly
 
@@ -203,14 +224,12 @@ Plug the finger motor into the motor port on he Gripper Hat. Leave the wrist mot
 Put a 10x15x4 bearing onto the ABS tube followed by a 3/8" x 7/8" steel washer. 
 
 Make a mark 6mm from the end of the tube with a sharpie pen.
-Forcefully wwist the helical gear onto the tube until the marked 6mm of tube protrude past the gear.
+*Forcefully twist* the helical gear onto the tube until the marked 6mm of tube protrude past the gear.
 
 ![](images/grip_arp/PXL_20260203_024931510.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_151856981.jpg){ loading=lazy, width=45% }
 
 Put a drop of cyanoacrylate glue where the gear and tube touch.
-
-![](images/grip_arp/){ loading=lazy, width=45% } 
 
 Locate or print the gantry marker tags.
 If you are printing them, This is the [sticker paper on amazon](https://www.amazon.com/dp/B092444Z49) and the [document with the marker images is here](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing). It must be printed without margins.
@@ -282,5 +301,3 @@ Screw on the front and back face plates with three M3x4 screws on each side. Two
 Complete! you are now in possession of one complete gripper - the most complex part of Stringman.
 
 Now you can move on to [Tie up](installation_guide.md).
-
-![](images/grip_arp/image82.png){ loading=lazy, width=45% }

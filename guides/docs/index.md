@@ -17,12 +17,12 @@ If you have [purchased a Stringman robot](https://neufangled.com/stringman-arpeg
 
 #### Newest Design
 
- * The newest hardware version of the anchors is the Pilot version (1). Follow the [Anchor Build Guide](anchor_build_guide) for assembly.
+ * The newest hardware version of the anchors is the Pilot version (1). Follow the [Anchor Build Guide](anchor_build_guide.md) for assembly.
  * The newest hardware version of the gripper is the Arpeggio version (2). Follow thge [Arpeggio Gripper Build Guide](arpeggio_gripper_build_guide.md)
 
 #### Earlier versions
 
-[Pilot gripper assembly guide](gripper_build_guide)
+[Pilot gripper assembly guide](gripper_build_guide.md)
 
 ### STL files and BOM
 
