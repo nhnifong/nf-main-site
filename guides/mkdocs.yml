@@ -21,6 +21,7 @@ extra:
       link: https://www.youtube.com/@overengineer7691
     - icon: fontawesome/brands/discord
       link: https://discord.gg/T5HEvxVgbA
+  homepage: http://neufangled.com/
 markdown_extensions:
   - attr_list
   - pymdownx.superfences
@@ -31,6 +32,7 @@ markdown_extensions:
   - footnotes
 plugins:
   - glightbox
+  - search
 extra_css:
   - stylesheets/extra.css
 hooks:
