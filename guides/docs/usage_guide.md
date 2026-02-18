@@ -90,7 +90,12 @@ Print out the [full-page "origin" marker](https://docs.google.com/document/d/1B4
 
 ![](images/usage/calibration_cards.png){ loading=lazy, width=45% }
 
-Select the "Full Calibration" option from the main menu. The robot should move to a position over the origin and make some other small motions. When this is finished, the shape of the room in the UI should update. If anything looks drastically wrong try repeating the calibration with better lighting, or with the helper cards in different places.
+Select the **Calibration and Maintenence** submenu followed by **Full Calibration**
+
+![](images/usage/maintenence_menu.png){ loading=lazy, width=45% } 
+![](images/usage/fullcal.png){ loading=lazy, width=45% } 
+
+The robot should move to a position over the origin and make some other small motions. When this is finished, the shape of the room in the UI should update. If anything looks drastically wrong try repeating the calibration with better lighting, or with the helper cards in different places.
 
 You should can judge the quality of the calibration by moving in straight lines. *WASDQE* keys move the robot along the cardinal directions of the origin card. With good calibration, the gantry should move in straight lines. Poor calibration usually causes it to move in an ascending arc, with some lines becoming slack in the process.
 

@@ -1016,17 +1016,32 @@
             <!-- Menu Items hooked up in main.ts -->
             <div id="action-pick-drop" class="menu-item">Pick and drop targets</div>
             <div id="action-tension" class="menu-item">Tension all lines (D-up)</div>
-            <div id="action-full-cal" class="menu-item">Full Calibration</div>
             <div id="action-half-cal" class="menu-item">Quick Calibration (D-left)</div>
             <div id="action-record-park" class="menu-item">Set Parking Location</div>
             <div id="action-park" class="menu-item">Park</div>
             <div id="action-unpark" class="menu-item">UnPark</div>
             <div id="action-grasp" class="menu-item">Auto Grasp Here (D-right)</div>
+            <div id="action-maintenance" class="menu-item" style="border-top: 1px solid #ccc; font-weight: bold;">Calibration and Maintenance</div>
+            <div id="action-bind" class="menu-item hidden" style="border-top: 1px solid #ccc; color: #007fff; font-weight: bold;">Bind to account</div>
+          </div>
+
+          <!-- Maintenance Sub-Menu -->
+          <div id="maintenance-menu" class="run-menu-content">
+            <div id="action-maint-back" class="menu-item" style="font-weight:bold; color:#555;">&larr; Back</div>
+            <div style="border-bottom:1px solid #ddd; margin-bottom:5px;"></div>
+            
+            <div id="action-full-cal" class="menu-item">Full Calibration</div>
             <div id="action-dataset" class="menu-item">Add targets to dataset</div>
             <div id="action-collect-images" class="menu-item">Collect Gripper Images</div>
-            <div id="action-bind" class="menu-item hidden" style="border-top: 1px solid #ccc; color: #007fff; font-weight: bold;">Bind to account</div>
             <div id="action-update-firmware" class="menu-item">Update Firmware on Components</div>
-
+            
+            <div class="menu-item" style="cursor: default; padding: 8px 20px;">
+                <div style="font-size:0.8em; margin-bottom:4px;">Debug Command</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="debug-input" class="input-text" style="padding:4px; margin:0; font-size:0.9rem;" placeholder="cmd">
+                    <button id="action-debug-send" class="run-button" style="padding:4px 10px; font-size:0.8rem;">Send</button>
+                </div>
+            </div>
           </div>
         </div>
 

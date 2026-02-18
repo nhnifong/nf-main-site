@@ -29,6 +29,10 @@
 
     **Solution:** Make sure you don't have any stray april tags or aruco tags in the room, or on any tags on computer screens which are visible to the robot. Use the maximum intensity of lighting available during calibraiton and operation.
 
+??? example "ValueError: No Hardware I2C on (scl,sda)=(3, 2)"
+
+    The gripper has to be rebooted once the first time after booting a newly flashed image before the i2c bus comes up.
+
 
 ## Anchor Post Assembly Quality Checks
 

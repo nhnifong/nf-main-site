@@ -1029,13 +1029,60 @@ targetListManager.sendFn = sendControl;
 function initRunMenu() {
     const runBtn = document.getElementById('run-btn');
     const runMenu = document.getElementById('run-menu');
+    const maintMenu = document.getElementById('maintenance-menu');
     const stopBtn = document.getElementById('stop-btn');
 
-    // Toggle Menu
+    // Toggle Main Menu
     if (runBtn && runMenu) {
         runBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent document click from immediately closing it
+            e.stopPropagation(); 
+            // Close maint menu if open, toggle main menu
+            maintMenu?.classList.remove('show');
             runMenu.classList.toggle('show');
+        });
+    }
+
+    // Toggle Maintenance Menu
+    const maintAction = document.getElementById('action-maintenance');
+    const maintBack = document.getElementById('action-maint-back');
+
+    if (maintAction && maintMenu && runMenu) {
+        maintAction.addEventListener('click', (e) => {
+            e.stopPropagation();
+            runMenu.classList.remove('show');
+            maintMenu.classList.add('show');
+        });
+    }
+
+    if (maintBack && maintMenu && runMenu) {
+        maintBack.addEventListener('click', (e) => {
+            e.stopPropagation();
+            maintMenu.classList.remove('show');
+            runMenu.classList.add('show');
+        });
+    }
+
+    // Prevent input click from closing menu
+    const debugInput = document.getElementById('debug-input');
+    if (debugInput) {
+        debugInput.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    // Debug Send Action
+    const debugSendBtn = document.getElementById('action-debug-send');
+    if (debugSendBtn && debugInput) {
+        debugSendBtn.addEventListener('click', () => {
+            const val = (debugInput as HTMLInputElement).value;
+            if (val) {
+                console.log("Sending debug cmd:", val);
+                sendControl([nf.control.ControlItem.create({
+                    debug: {action: val}
+                })]);
+                // Close menus after send? Optional. User said 'selected' triggers it.
+                // Keeping open might be better for debug tweaks, but standard behavior is close.
+                // Let's close it to be safe unless requested otherwise.
+                maintMenu?.classList.remove('show');
+            }
         });
     }
 
@@ -1043,6 +1090,9 @@ function initRunMenu() {
     document.addEventListener('click', () => {
         if (runMenu && runMenu.classList.contains('show')) {
             runMenu.classList.remove('show');
+        }
+        if (maintMenu && maintMenu.classList.contains('show')) {
+            maintMenu.classList.remove('show');
         }
     });
 
@@ -1055,6 +1105,7 @@ function initRunMenu() {
                     simpleCommand(cmdEnum);
                     // close menu after selection
                     runMenu?.classList.remove('show');
+                    maintMenu?.classList.remove('show');
                 }
             });
         }
@@ -1063,19 +1114,17 @@ function initRunMenu() {
     // Bind all menu actions
     const Command = nf.control.Command;
 
-    bindCommand('action-pick-drop',      Command.COMMAND_PICK_AND_DROP);
+    bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
     bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
     bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
     bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
     bindCommand('action-grasp',          Command.COMMAND_GRASP);
     bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
-    // bindCommand('action-zero-winch',     Command.COMMAND_ZERO_WINCH);
-    // bindCommand('action-horiz-check',    Command.COMMAND_HORIZONTAL_CHECK);
     bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
+    bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
     bindCommand('action-record-park',    Command.COMMAND_RECORD_PARK);
     bindCommand('action-park',           Command.COMMAND_PARK);
     bindCommand('action-unpark',         Command.COMMAND_UNPARK);
-    bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
     
     // Bind bind action
     const bindAction = document.getElementById('action-bind');
