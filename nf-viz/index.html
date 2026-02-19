@@ -321,75 +321,178 @@
         </div>
     </section>
 
-    <section class="feature-section">
-        <div class="feature-content">
-            <div class="feature-image">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/render.png">
-            </div>
-            <div class="feature-text">
-                <h2>Room-Scale Reach</h2>
-                <p>Stringman is capable of reaching anything in a single room.</p>
-                <br>
-                <p>Move beyond a desktop arm and start using your robot to do real work. Our current network picks up laundry, toys, and trash, dropping them in marked bins. The cable-driven robot platform makes navigation and balance non-issues, and there is no downtime for charging.</p>
-            </div>
-        </div>
-    </section>
 
-    <section class="feature-section">
-        <div class="feature-content">
-            <div class="feature-image">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/topview.png">
-            </div>
-            <div class="feature-text">
-                <h2>Simplicity of Operation</h2>
-                <p>Stringmans supports teleoperation from either a local or cloud interface.</p>
-                <br>
-                <p>At it's simplest, you just turn it on, select automatic pick and place, and let it run for about 15 minutes for cleaner floors. You can drive it manually with a standard gamepad from the <a href="control_panel/">web interface</a>, or import the <a href="https://pypi.org/project/nf-robot/">nf_robot python module</a> and control it with the protobuf based interface.</p>
-            </div>
-        </div>
-    </section>
+    <div id="features">
 
-    <section class="feature-section">
-        <div class="feature-content">
-            <div class="feature-image">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/fingers.png">
+        <!-- Automated Clutter Pickup -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Object+Recognition" alt="Clutter Pickup">
+                </div>
+                <div class="feature-text">
+                    <h2>Automated Clutter Pickup</h2>
+                    <p>The core routine is designed for the common household task of picking up messes. Stringman is trained to identify and clear laundry, trash, and toys from floor surfaces. The model is specifically tuned to filter out and avoid sensitive items like power cables, dishes, heavy things, and people.</p>
+                </div>
             </div>
-            <div class="feature-text">
-                <h2>Open Source</h2>
-                <p>Stringman is completely open source and <a href="https://certification.oshwa.org/us002788.html" class="light-link">certified by OSHWA</a>. And complete <a href="https://nhnifong.github.io/neufangled-site-2/" class="light-link">visual guides</a> are available if you want to print and build your own.</p>
-                <br>
-                <p>Stringman components are based on <a href="https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/">Raspberry Pi's</a> with most heavy lifting occuring on your host machine. You can find the control code on <a href="https://github.com/nhnifong/cranebot3-firmware">Github</a></p>
-            </div>
-        </div>
-    </section>
+        </section>
 
+        <!-- LeRobot Integration -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=LeRobot+Training" alt="LeRobot">
+                </div>
+                <div class="feature-text">
+                    <h2>LeRobot Integration</h2>
+                    <p>We've built our grasping capabilities on top of the LeRobot platform. For developers, this means a familiar ecosystem of open-source tools. If the default routines don't fit your needs, you can record your own demonstrations and train custom models for specific household tasks.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Unmatched Reach -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Room-Scale+Reach" alt="Reach Illustration">
+                </div>
+                <div class="feature-text">
+                    <h2>Unmatched Reach</h2>
+                    <p>Unlike desktop arms limited to a fixed radius, Stringman leverages a cable-driven architecture to access the full volume of a room. By mounting anchors in the corners, the gripper can transition from floor-level pick-ups to high-shelf placements without rails or limbs.</p>
+                </div>
+            </div>
+        </section>
 
-    <section class="feature-section">
-        <div class="feature-content">
-            <div class="feature-image">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/passport.png">
+        <!-- Set Your Drop Bins -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Fiducial+Tags" alt="Drop Bins">
+                </div>
+                <div class="feature-text">
+                    <h2>Set Your Drop Bins</h2>
+                    <p>Organizing your home is a physical process, not a coding task. Use our clip-on fiducial tags to designate your laundry bin, toy box, and trash can. Stringman maps these locations visually; you don't need to tag individual pieces of clutter—just the destination.</p>
+                </div>
             </div>
-            <div class="feature-text">
-                <h2>Remote Management</h2>
-                <p>Ever needed to reach through your security camera, grab something and put it somewhere? Stringman is basically a set of security cameras with a hand, so you can log in and manage your robot from anywhere.</p>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="feature-section">
-        <div class="feature-content">
-            <div class="feature-image">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/heatmap.png">
+        <!-- Local Privacy Mode -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=On-Premise+Compute" alt="Privacy">
+                </div>
+                <div class="feature-text">
+                    <h2>Local Privacy Mode</h2>
+                    <p>Robotics shouldn't come at the cost of domestic privacy. Stringman supports a fully on-premise operating mode where all video processing and telemetry remain within your local network. You get the full suite of automation and computer vision functionality without streaming your home's interior to the cloud.</p>
+                </div>
             </div>
-            <div class="feature-text">
-                <h2>Constantly Improving Models</h2>
-                <p>Model updates are offered regularly for recognizing a greater variety of targets and obstacles and handling edge cases in new enviroments. If you're up for it, you can program your own behaviors or fine tune our models on your household data. Models and datasets are of course open source as well and <a href="https://huggingface.co/naavox">published on HuggingFace</a></p>
-                <br>
-                <p>For more examples of robot behavior, find <a href="https://www.youtube.com/@overengineer7691/videos">Stringman on YouTube</a></p>
-            </div>
-        </div>
-    </section>
+        </section>
 
+        <!-- Remote Management -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/passport.png" alt="Remote Mgmt">
+                </div>
+                <div class="feature-text">
+                    <h2>Remote Management</h2>
+                    <p>For those who prefer to make the trade-off, our cloud-based console allows you to monitor and control Stringman from anywhere. Think of it as a security camera that can actually interact with its environment—log in from work to move an object or check a status from your phone.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Open Source -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Apache+2.0+Cert" alt="Open Source">
+                </div>
+                <div class="feature-text">
+                    <h2>Open Source</h2>
+                    <p>Stringman is proudly based on a stack of open source tools and is Apache 2.0 licensed and OSHWA certified. From the mechanical CAD to the firmware running on the Raspberry Pi nodes, the entire stack is available for audit, modification, and community contribution. Build something useful, and pay it forward.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- No Charging Downtime -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Tethered+Power" alt="Power">
+                </div>
+                <div class="feature-text">
+                    <h2>No Charging Downtime</h2>
+                    <p>Mobile robots spend a significant portion of their time charging. Because Stringman is a powered from the wall, it's always ready for work. Furthermore, by removing the heavy battery pack, we've increased the payload capacity per dollar compared to mobile platforms that must waste energy carrying their own power supply.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Household Aesthetics -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Crown+Moulding+Anchors" alt="Aesthetics">
+                </div>
+                <div class="feature-text">
+                    <h2>Household Aesthetics</h2>
+                    <p>We designed Stringman to exist in a home, not just a lab. The corner anchors are styled to mimic standard crown moulding, and the high-strength fishing line used for the drive system is nearly invisible at a distance of just a few meters. It’s an appliance that blends in when not in use.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simple Self Parking -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=One-Button+Interface" alt="Parking">
+                </div>
+                <div class="feature-text">
+                    <h2>Simple Self Parking</h2>
+                    <p>Daily use shouldn't require a terminal. Stringman features a single-button mode: Turn it on, and the robot unparks itself, completes its cleaning routine, returns to its home position, and enters a low-power sleep automatically.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Swing Cancellation -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Active+Stabilization" alt="Stabilization">
+                </div>
+                <div class="feature-text">
+                    <h2>Swing Cancellation</h2>
+                    <p>Stringman's gripper is 50cm below the pivot point so it can reach the floor next to beds and tables. This additional linkage could allow unconstrained motion so Stringman employs active swing cancellation algorithms to counteract momentum, without adding the cost of any additional motors. This ensures the gripper remains steady and predictable even during rapid cross-room traversals.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wrist and Fingers -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Active+Stabilization" alt="Stabilization">
+                </div>
+                <div class="feature-text">
+                    <h2>Wrist and Fingers</h2>
+                    <p>Often, a simple solution that gets the job done has more value than a complex one. Stringman uses a two fingered gripper with a wrist. This is enough dexterity for the clutter it is designed to pick up, keeping weight and cost low and reliability high. In our household tests we have determined that more layers of grip tape is simply a better return on investment than more articulated fingers.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customize Your Look -->
+        <section class="feature-section">
+            <div class="feature-content">
+                <div class="feature-image">
+                    <img src="https://placehold.co/600x400/222/7cdbfb?text=3D+Printable+Faceplates" alt="Customization">
+                </div>
+                <div class="feature-text">
+                    <h2>Customize Your Look</h2>
+                    <p>The hardware is as modular as the software. The Stringman faceplate is easily swappable and 3D printable. Change colors to match your decor, or use our templates to design something entirely custom. If you want your robot to look like a pineapple, the files are there for you to do it.</p>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <section class="join-section">
         <a href="https://groups.google.com/g/stringman-crew" class="join-button">Mailing List</a>
