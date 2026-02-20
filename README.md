@@ -11,6 +11,12 @@ Run all components (control_plane, media_gateway, redis) at once with docker com
 
     docker compose up --build
 
+### Kill all running docker containers
+
+Sometimes you can't bind the port and need to kill leftover processes
+
+    docker kill $(docker ps -q)
+
 ### Run media gateway in isolation
 
 build

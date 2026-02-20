@@ -37,6 +37,10 @@
             z-index: 10;
         }
 
+        a {
+            color: #ffe79b;
+        }
+
         .navbar a {
             color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
@@ -174,7 +178,12 @@
             flex: 1;
         }
 
-        .feature-image img {
+        /* Combined selector for feature images and videos. 
+           display: block ensures the element takes up its full container width 
+           and treats height: auto correctly. */
+        .feature-image img, 
+        .feature-image video {
+            display: block;
             width: 100%;
             height: auto;
             border-radius: 12px;
@@ -182,8 +191,8 @@
             transition: transform 0.3s ease;
         }
         
-        /* Subtle hover effect for feature images */
-        .feature-image img:hover {
+        .feature-image img:hover, 
+        .feature-image video:hover {
             transform: scale(1.02);
         }
 
@@ -316,7 +325,7 @@
         </div>
 
         <div class="button-row">
-            <a href="stringman-pilot" class="hero-button">learn more</a>
+            <a href="stringman-arpeggio-pilot" class="hero-button">learn more</a>
             <a href="control_panel/" class="hero-button">run simulator</a>
         </div>
     </section>
@@ -328,7 +337,7 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Object+Recognition" alt="Clutter Pickup">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Clutter Pickup">
                 </div>
                 <div class="feature-text">
                     <h2>Automated Clutter Pickup</h2>
@@ -341,24 +350,24 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=LeRobot+Training" alt="LeRobot">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="LeRobot">
                 </div>
                 <div class="feature-text">
                     <h2>LeRobot Integration</h2>
-                    <p>We've built our grasping capabilities on top of the LeRobot platform. For developers, this means a familiar ecosystem of open-source tools. If the default routines don't fit your needs, you can record your own demonstrations and train custom models for specific household tasks.</p>
+                    <p>We've built our grasping capabilities on top of the <a href="https://huggingface.co/docs/lerobot/en/index">LeRobot platform</a>, which allows us to train Stringman to immitate grasping examples from teleoperation. We provide a detailed guide inviting you to try training it to grasp objects from your own examples. Robotic Immitation Learning is not as hard as it looks.</p>
                 </div>
             </div>
         </section>
-        
+
         <!-- Unmatched Reach -->
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Room-Scale+Reach" alt="Reach Illustration">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Reach Illustration">
                 </div>
                 <div class="feature-text">
                     <h2>Unmatched Reach</h2>
-                    <p>Unlike desktop arms limited to a fixed radius, Stringman leverages a cable-driven architecture to access the full volume of a room. By mounting anchors in the corners, the gripper can transition from floor-level pick-ups to high-shelf placements without rails or limbs.</p>
+                    <p>Unlike desktop arms limited to a fixed radius, Stringman leverages a cable-driven architecture to access the full volume of a room. By mounting anchors in the corners, the gripper can transition from floor-level pick-ups to high-shelf placements without rails or limbs, all with fewer actuators than even the simplest mobile robots.</p>
                 </div>
             </div>
         </section>
@@ -367,11 +376,15 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Fiducial+Tags" alt="Drop Bins">
+                    <video autoplay muted loop playsinline>
+                        <source src="%VITE_ASSET_BUCKET_URL%/assets/place_tag.mp4" type="video/mp4">
+                    </video>
                 </div>
                 <div class="feature-text">
                     <h2>Set Your Drop Bins</h2>
-                    <p>Organizing your home is a physical process, not a coding task. Use our clip-on fiducial tags to designate your laundry bin, toy box, and trash can. Stringman maps these locations visually; you don't need to tag individual pieces of clutter—just the destination.</p>
+                    <p>Organizing your home is a physical process, not a coding task. Use our clip-on fiducial tags to designate your laundry bin, toy box, and trash can. Stringman maps these locations visually. You don't need to tag individual pieces of clutter—just the destination. If there's something you never want it to pick up, you can mark that item as off-limits.</p>
+                    <br>
+                    <p>Stringman's AI produces a list of targets for pick up, and you can add or remove any target from the UI. If you want, you can disable the inference altogether and just click on all the things in the image you'd like it to grab and haul off to the trash can.</p>
                 </div>
             </div>
         </section>
@@ -380,11 +393,11 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=On-Premise+Compute" alt="Privacy">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Privacy">
                 </div>
                 <div class="feature-text">
-                    <h2>Local Privacy Mode</h2>
-                    <p>Robotics shouldn't come at the cost of domestic privacy. Stringman supports a fully on-premise operating mode where all video processing and telemetry remain within your local network. You get the full suite of automation and computer vision functionality without streaming your home's interior to the cloud.</p>
+                    <h2>Local Privacy</h2>
+                    <p>Robotics shouldn't come at the cost of domestic privacy. Stringman supports a fully <a href="/docs/lan_only_guide/">on-premise operating mode</a> where all video processing and telemetry remain within your local network. You get the full suite of automation and computer vision functionality without streaming your home's interior to the cloud.</p>
                 </div>
             </div>
         </section>
@@ -393,11 +406,13 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="%VITE_ASSET_BUCKET_URL%/assets/passport.png" alt="Remote Mgmt">
+                    <video autoplay muted loop playsinline>
+                        <source src="%VITE_ASSET_BUCKET_URL%/assets/fixed_control_panel.mp4" type="video/mp4">
+                    </video>
                 </div>
                 <div class="feature-text">
                     <h2>Remote Management</h2>
-                    <p>For those who prefer to make the trade-off, our cloud-based console allows you to monitor and control Stringman from anywhere. Think of it as a security camera that can actually interact with its environment—log in from work to move an object or check a status from your phone.</p>
+                    <p>For those who prefer to make the trade-off by binding their robot to an account, our <a href="/control_panel">web-based console</a> allows you to monitor and control Stringman from anywhere. Think of it as a security camera that can actually interact with its environment—log in from work to move an object or check a status from your phone.</p>
                 </div>
             </div>
         </section>
@@ -406,11 +421,13 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Apache+2.0+Cert" alt="Open Source">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/exploded.png" alt="Open Source">
                 </div>
                 <div class="feature-text">
                     <h2>Open Source</h2>
-                    <p>Stringman is proudly based on a stack of open source tools and is Apache 2.0 licensed and OSHWA certified. From the mechanical CAD to the firmware running on the Raspberry Pi nodes, the entire stack is available for audit, modification, and community contribution. Build something useful, and pay it forward.</p>
+                    <p>Stringman is proudly based on a stack of open source tools and is Apache 2.0 licensed and <a href="https://certification.oshwa.org/us002788.html">OSHWA certified</a>. From the mechanical CAD to the firmware running on the <a href="https://www.raspberrypi.com/">Raspberry Pi</a> nodes, the entire stack is available for audit, modification, and community contribution. Build something useful, and pay it forward.</p>
+                    <br>
+                    <p><a href="/docs/anchor_build_guide/">Start at the build guides</a> to get an idea of whether you'd like to print and build one yourself</p>
                 </div>
             </div>
         </section>
@@ -419,7 +436,9 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Tethered+Power" alt="Power">
+                    <video autoplay muted loop playsinline>
+                        <source src="%VITE_ASSET_BUCKET_URL%/assets/blanket_lift.mp4" type="video/mp4">
+                    </video>
                 </div>
                 <div class="feature-text">
                     <h2>No Charging Downtime</h2>
@@ -432,7 +451,7 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Crown+Moulding+Anchors" alt="Aesthetics">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/corner_anchor.png" alt="Aesthetics">
                 </div>
                 <div class="feature-text">
                     <h2>Household Aesthetics</h2>
@@ -445,7 +464,7 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=One-Button+Interface" alt="Parking">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Parking">
                 </div>
                 <div class="feature-text">
                     <h2>Simple Self Parking</h2>
@@ -458,11 +477,15 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Active+Stabilization" alt="Stabilization">
+                    <video autoplay muted loop playsinline>
+                        <source src="%VITE_ASSET_BUCKET_URL%/assets/cancel_swing.mp4" type="video/mp4">
+                    </video>
                 </div>
                 <div class="feature-text">
                     <h2>Swing Cancellation</h2>
                     <p>Stringman's gripper is 50cm below the pivot point so it can reach the floor next to beds and tables. This additional linkage could allow unconstrained motion so Stringman employs active swing cancellation algorithms to counteract momentum, without adding the cost of any additional motors. This ensures the gripper remains steady and predictable even during rapid cross-room traversals.</p>
+                    <br>
+                    <p>There's a whole <a href="https://www.youtube.com/watch?v=d7SvwrUoPOM">video about swing cancellation</a> if you're curious about how it works!</p>
                 </div>
             </div>
         </section>
@@ -471,7 +494,7 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=Active+Stabilization" alt="Stabilization">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Stabilization">
                 </div>
                 <div class="feature-text">
                     <h2>Wrist and Fingers</h2>
@@ -484,11 +507,11 @@
         <section class="feature-section">
             <div class="feature-content">
                 <div class="feature-image">
-                    <img src="https://placehold.co/600x400/222/7cdbfb?text=3D+Printable+Faceplates" alt="Customization">
+                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Customization">
                 </div>
                 <div class="feature-text">
                     <h2>Customize Your Look</h2>
-                    <p>The hardware is as modular as the software. The Stringman faceplate is easily swappable and 3D printable. Change colors to match your decor, or use our templates to design something entirely custom. If you want your robot to look like a pineapple, the files are there for you to do it.</p>
+                    <p>The hardware is as modular as the software. The Stringman faceplate is easily swappable and 3D printable. Change colors to match your decor, or use our templates to design something entirely custom. If you want your robot to look like a pineapple, <a href="docs/downloads/">the files are there</a> for you to do it.</p>
                 </div>
             </div>
         </section>
@@ -505,7 +528,7 @@
         <div class="cta-image-container">
             <img src="%VITE_ASSET_BUCKET_URL%/assets/product_pilot.png" alt="Stringman Pilot">
         </div>
-        <a href="stringman-pilot" class="order-button">Order Stringman</a>
+        <a href="stringman-arpeggio-pilot" class="order-button">Order Stringman</a>
     </section>
 
 </body>
