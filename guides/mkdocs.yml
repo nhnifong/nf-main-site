@@ -1,5 +1,6 @@
 site_name: Cranebot/Stringman Docs
 site_url: https://nhnifong.github.io/neufangled-site
+repo_url: https://github.com/nhnifong/cranebot3-firmware
 theme:
   name: material
   logo: icons/neufangled_icon_outline.png
