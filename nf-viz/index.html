@@ -202,6 +202,60 @@
             flex-direction: row-reverse;
         }
 
+        /* --- FAQ INTERRUPTOR --- */
+        /* We use a div instead of a section here to avoid disrupting the 
+           nth-of-type(even) counter for the .feature-section tags. */
+        .faq-interruptor {
+            width: 100%;
+            padding: 0px 20px;
+            margin: 40px 0;
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .whitish-bar {
+            width: 100%;
+            max-width: 1400px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            margin: 30px 0;
+        }
+
+        .faq-container {
+            max-width: 1300px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .faq-title {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .faq-item h3 {
+            font-size: 1.4rem;
+            color: #7cdbfb;
+            margin-bottom: 12px;
+        }
+
+        .faq-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
         /* --- CTA / ORDER SECTION --- */
         .cta-section {
             min-height: 50vh;
@@ -296,6 +350,20 @@
             .hero-video {
                 object-position: 30% center; 
             }
+            .hero-button {
+                padding: 10px 20px;
+                border-radius: 25px;
+                font-size: 1rem;
+            }
+            .button-row {
+                bottom: 5vh;
+                left: 50%;
+                gap: 20px;
+                padding: 60px 10px;
+            }
+            .navbar a {
+                margin-left: 0px;
+            }
         }
     </style>
 </head>
@@ -304,6 +372,7 @@
     <!-- Utility Navbar -->
     <nav class="navbar">
         <a href="docs/">Docs</a>
+        <a href="https://www.youtube.com/@overengineer7691/videos">Youtube</a>
         <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
         <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
         <a href="/company">Company</a>
@@ -378,6 +447,29 @@
             </div>
         </section>
 
+        <!-- FAQ INTERRUPTOR (Added after 3rd section) -->
+        <div class="faq-interruptor">
+            <div class="whitish-bar"></div>
+            <div class="faq-container">
+                <h2 class="faq-title">Frequently Asked Questions</h2>
+                <div class="faq-grid">
+                    <div class="faq-item">
+                        <h3>How difficult is the physical installation?</h3>
+                        <p>Stringman's anchors are secured to the studs with a pair of wood screws, similar to a curtain rod. You need step ladder, a cordless drill, and about 1 hour for installation and setup following the <a href="/docs/installation_guide/">detailed picture guides</a>. Connecting to your network is a matter of holding wifi sharing QR codes up to stringman's cameras. Calibration is automatic and takes about 30 seconds.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Will there be lines crossing my room?</h3>
+                        <p>As long as it remains installed, yes. However, when parked, they are up near the ceiling and out of the way. And if you regulary run stringman, your room will be less cluttered than it started. A future version of the anchor however will make some improvments in this regard, being easier to detach and remove for events, while leaving a small clip instead of holes.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can it be used in rooms with ceiling fans?</h3>
+                        <p>Yes, it's just a matter of mounting the anchors at or below the level of the fan, making it physically impossible for the lines or marker box to touch it. Similarly, the work area can be shrunk to exlcude low hanging light fixures if they are off to the side, but if the center of the room does contain low hanging objects, strinman cannot be installed in that room.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="whitish-bar"></div>
+        </div>
+
         <!-- Local Privacy Mode -->
         <section class="feature-section">
             <div class="feature-content">
@@ -449,19 +541,6 @@
             </div>
         </section>
 
-        <!-- Simple Self Parking -->
-        <section class="feature-section">
-            <div class="feature-content">
-                <div class="feature-image">
-                    <img src="%VITE_ASSET_BUCKET_URL%/assets/white_gripper.jpg" alt="Parking">
-                </div>
-                <div class="feature-text">
-                    <h2>Simple Self Parking</h2>
-                    <p>Daily use shouldn't require a terminal. Stringman features a single-button mode: Turn it on, and the robot unparks itself, completes its cleaning routine, returns to its home position, and enters a low-power sleep automatically.</p>
-                </div>
-            </div>
-        </section>
-
         <!-- Swing Cancellation -->
         <section class="feature-section">
             <div class="feature-content">
@@ -519,7 +598,7 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-image-container">
-            <img src="%VITE_ASSET_BUCKET_URL%/assets/product_pilot.png" alt="Stringman Pilot">
+            <img src="%VITE_ASSET_BUCKET_URL%/assets/group_of_three.png" alt="Stringman Pilot">
         </div>
         <a href="stringman-arpeggio-pilot" class="order-button">Order Stringman</a>
     </section>
