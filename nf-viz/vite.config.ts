@@ -49,6 +49,7 @@ export default defineConfig({
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
         stringmanpilot: resolve(__dirname, 'stringman-pilot.html'),
+        stringmanarpeggiopilot: resolve(__dirname, 'stringman-arpeggio-pilot.html'),
       }
     }
   }
