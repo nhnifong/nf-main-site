@@ -2,7 +2,7 @@
 
 Hardware Version: Arpeggio
 
-**Print time**: about 12 hours  
+**Print time**: about 20 hours, or about 40 hours if using multicolor instead of stickers for apriltags
 **Build time**: about 2 hours
 
 First you should have printed the parts according to the [print guide](print_guide.md)
@@ -10,10 +10,13 @@ First you should have printed the parts according to the [print guide](print_gui
 ## Tool list
 
  - [Mini screwdriver with a bit set](https://www.amazon.com/dp/B01KB02F9C)
- - Soldering iron
  - [Cross locking tweezers](https://www.amazon.com/dp/B001BU9MLG)
  - Super glue ([loctite super glue “professional liquid”](https://www.amazon.com/dp/B07VL6MP94?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1&th=1) recommended)
  - exacto/hobby knife
+ - flush cut wire clippers
+
+Please excuse the changing colors of the parts in this guide. It it is a better use of my time to only update sections which have changed as I develop stringman.
+I will make a final pass when the hardware is stable.
 
 ## Fingers
 
@@ -34,26 +37,16 @@ Tighten and then back off just until the mechanism moves freely. Repeat with the
 ![](images/grip_arp/PXL_20260202_232326116.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260202_232502475.jpg){ loading=lazy, width=45% }
 
-Stick a pressure sensitive resistor onto the finger with the wire channel holes. Its no harder or easier to solder to it while it's stuck to the finger in my opinion, but you can do it either way. If you don't stick it on, you need something to hold it.
-
-![](images/grip_arp/PXL_20260213_004449829.jpg){ loading=lazy, width=45% }
-
 Locate the pressure sense connector. It is a 2-pin 1.00mm pitch male JST-SH connector with 20cm wire ends.
 
-Select the finger with the wire channel. Feed the bare wire ends through the small hole starting at the gear and leading down towards the finger joint. Push them down the channel, till they pop out of the face near the joint, then pull plenty of slack through.
+Place heat shrink tubing on the wires and solder them to the pressure sensitive resistor. Polarity is irrelevant.
+If you purchase a hardware kit, you should have this pre soldered. Stick the resistor pad onto the finger which has a wire channel in it. Clip the wings off the JST-SH connector with flush cut wire clippers and feed the plug through the channel in the finger.
 
-![](images/grip_arp/PXL_20260213_004511005.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_004519045.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_004536727.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_234806045.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_234823899.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_234902743.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_234931459.jpg){ loading=lazy, width=45% }
 
-Place a small length of heat shrink on each wire lead and solder them to the pressure sensitive resistor's leads, shrink the protective tubing while being careful not to melt the plastic. To make this easier, gently bend the leads away from the part while soldering. Polarity is irrelevant.
-
-!!! warning "Danger"
-
-    PLA is flammable. Don't hold a lighter up to it, angle the part so the heat rises past the plastic.
-
-![](images/grip_arp/PXL_20260213_004808856.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_004941544.jpg){ loading=lazy, width=45% }
 
 Cover the flat face of the finger with a strip of adhesive backed foam. Start from the top edge of the finger (nearest the gear) make one end of the foam meet this edge, stick down the foam and you will have about 10mm sticking off the end. Fold it over the edge.
 Press the finger flat against a desk to firmly stick it down everywhere. Then with an exacto knife, cut the foam right down the crack where the two finger peices slide past eachother as pictured. finally, Cut a relief slit on both sides where finger pad curves and narrows so you can fold the remaining foam around the sides.
@@ -105,48 +98,46 @@ Attach the finger motor to the inside of mechanism_lid with four of the smallest
 ![](images/grip_arp/PXL_20260203_001106920.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_001205714.jpg){ loading=lazy, width=45% }
 
+Attach a 30mm fan to the mechanism lid using two M3x10 screws in opposite corners. ensure the airflow points outwards.
+
+![](images/grip_arp/PXL_20260306_233719266.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_233758557.jpg){ loading=lazy, width=45% }
+
 Locate the printed back plate (the largest piece)
 Insert two M4x25 bolts into the back plate from the bottom, hold them in as you place it on the table. Followed by two M4 washers.
 
+![](images/grip_arp/PXL_20260306_233949642.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_234013867.jpg){ loading=lazy, width=45% }
+
 Mesh the two geared levers together in the closed position, making sure they are aligned correctly. They must remain meshed the entire time. Use a rubber band to hold them together if necessary.  
 
-Feed the plug of the pressure sense wire through the smile shaped slot in back_plate, and place the fingers on the bolts simultaneously, keeping them meshed, and keeping the sens wire from being pinched anywhere.
-
-![](images/grip_arp/PXL_20260203_001253755.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001317876.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001428724.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001453658.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001516533.jpg){ loading=lazy, width=45% }
+Feed the plug of the pressure sense wire through the smile shaped slot in back_plate, and place the fingers on the bolts simultaneously, keeping them meshed, and keeping the sense wire from being pinched anywhere.
 
 Place M4 washers over the bolts after they protrude from the fingers.
 
-![](images/grip_arp/PXL_20260203_001535809.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_235338516.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001018771.jpg){ loading=lazy, width=45% }
 
-Place the mechanism lid and finger motor assembly onto the back plate, gently wiggle everything in order to get it to fit. The two M4x25 bolts should go through the holes in mechanism_lid and the drive gear should mesh with the finger gears. The alignment tabs on the sides should line up. Repeatedly opening and closing the fingers a small angle will help it all fit together.
+Place the mechanism lid and finger motor assembly onto the back plate, gently wiggle everything in order to get it to fit. The two M4x25 bolts should go through the holes in mechanism_lid and the drive gear should mesh with the finger gears. The alignment tabs on the sides should line up. If you have trouble getting it on there, try pulling the m3x15 bolts back a bit into the fingers, make the gear mesh first, then push the bolts through.
 
-Insert two M4 nuts into the hexagonal holes. Tighten the bolts from behind and then back off enough that the geared levers move freely. 
+Insert two M4 nuts into the hexagonal holes. Tighten the bolts from behind and then back off enough that the geared levers move freely.
 
-![](images/grip_arp/PXL_20260203_001602302.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001728885.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001740800.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001817066.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001034652.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001123623.jpg){ loading=lazy, width=45% }
 
-Secure the lid around the edges with four M3x10 bolts
+Screw in a single M4x10 screw into the center hole in the back plate. this provides some stability to the finger drive gear.
 
-![](images/grip_arp/PXL_20260203_001846992.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001936613.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001143714.jpg){ loading=lazy, width=45% }
+
+Secure the lid around the edges with four M3x10 screws
+
+![](images/grip_arp/PXL_20260307_001421462.jpg){ loading=lazy, width=45% }
 
 ## Electronics
 
-Unpack one Wide angle Camera Module and install an 8cm mini cable. (golden one) the wide end of the mini ribbon cable plugs in the camera, with its black face on the camera’s back side. The plastic retaining clip is pulled out to loosen a ribbon cable, and pushed in to secure one.  
-screw the camera to the camera mount with two M2x4 bolts in opposite corners. Make sure the ribbon is in the pictured direction.
+Select a raspberry pi zero 2w. you can either buy the one with the full header, or one with no header and solder header pins on only the first 6 pins of each row.
 
-![](images/grip_arp/PXL_20260203_002216883.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_002249091.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_002418793.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_002452120.jpg){ loading=lazy, width=45% }
-
-Stick a heat sink onto a Raspberry Pi Zero 2W (with header). It goes on the black chip.
+Stick a heat sink onto the black chip.
 
 ![](images/grip_arp/image11.png){ loading=lazy, width=45% }
 
@@ -154,20 +145,18 @@ Press the Strinman Gripper Hat onto the raspberry pi.
 
 ![](images/grip_arp/PXL_20260203_002527211.jpg){ loading=lazy, width=45% }
 
-Insert spacers between the two boards, and insert M2.5x14 through the boards and spacers. Only three corners are used since the ribbon cable is in the path of one of them.
+Insert spacers between the two boards, and insert M2.5x14 through the boards and spacers. Only three corners are used since the ribbon cable is in the path of one of them. use screws and spacers only in the three holes pictured.
 
-Attach the PCBs to the camera mount in the three corners that have screw holes.
+![](images/grip_arp/PXL_20260307_163945036.jpg){ loading=lazy, width=45% }
 
-![](images/grip_arp/PXL_20260203_002857085.jpg){ loading=lazy, width=45% }
+Unpack one [**Wide** angle Rasberry Pi Camera Module 3](https://www.digikey.com/en/products/detail/raspberry-pi/SC1224/17278644) and install an 8cm mini cable. The wide end of the mini ribbon cable plugs in the camera. Very carefully and gently pull out both sides of the black retaining clip in the Raspberry Pis ribbon cable connector. Insert the ribbon cable, black side up, under the retention clip. Push the clip back in to secure it. If the clip falls out, you can put it back in with tweezers by inserting one side at a time.
 
-Fold the ribbon cable over as shown and insert it into the raspberry pi zero 2w's connector. Be careful it is very delicate.
+Layout the parts as pictured screw the camera to the camera mount with two M2x4 bolts in opposite corners. Then, folding the ribbon as pictured, place the board stack on the mount and screw it in in the three corners that have screws.
 
-Very carefully and gently pull out both sides of the black retaining clip in the Raspberry Pis ribbon cable connector. (Zoom in on the photo above to get a good look at it.) Insert the ribbon cable, black side up, under the retention clip. Push the clip back in to secure it. If the clip falls out, you can put it back in with tweezers by inserting one side at a time.
-
-![](images/grip_arp/PXL_20260203_002931578.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_002942002.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_003018515.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_003034854.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001646350.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001725647.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_001727665.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260303_144334089.jpg){ loading=lazy, width=45% }
 
 Open the gripper fingers. Attach the camera mount assembly to the back plate with an M3x6 countersunk screw.
 
@@ -188,14 +177,17 @@ Image an SD card according to the instructions in [Raspi Setup](raspi_setup.md) 
 
 ![](images/grip_arp/PXL_20260203_003359996.jpg){ loading=lazy, width=45% }
 
-Solder the straight header onto the rangefinder
+Solder the straight header onto the rangefinder. You can solder all six or just the four lablelld VIN, GND, SCL, and SCA.
+Feed the 4p rectangular dupont plug out of the horizontal slot near the fan and plug it into the rangefinder. note that in this case white is on the VIN plug. I didn't have control of the colors in these wires.
+
 Attach the rangefinder to the frame with two M2x4 screws.  
-connect the rangefinder to the gripper hat's stemma socket.
+Feed the other connector through the frame and connect the rangefinder to the gripper hat's stemma socket.
 
 ![](images/grip_arp/PXL_20260203_003557749.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_003848813.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_004633514.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260307_003643671.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_004822533.jpg){ loading=lazy, width=45% }
+
+Plug in the Fan into to 5V socket labelled FAN. Image coming soon.
 
 ## Wrist motor
 
@@ -221,15 +213,26 @@ Plug the finger motor into the motor port on he Gripper Hat. Leave the wrist mot
 
 ## Marker Display Box
 
+The marker display box is a passive component that displays april tags at the point where the lines meet.
+It was previously called the gantry and so you may find it referred to by that name.
+The marker display box is connected to the gripper by a [50cm ABS tube with a diameter of 10mm](https://www.aliexpress.us/item/3256804916904509.html).
+
 Put a 10x15x4 bearing onto the ABS tube followed by a 3/8" x 7/8" steel washer. 
 
-Make a mark 6mm from the end of the tube with a sharpie pen.
+Make a mark 6.5mm from the end of the tube with a sharpie pen.
 *Forcefully twist* the helical gear onto the tube until the marked 6mm of tube protrude past the gear.
 
-![](images/grip_arp/PXL_20260203_024931510.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_151856981.jpg){ loading=lazy, width=45% }
+Put a few drops of cyanoacrylate glue where the gear and tube touch, followed by another washer and press it firmly to glue it there.
 
-Put a drop of cyanoacrylate glue where the gear and tube touch.
+![](images/grip_arp/PXL_20260203_024931510.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/tube.png){ loading=lazy, width=45% }
+
+!!! tip "Multicolor print or stickers"
+
+    You can either print the marker box in multi color for a more durable result (19h) or print it in white and add stickers (3h)
+    If printing in multicolor, you can find it in the STL download in `multicolor prints for bambu/platform box.3mf`
+
+    STLs are on the [downloads page](downloads.md/#__tabbed_1_2)
 
 Locate or print the gantry marker tags.
 If you are printing them, This is the [sticker paper on amazon](https://www.amazon.com/dp/B092444Z49) and the [document with the marker images is here](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing). It must be printed without margins.
