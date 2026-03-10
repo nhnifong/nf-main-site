@@ -2,6 +2,8 @@
 
 ### Setup for frontend
 
+Once
+
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
     source ~/.bashrc
     nvm install 22
@@ -11,6 +13,11 @@
     python3 -m venv venv
     source venv/bin/activate
     pip install nf_robot
+
+Each build
+
+    source venv/bin/activate
+    pip install --upgrade nf_robot
     npm run build
 
 If you need to build against protos that have not been comitted to pypi yet, then install an editable version of the nf_robot module in the venv where you run `npm run build` the only reason for that venv is to extract the protos.
