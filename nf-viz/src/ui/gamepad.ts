@@ -27,6 +27,7 @@ export class GamepadController {
     private dpadLeftWasHeld = false;
     private dpadRightWasHeld = false;
     private selectWasHeld = false;
+    private lclickWasHeld = false;
 
     // keyboard input state
     private keys = new Set<string>();
@@ -35,7 +36,9 @@ export class GamepadController {
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
     private lastAction = new Float32Array(7); 
 
-    public targetListManager: TargetListManager | null = null
+    public targetListManager: TargetListManager | null = null;
+
+    public toggleSwingC: () => void = () => {};
 
     constructor() {
         // Listen for connection events to know which index to poll
@@ -146,6 +149,9 @@ export class GamepadController {
                 // Extras
                 select: gp.buttons[8]?.pressed || false, // somtimes also called back
                 start: gp.buttons[9]?.pressed || false,
+                // Stick clickers
+                lclick: gp.buttons[10].pressed,
+                rclick: gp.buttons[11].pressed,
                 // D-Pad (Standard Indices 12-15)
                 dpadUp: gp.buttons[12]?.pressed || false,
                 dpadDown: gp.buttons[13]?.pressed || false,
@@ -183,6 +189,9 @@ export class GamepadController {
                 // Extras
                 select: this.keys.has('Backspace'),
                 start: this.keys.has('Enter'),
+                // Stick clickers
+                lclick: this.keys.has('Digit5'),
+                rclick: this.keys.has('Digit6'),
                 // D-Pad (Standard Indices 12-15)
                 dpadUp: this.keys.has('Digit1'),
                 dpadDown:  this.keys.has('Digit4'),
@@ -257,6 +266,8 @@ export class GamepadController {
                         rt: Math.max(input.buttons.rt, gpInput?.buttons.rt ?? 0),
                         start: input.buttons.start || (gpInput?.buttons.start ?? false),
                         select: input.buttons.select || (gpInput?.buttons.select ?? false),
+                        lclick: input.buttons.lclick || (gpInput?.buttons.lclick ?? false),
+                        rclick: input.buttons.rclick || (gpInput?.buttons.rclick ?? false),
                         dpadUp: input.buttons.dpadUp || (gpInput?.buttons.dpadUp ?? false),
                         dpadDown: input.buttons.dpadDown || (gpInput?.buttons.dpadDown ?? false),
                         dpadLeft: input.buttons.dpadLeft || (gpInput?.buttons.dpadLeft ?? false),
@@ -390,6 +401,13 @@ export class GamepadController {
             }));
         }
         this.selectWasHeld = input.buttons.select;
+
+        // Click left stick or press 5
+        // Toggle swing cancellation
+        if (input.buttons.lclick && !this.lclickWasHeld) {
+            this.toggleSwingC();
+        }
+        this.lclickWasHeld = input.buttons.lclick;
 
         // Movement Message (Throttled/Changed)
         

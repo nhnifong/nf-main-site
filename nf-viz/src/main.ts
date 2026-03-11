@@ -25,6 +25,7 @@ const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 // If robotid is set in URL, we force cloud login. Otherwise we start the landing UI.
 let currentRobotId: string | null = urlParams.get('robotid'); 
 let detectedRobotId: string | null = null; // Stored from incoming telemetry
+let swingCancellationEnabled = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -558,6 +559,9 @@ function connect(wsUrl: string) {
         else if (update.operationProgress) {
           handleOperationProgress(update.operationProgress);
         }
+        else if (update.swingCancellationState) {
+          handleSwingCancellationState(update.swingCancellationState);
+        }
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -876,6 +880,22 @@ function handleGripSensors(data: nf.telemetry.IGripperSensors) {
   gripper.setSensorValues(data, laserReadings);
 }
 
+function handleSwingCancellationState(data: nf.telemetry.ISwingCancellationState) {
+  swingCancellationEnabled = data.enabled ?? false;
+  const btn = document.getElementById('btn-swing-cancel');
+  const indicator = document.getElementById('swing-cancel-indicator');
+
+  if (btn && indicator) {
+    if (swingCancellationEnabled) {
+      btn.classList.add('perspective-button-selected');
+      indicator.classList.remove('status-offline');
+    } else {
+      btn.classList.remove('perspective-button-selected');
+      indicator.classList.add('status-offline');
+    }
+  }
+}
+
 function updateOnlineStatus(online: boolean) {``
   const statusDot = document.getElementById('status-dot-el');
   const statusText = document.getElementById('status-text');
@@ -1190,3 +1210,17 @@ function initComponentMenu() {
 }
 
 initComponentMenu();
+
+function toggleSwingCancellation() {
+    sendControl([nf.control.ControlItem.create({
+        setSwingCancellation: { enabled: !swingCancellationEnabled, present: '.' }
+    })]);
+}
+
+// --- Swing Control Menu ---
+function initSwingControl() {
+    const btn = document.getElementById('btn-swing-cancel');
+    btn?.addEventListener('click', toggleSwingCancellation);
+    gamepad.toggleSwingC = toggleSwingCancellation;
+}
+initSwingControl();

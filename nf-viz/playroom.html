@@ -879,6 +879,37 @@
         line-height: 1;
       }
 
+      /* --- Custom Toggle Switch --- */
+      .toggle-track {
+        width: 46px;
+        height: 24px;
+        background-color: #d1d1d1;
+        border-radius: 24px;
+        position: relative;
+        cursor: pointer;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        transition: background-color 0.2s;
+      }
+      .toggle-track.perspective-button-selected {
+        background-color: #c8e6c9; /* Subtle green track */
+      }
+      .toggle-knob {
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 2px;
+        bottom: 2px;
+        background-color: #4CAF50; /* Green knob on */
+        border-radius: 50%;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        transition: transform 0.2s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.2s;
+        transform: translateX(22px);
+      }
+      .toggle-knob.status-offline {
+        background-color: #888; /* Gray knob off */
+        transform: translateX(0);
+      }
+
     </style>
   </head>
   <body>
@@ -1081,6 +1112,16 @@
               <button id="btn-person" class="perspective-button perspective-button-selected"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Seat Tag</button>
               <button id="btn-bottom" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Anchor 2</button>
               <button id="btn-gripper" class="perspective-button"><img src="%VITE_ASSET_BUCKET_URL%/assets/orbit_icon.png" class="orbit-image"/>Gripper</button>
+           </div>
+        </div>
+
+        <div class="footer-divider"></div>
+
+        <!-- Swing Cancellation Toggle -->
+        <div class="footer-stats-group" style="align-items: center; gap: 8px;">
+           <span style="font-size: 0.9rem; color: #333;">swing cancellation</span>
+           <div id="btn-swing-cancel" class="toggle-track">
+             <div id="swing-cancel-indicator" class="toggle-knob status-offline"></div>
            </div>
         </div>
 
