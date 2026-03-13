@@ -7,6 +7,10 @@ Hardware Version: Arpeggio
 
 First you should have printed the parts according to the [print guide](print_guide.md)
 
+## Bill of Materials
+
+[Stringman Arpeggio Gripper BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)
+
 ## Tool list
 
  - [Mini screwdriver with a bit set](https://www.amazon.com/dp/B01KB02F9C)
