@@ -1,5 +1,10 @@
 # Pilot Gripper Build Guide
 
+!!! tip "Build the latest hardware"
+
+    The Pilot gripper is deprecated.
+    [The lastest version of the gripper is Arpeggio](arpeggio_gripper_build_guide.md). Build that instead, it's better in every way.
+
 Hardware Version: Pilot run
 
 Build time: about 3 hours
