@@ -30,6 +30,10 @@ export class Gripper {
         this.ready = this.loadSharedModel();
     }
 
+    public getInteractableMesh(): THREE.Object3D | undefined {
+        return this.root.getObjectByName('gripper');
+    }
+
     private async loadSharedModel() {
         if (!Gripper.modelPromise) {
             const loader = new GLTFLoader();

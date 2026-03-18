@@ -330,8 +330,8 @@ h2 {
   font-size: 0.9rem;
 
   display: flex;
-  justifyContent: space-between;
-  alignItems: center;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .task-item.active {
@@ -524,6 +524,22 @@ h2 {
   background-color: #43a047;
 }
 
+/* Add a click animation to the run buttons */
+.run-button:active:not(.disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Color modifiers for the component panel buttons */
+.run-button.btn-gray { background-color: #555; }
+.run-button.btn-gray:hover:not(.disabled) { background-color: #666; }
+
+.run-button.btn-blue { background-color: #2196F3; }
+.run-button.btn-blue:hover:not(.disabled) { background-color: #1976D2; }
+
+.run-button.btn-red { background-color: #f44336; }
+.run-button.btn-red:hover:not(.disabled) { background-color: #d32f2f; }
+
 /* Drop-up Content */
 .run-menu-content {
   display: none;
@@ -713,6 +729,7 @@ h2 {
 /* --- END COMPONENT STATUS MENU --- */
 
 
+
 /* --- Perspective Buttons Styling --- */
 .perspective-container {
   display: flex;
@@ -900,4 +917,65 @@ h2 {
 .toggle-knob.status-offline {
   background-color: #888; /* Gray knob off */
   transform: translateX(0);
+}
+
+/* --- Component Details Panel --- */
+#component-details-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+#component-details-overlay.hidden {
+  display: none !important;
+}
+.component-details-box {
+  position: relative;
+  min-width: 320px;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #555;
+  padding: 24px;
+  z-index: 1001; /* Above catcher */
+  pointer-events: auto;
+}
+.cd-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.cd-close-btn:hover {
+  color: white;
+}
+
+/* --- Floating Labels --- */
+.floating-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  pointer-events: none; /* Let clicks pass through to the 3D scene */
+  white-space: nowrap;
+  /* Left justified so the corner follows the anchor: */
+  transform-origin: bottom left; 
+  /* Heavy text shadow for legibility over any background color */
+  text-shadow: 
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0px  2px 4px rgba(0,0,0,0.8);
 }

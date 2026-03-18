@@ -1,0 +1,43 @@
+connectors:
+  I2C-sh:
+    type: JST SH 1.0
+    subtype: male
+    # pin 1 is on the left when looking at the mating face of the female receptacle with the wing slots on the top
+    pinlabels: [SDA, SCL, 3V3, GND]
+
+  I2C-rangefinger:
+    type: Dupont 2.54
+    subtype: female
+    pinlabels: [3V3, GND, SDA, SCL]
+
+  gripper-power1:
+    type: JST ZH 1.5
+    subtype: male
+    pinlabels: [GND, 24V]
+
+  gripper-power2:
+    type: JST ZH 1.5
+    subtype: male
+    pinlabels: [GND, 24V]
+
+cables:
+  W1:
+    gauge: 28 awg
+    length: 13 cm
+    colors: [BU,YE,RD,BK]
+    wirecount: 4
+  W2:
+    gauge: 26 awg
+    length: 64 cm
+    colors: [BK,RD]
+    wirecount: 2
+
+connections:
+  -
+    - I2C-sh: [1-4]
+    - W1:   [1-4]
+    - I2C-rangefinger: [3,4,1,2]
+  -
+    - gripper-power1: [1-2]
+    - W2:   [1-2]
+    - gripper-power2: [1-2]

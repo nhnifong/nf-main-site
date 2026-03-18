@@ -15,6 +15,7 @@ import { TargetListManager } from './ui/target_list_manager.ts'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 // Auth Manager
@@ -26,6 +27,10 @@ const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 let currentRobotId: string | null = urlParams.get('robotid'); 
 let detectedRobotId: string | null = null; // Stored from incoming telemetry
 let swingCancellationEnabled = false;
+
+// Calibration tracking variables
+let isFullCalibrationActive = false;
+let anchorsSeeingOriginCard: number[] = [];
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -55,6 +60,15 @@ composer.addPass(renderPass);
 const gtaoPass = new GTAOPass(scene, camera, window.innerWidth, window.innerHeight);
 gtaoPass.setSize(window.innerWidth, window.innerHeight);
 composer.addPass(gtaoPass);
+
+// Outline Pass for prominent hover selection
+const outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), scene, camera);
+outlinePass.edgeStrength = 5.0; // Prominence of the outline
+outlinePass.edgeThickness = 2.0; // Thickness of the outline
+outlinePass.edgeGlow = 0.0;
+outlinePass.visibleEdgeColor.set(0xffffff); // Bright white outline
+outlinePass.hiddenEdgeColor.set(0x888888); // Dimmer if occluded
+composer.addPass(outlinePass);
 
 // Output Pass: Tone mapping and sRGB conversion
 const outputPass = new OutputPass();
@@ -562,6 +576,9 @@ function connect(wsUrl: string) {
         else if (update.swingCancellationState) {
           handleSwingCancellationState(update.swingCancellationState);
         }
+        else if (update.visibilityStates) {
+          handleVisibilityStates(update.visibilityStates);
+        }
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -588,6 +605,14 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   const nameEl = document.getElementById('op-name');
   const actionEl = document.getElementById('op-action');
   const fillEl = document.getElementById('op-bar-fill');
+
+  // Track if we are inside the 'Full Calibration' operation to manage monkey emoji visibility
+  if (data.name?.toLowerCase().includes('Calibration')) {
+      isFullCalibrationActive = (data.percentComplete ?? 0) < 100;
+  } else if ((data.percentComplete ?? 0) >= 100) {
+      isFullCalibrationActive = false;
+  }
+  updateFloatingLabelsText();
 
   if (!container || !nameEl || !actionEl || !fillEl) return;
 
@@ -616,6 +641,59 @@ function sendGamepad() {
   }
 }
 
+// --- Floating Labels Updater ---
+function handleVisibilityStates(data: nf.telemetry.IVisibilityStates) {
+    anchorsSeeingOriginCard = data.anchorsSeeingOriginCard || [];
+    updateFloatingLabelsText();
+}
+
+function updateFloatingLabelsText() {
+    for (let i = 0; i < anchors.length; i++) {
+        const labelEl = document.getElementById(`label-anchor-${i}`);
+        if (labelEl) {
+            if (isFullCalibrationActive && !anchorsSeeingOriginCard.includes(i)) {
+                labelEl.textContent = `Anchor ${i} 🙈`;
+            } else {
+                labelEl.textContent = `Anchor ${i}`;
+            }
+        }
+    }
+}
+
+function updateFloatingLabels() {
+  const halfWidth = window.innerWidth / 2;
+  const halfHeight = window.innerHeight / 2;
+  const pos = new THREE.Vector3();
+
+  for (let i = 0; i < anchors.length; i++) {
+      const anchor = anchors[i];
+      const labelEl = document.getElementById(`label-anchor-${i}`);
+      
+      if (anchor.grommet_pos && labelEl) {
+          pos.copy(anchor.grommet_pos);
+          
+          // Project 3D position to 2D screen coordinates
+          pos.project(camera);
+
+          // Hide label if anchor is behind the camera
+          if (pos.z > 1) {
+              labelEl.classList.add('hidden');
+              continue;
+          }
+
+          labelEl.classList.remove('hidden');
+
+          // Convert to CSS coordinates
+          const x = (pos.x * halfWidth) + halfWidth;
+          const y = -(pos.y * halfHeight) + halfHeight;
+
+          // Apply translation. Subtracting 100% and 10px from Y dynamically ensures the
+          // bottom-left corner of the div tracks the anchor position precisely while hovering above it.
+          labelEl.style.transform = `translate(${x}px, calc(${y}px - 100% - 10px))`;
+      }
+  }
+}
+
 // --- Render Loop ---
 function animate() {
   requestAnimationFrame(animate);
@@ -624,6 +702,7 @@ function animate() {
   laserReadings.update();
   composer.render();
   sendGamepad();
+  updateFloatingLabels();
 }
 
 animate();
@@ -633,6 +712,9 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  gtaoPass.setSize(window.innerWidth, window.innerHeight);
+  outlinePass.setSize(window.innerWidth, window.innerHeight);
 });
 
 //  ===== telemetry update handlers =====
@@ -712,11 +794,11 @@ interface ComponentState {
   type: 'Anchor' | 'Gripper';
   status: number;
   ip: string;
+  errorMessage?: string;
 }
 const componentStates = new Map<string, ComponentState>();
 
 function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
-  // Identify Component Name & Type
   let name = "Unknown";
   let type: 'Anchor' | 'Gripper' = 'Anchor';
 
@@ -732,16 +814,15 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
     name = `Anchor ${data.anchorNum}`;
   }
 
-  // Update Map
   componentStates.set(name, {
     name: name,
     type: type,
     status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
-    ip: data.ipAddress ?? ""
+    ip: data.ipAddress ?? "",
+    errorMessage: data.errorMessage ?? undefined
   });
 
-  // Recalculate Totals
-  let anchorCount = 4; // TODO from another message we should be told the expected total based on the model of installed anchor
+  let anchorCount = 4;
   let anchorConnected = 0;
   let gripperCount = 1;
   let gripperConnected = 0;
@@ -756,18 +837,15 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
     }
   });
 
-  // Update Button Text
   const btnText = document.getElementById('component-status-text');
   if (btnText) {
     btnText.textContent = `Anchors (${anchorConnected}/${anchorCount}) Gripper (${gripperConnected}/${gripperCount})`;
   }
 
-  // Update Popup List
   const menu = document.getElementById('component-menu');
   if (menu) {
     menu.innerHTML = '';
     
-    // Sort keys alphabetically for consistent display
     const sortedKeys = Array.from(componentStates.keys()).sort();
 
     if (sortedKeys.length === 0) {
@@ -785,7 +863,6 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
       const statusText = isConnected ? 'Connected' : 'Disconnected';
       const ip = comp.ip || 'Unknown IP';
       
-      // Use placeholder span for the second line detail
       row.innerHTML = `
         <div class="comp-header">
           <span>${comp.name}</span>
@@ -993,13 +1070,6 @@ function initPerspectiveControls() {
 
 initPerspectiveControls();
 
-window.addEventListener('resize', () => {
-    // Update Composer
-    composer.setSize(window.innerWidth, window.innerHeight);
-    // Update GTAO specific size
-    gtaoPass.setSize(window.innerWidth, window.innerHeight);
-});
-
 // One-time setup to bind the button in the popup window
 function initPopup() {
     const overlay = document.getElementById('popup-overlay');
@@ -1040,6 +1110,19 @@ function simpleCommand(cmdEnum: nf.control.Command) {
     sendControl([nf.control.ControlItem.create({
       command: {name: cmdEnum}
     })]);
+}
+
+// send a command that concerns a single component
+function sendSingleComponentAction(type: string, index: number, actionEnum: nf.control.ComponentAction) {
+    const isGripper = (type === 'Gripper');
+    const action = nf.control.ControlItem.create({
+        singleComponentAction: {
+            isGripper: isGripper,
+            anchorNum: isGripper ? undefined : index,
+            action: actionEnum
+        }
+    });
+    sendControl([action]);
 }
 
 overheadVideofeeds.forEach(feed => {feed.sendFn = sendControl});
@@ -1224,3 +1307,181 @@ function initSwingControl() {
     gamepad.toggleSwingC = toggleSwingCancellation;
 }
 initSwingControl();
+
+// --- Component Interaction & Details Panel ---
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let currentHoverType: string | null = null;
+let currentHoverIndex: number = -1;
+let activeComponentData: { type: string, index: number, name: string } | null = null;
+
+function clearHover() {
+    outlinePass.selectedObjects = [];
+    currentHoverType = null;
+    currentHoverIndex = -1;
+    document.body.style.cursor = 'default';
+}
+
+function applyHover(targetMesh: THREE.Object3D, type: string, index: number) {
+    if (currentHoverType === type && currentHoverIndex === index) return;
+    clearHover();
+    
+    currentHoverType = type;
+    currentHoverIndex = index;
+    document.body.style.cursor = 'pointer';
+
+    // OutlinePass natively handles traversing the hierarchy to draw the outline
+    // without hacking any materials, preventing the shared material bug!
+    outlinePass.selectedObjects = [targetMesh];
+}
+
+function isDescendant(child: THREE.Object3D, parent: THREE.Object3D): boolean {
+    let current: THREE.Object3D | null = child;
+    while (current) {
+        if (current === parent) return true;
+        current = current.parent;
+    }
+    return false;
+}
+
+window.addEventListener('pointermove', (event) => {
+    if (event.target !== renderer.domElement) {
+        clearHover();
+        return;
+    }
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
+    let foundType: string | null = null;
+    let foundIndex = -1;
+    let hoverTarget: THREE.Object3D | null = null;
+
+    // Check all intersections along the ray to bypass invisible room walls
+    for (const hit of intersects) {
+        const obj = hit.object;
+        
+        const gripperMesh = gripper.getInteractableMesh();
+        if (gripperMesh && isDescendant(obj, gripperMesh)) {
+            foundType = 'Gripper';
+            foundIndex = 0;
+            hoverTarget = gripperMesh;
+            break;
+        }
+        
+        for (let i = 0; i < anchors.length; i++) {
+            const anchorMesh = anchors[i].getInteractableMesh();
+            if (anchorMesh && isDescendant(obj, anchorMesh)) {
+                foundType = 'Anchor';
+                foundIndex = i;
+                hoverTarget = anchorMesh;
+                break;
+            }
+        }
+        
+        if (foundType) break; // Stop checking further hits once we find a component
+    }
+
+    if (foundType && hoverTarget) {
+        applyHover(hoverTarget, foundType, foundIndex);
+    } else {
+        clearHover();
+    }
+});
+
+window.addEventListener('click', (event) => {
+    if (event.target !== renderer.domElement) return;
+    if (currentHoverType) {
+        openComponentPanel(currentHoverType, currentHoverIndex);
+    }
+});
+
+function openComponentPanel(type: string, index: number) {
+    const overlay = document.getElementById('component-details-overlay');
+    const title = document.getElementById('cd-title');
+    const ipEl = document.getElementById('cd-ip');
+    const statusEl = document.getElementById('cd-status');
+    const sensorsEl = document.getElementById('cd-sensors');
+    const anchorActions = document.getElementById('cd-anchor-actions');
+
+    if (!overlay || !title || !ipEl || !statusEl || !sensorsEl || !anchorActions) return;
+
+    let name = "";
+    if (type === 'Anchor') {
+        name = `Anchor ${index}`;
+        anchorActions.style.display = 'flex';
+    } else {
+        name = "Gripper";
+        for (const key of componentStates.keys()) {
+            if (componentStates.get(key)?.type === 'Gripper') {
+                name = key;
+                break;
+            }
+        }
+        anchorActions.style.display = 'none';
+    }
+
+    activeComponentData = { type, index, name };
+    title.textContent = `${name} Details`;
+
+    const state = componentStates.get(name);
+    ipEl.textContent = state?.ip || "Unknown";
+    statusEl.textContent = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED ? "Connected" : "Disconnected";
+    
+    if (state?.errorMessage) {
+        sensorsEl.textContent = state.errorMessage;
+    } else {
+        sensorsEl.textContent = "sensors nominal";
+    }
+
+    overlay.classList.remove('hidden');
+}
+
+// Panel UI Listeners
+function initComponentDetailsPanel() {
+    document.getElementById('cd-bg-catcher')?.addEventListener('click', () => {
+        document.getElementById('component-details-overlay')?.classList.add('hidden');
+        activeComponentData = null;
+    });
+    document.getElementById('close-component-panel')?.addEventListener('click', () => {
+        document.getElementById('component-details-overlay')?.classList.add('hidden');
+        activeComponentData = null;
+    });
+
+    // Placeholders
+    document.getElementById('btn-cd-reboot')?.addEventListener('click', () => {
+        if (activeComponentData) handleComponentReboot(activeComponentData.type, activeComponentData.index);
+    });
+    document.getElementById('btn-cd-identify')?.addEventListener('click', () => {
+        if (activeComponentData) handleComponentIdentify(activeComponentData.type, activeComponentData.index);
+    });
+    document.getElementById('btn-cd-tighten')?.addEventListener('click', () => {
+        if (activeComponentData && activeComponentData.type === 'Anchor') handleAnchorTighten(activeComponentData.index);
+    });
+    document.getElementById('btn-cd-relax')?.addEventListener('click', () => {
+        if (activeComponentData && activeComponentData.type === 'Anchor') handleAnchorRelax(activeComponentData.index);
+    });
+}
+
+function handleComponentReboot(type: string, index: number) {
+    sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_REBOOT);
+}
+
+function handleComponentIdentify(type: string, index: number) {
+    sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);
+}
+
+function handleAnchorTighten(index: number) {
+    sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_TIGHTEN);
+}
+
+function handleAnchorRelax(index: number) {
+    sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_RELAX);
+}
+
+initComponentDetailsPanel();

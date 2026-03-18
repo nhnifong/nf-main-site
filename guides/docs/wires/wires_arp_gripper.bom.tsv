@@ -1,0 +1,6 @@
+Id	Description	Qty	Unit	Designators
+1	Cable, 2 x 26 AWG	64	cm	W2
+2	Cable, 4 x 28 AWG	13	cm	W1
+3	Connector, Dupont 2.54, female, 4 pins	1		I2C-rangefinger
+4	Connector, JST SH 1.0, male, 4 pins	1		I2C-sh
+5	Connector, JST ZH 1.5, male, 2 pins	2		gripper-power1, gripper-power2

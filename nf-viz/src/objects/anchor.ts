@@ -31,6 +31,10 @@ export class Anchor {
         this.ready = this.loadSharedModel();
     }
 
+    public getInteractableMesh(): THREE.Object3D | undefined {
+        return this.root.getObjectByName('anchor');
+    }
+
     private async loadSharedModel() {
         // if this is the first anchor, download the asset
         if (!Anchor.modelPromise) {
