@@ -607,12 +607,13 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   const fillEl = document.getElementById('op-bar-fill');
 
   // Track if we are inside the 'Full Calibration' operation to manage monkey emoji visibility
+  let percentComplete = (data.percentComplete ?? 0);
   if (data.name?.toLowerCase().includes('alibration')) {
-      isFullCalibrationActive = (data.percentComplete ?? 0) < 100;
-      if (data.percentComplete < 0.1) {
+      isFullCalibrationActive = percentComplete < 100;
+      if (percentComplete < 0.1) {
         anchorsSeeingOriginCard = [];
       }
-  } else if ((data.percentComplete ?? 0) >= 100) {
+  } else if (percentComplete >= 100) {
       isFullCalibrationActive = false;
   }
   updateFloatingLabelsText();
@@ -620,7 +621,7 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   if (!container || !nameEl || !actionEl || !fillEl) return;
 
   // 100% Logic
-  if ((data.percentComplete ?? 0) >= 100) {
+  if (percentComplete >= 100) {
     container.classList.add('hidden');
     // Use data.name and data.currentAction for the popup
     showPopup({ message: `${data.name ?? 'Operation'} Complete\n${data.currentAction ?? ''}` });
@@ -631,7 +632,7 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   container.classList.remove('hidden');
   nameEl.textContent = data.name ?? 'Operation';
   actionEl.textContent = data.currentAction ?? '';
-  fillEl.style.width = `${Math.max(0, Math.min(100, data.percentComplete ?? 0))}%`;
+  fillEl.style.width = `${Math.max(0, Math.min(100, percentComplete))}%`;
 }
 
 // Start the app
@@ -1471,20 +1472,15 @@ function openComponentPanel(type: string, index: number) {
         sensorsEl.textContent = "";
     }
 
-    if (connected) {
-      document.getElementById('btn-cd-identify').classList.remove('disabled');
-      document.getElementById('btn-cd-tighten').classList.remove('disabled');
-      document.getElementById('btn-cd-relax').classList.remove('disabled');
-    } else {
-      document.getElementById('btn-cd-identify').classList.add('disabled');
-      document.getElementById('btn-cd-tighten').classList.add('disabled');
-      document.getElementById('btn-cd-relax').classList.add('disabled');
-    }
+    // set 'disabled' state for all action buttons in this panel based on whether component is connected
+    const actionButtons = overlay.querySelectorAll('.run-button');
+    actionButtons.forEach(btn => {
+        btn.classList.toggle('disabled', !connected);
+    });
 
     overlay.classList.remove('hidden');
 }
 
-// Panel UI Listeners
 function initComponentDetailsPanel() {
     document.getElementById('cd-bg-catcher')?.addEventListener('click', () => {
         document.getElementById('component-details-overlay')?.classList.add('hidden');
@@ -1495,24 +1491,26 @@ function initComponentDetailsPanel() {
         activeComponentData = null;
     });
 
-    // Placeholders
-    // document.getElementById('btn-cd-reboot')?.addEventListener('click', () => {
-    //     if (activeComponentData) handleComponentReboot(activeComponentData.type, activeComponentData.index);
-    // });
-    document.getElementById('btn-cd-identify')?.addEventListener('click', () => {
-        if (activeComponentData) handleComponentIdentify(activeComponentData.type, activeComponentData.index);
+    // Helper to bind buttons and respect the 'disabled' class
+    const bindCdBtn = (id: string, actionFn: (type: string, index: number) => void) => {
+        document.getElementById(id)?.addEventListener('click', (e) => {
+            const btn = e.currentTarget as HTMLElement;
+            if (!btn.classList.contains('disabled') && activeComponentData) {
+                actionFn(activeComponentData.type, activeComponentData.index);
+            }
+        });
+    };
+
+    bindCdBtn('btn-cd-identify', handleComponentIdentify);
+    
+    bindCdBtn('btn-cd-tighten', (type, index) => {
+        if (type === 'Anchor') handleAnchorTighten(index);
     });
-    document.getElementById('btn-cd-tighten')?.addEventListener('click', () => {
-        if (activeComponentData && activeComponentData.type === 'Anchor') handleAnchorTighten(activeComponentData.index);
-    });
-    document.getElementById('btn-cd-relax')?.addEventListener('click', () => {
-        if (activeComponentData && activeComponentData.type === 'Anchor') handleAnchorRelax(activeComponentData.index);
+    bindCdBtn('btn-cd-relax', (type, index) => {
+        if (type === 'Anchor') handleAnchorRelax(index);
     });
 }
 
-// function handleComponentReboot(type: string, index: number) {
-//     sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_REBOOT);
-// }
 
 function handleComponentIdentify(type: string, index: number) {
     sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);
