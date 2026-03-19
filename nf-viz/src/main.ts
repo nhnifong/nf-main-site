@@ -607,8 +607,11 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   const fillEl = document.getElementById('op-bar-fill');
 
   // Track if we are inside the 'Full Calibration' operation to manage monkey emoji visibility
-  if (data.name?.toLowerCase().includes('Calibration')) {
+  if (data.name?.toLowerCase().includes('alibration')) {
       isFullCalibrationActive = (data.percentComplete ?? 0) < 100;
+      if (data.percentComplete < 0.1) {
+        anchorsSeeingOriginCard = [];
+      }
   } else if ((data.percentComplete ?? 0) >= 100) {
       isFullCalibrationActive = false;
   }
@@ -798,30 +801,7 @@ interface ComponentState {
 }
 const componentStates = new Map<string, ComponentState>();
 
-function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
-  let name = "Unknown";
-  let type: 'Anchor' | 'Gripper' = 'Anchor';
-
-  if (data.isGripper) {
-    type = 'Gripper';
-    if (data.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_ARPEGGIO) {
-      name = "Arpeggio Gripper";
-    } else {
-      name = "Pilot Gripper";
-    }
-  } else {
-    type = 'Anchor';
-    name = `Anchor ${data.anchorNum}`;
-  }
-
-  componentStates.set(name, {
-    name: name,
-    type: type,
-    status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
-    ip: data.ipAddress ?? "",
-    errorMessage: data.errorMessage ?? undefined
-  });
-
+function updateComponentStatusUI() {
   let anchorCount = 4;
   let anchorConnected = 0;
   let gripperCount = 1;
@@ -876,6 +856,33 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
       menu.appendChild(row);
     });
   }
+}
+
+function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
+  let name = "Unknown";
+  let type: 'Anchor' | 'Gripper' = 'Anchor';
+
+  if (data.isGripper) {
+    type = 'Gripper';
+    if (data.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_ARPEGGIO) {
+      name = "Arpeggio Gripper";
+    } else {
+      name = "Pilot Gripper";
+    }
+  } else {
+    type = 'Anchor';
+    name = `Anchor ${data.anchorNum}`;
+  }
+
+  componentStates.set(name, {
+    name: name,
+    type: type,
+    status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
+    ip: data.ipAddress ?? "",
+    errorMessage: data.errorMessage ?? undefined
+  });
+
+  updateComponentStatusUI();
 }
 
 function handleTargetList(data: nf.telemetry.ITargetList) {
@@ -973,7 +980,7 @@ function handleSwingCancellationState(data: nf.telemetry.ISwingCancellationState
   }
 }
 
-function updateOnlineStatus(online: boolean) {``
+function updateOnlineStatus(online: boolean) {
   const statusDot = document.getElementById('status-dot-el');
   const statusText = document.getElementById('status-text');
   const runBtn = document.getElementById('run-btn');
@@ -996,6 +1003,11 @@ function updateOnlineStatus(online: boolean) {``
       firstOverheadVideo.setOffline();
       secondOverheadVideo.setOffline();
       gripperVideo.setOffline();
+
+      componentStates.forEach(comp => {
+        comp.status = nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED;
+      });
+      updateComponentStatusUI();
     }
   }
 }
@@ -1272,6 +1284,23 @@ function initHeader() {
 }
 initHeader();
 
+// --- Controls Panel ---
+function initControlsPanel() {
+    const btnControls = document.getElementById('btn-header-controls');
+    const overlay = document.getElementById('controls-overlay');
+    const closeBtn = document.getElementById('close-controls-panel');
+    const catcher = document.getElementById('controls-bg-catcher');
+
+    btnControls?.addEventListener('click', () => {
+        overlay?.classList.remove('hidden');
+    });
+
+    const closePanel = () => overlay?.classList.add('hidden');
+    closeBtn?.addEventListener('click', closePanel);
+    catcher?.addEventListener('click', closePanel);
+}
+initControlsPanel();
+
 // --- Component Status Menu ---
 function initComponentMenu() {
   const compBtn = document.getElementById('component-status-btn');
@@ -1431,12 +1460,25 @@ function openComponentPanel(type: string, index: number) {
 
     const state = componentStates.get(name);
     ipEl.textContent = state?.ip || "Unknown";
-    statusEl.textContent = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED ? "Connected" : "Disconnected";
+    let connected = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+    statusEl.textContent = connected ? "Connected" : "Disconnected";
     
     if (state?.errorMessage) {
         sensorsEl.textContent = state.errorMessage;
-    } else {
+    } else if (connected) {
         sensorsEl.textContent = "sensors nominal";
+    } else {
+        sensorsEl.textContent = "";
+    }
+
+    if (connected) {
+      document.getElementById('btn-cd-identify').classList.remove('disabled');
+      document.getElementById('btn-cd-tighten').classList.remove('disabled');
+      document.getElementById('btn-cd-relax').classList.remove('disabled');
+    } else {
+      document.getElementById('btn-cd-identify').classList.add('disabled');
+      document.getElementById('btn-cd-tighten').classList.add('disabled');
+      document.getElementById('btn-cd-relax').classList.add('disabled');
     }
 
     overlay.classList.remove('hidden');
@@ -1454,9 +1496,9 @@ function initComponentDetailsPanel() {
     });
 
     // Placeholders
-    document.getElementById('btn-cd-reboot')?.addEventListener('click', () => {
-        if (activeComponentData) handleComponentReboot(activeComponentData.type, activeComponentData.index);
-    });
+    // document.getElementById('btn-cd-reboot')?.addEventListener('click', () => {
+    //     if (activeComponentData) handleComponentReboot(activeComponentData.type, activeComponentData.index);
+    // });
     document.getElementById('btn-cd-identify')?.addEventListener('click', () => {
         if (activeComponentData) handleComponentIdentify(activeComponentData.type, activeComponentData.index);
     });
@@ -1468,9 +1510,9 @@ function initComponentDetailsPanel() {
     });
 }
 
-function handleComponentReboot(type: string, index: number) {
-    sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_REBOOT);
-}
+// function handleComponentReboot(type: string, index: number) {
+//     sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_REBOOT);
+// }
 
 function handleComponentIdentify(type: string, index: number) {
     sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);

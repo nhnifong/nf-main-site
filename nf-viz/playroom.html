@@ -80,6 +80,7 @@
         <div class="header-left">
           <h2 class="header-title">Stringman Control Panel</h2>
           <button id="btn-header-back" class="header-back-btn">Change Robot</button>
+          <button id="btn-header-controls" class="header-back-btn">Controls</button>
         </div>
         <div id="op-progress-container" class="hidden">
           <div class="op-info">
@@ -308,7 +309,6 @@
         </div>
         
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button id="btn-cd-reboot" class="run-button btn-gray" style="width: 100%; justify-content: center;">Reboot</button>
           <button id="btn-cd-identify" class="run-button btn-gray" style="width: 100%; justify-content: center;">Identify Component</button>
           <div id="cd-anchor-actions" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
             <button id="btn-cd-tighten" class="run-button btn-blue" style="width: 100%; justify-content: center;">Tighten Line</button>
@@ -318,6 +318,30 @@
       </div>
     </div>
 
+    <!-- Controls Overlay -->
+    <div id="controls-overlay" class="hidden">
+      <div id="controls-bg-catcher" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+      <div class="panel component-details-box" style="max-width: 500px;">
+        <button id="close-controls-panel" class="cd-close-btn">&times;</button>
+        <h3 style="margin-top: 0; color: white; margin-bottom: 15px;">Controls</h3>
+        
+        <div class="controls-list" style="color: #ccc; font-size: 0.95rem; margin-bottom: 20px;">
+          <div><strong>WASD</strong> Move laterally</div>
+          <div><strong>QE</strong> Move vertically</div>
+          <div><strong>ZX</strong> Rotate wrist (Arpeggio) / Winch (Pilot)</div>
+          <div><strong>Space</strong> Close gripper</div>
+          <div><strong>L-Shift</strong> Open gripper</div>
+          <div><strong>1</strong> Tension all lines</div>
+          <div><strong>2</strong> Quick calibration</div>
+          <div><strong>3</strong> Auto grasp here</div>
+        </div>
+
+        <div style="text-align: center; border-top: 1px solid #555; padding-top: 15px;">
+          <img src="%VITE_ASSET_BUCKET_URL%/assets/gamepad.png" alt="Gamepad Controls" style="max-width: 100%; border-radius: 8px;">
+        </div>
+      </div>
+    </div>
+    
     <!-- Main Logic -->
     <script type="module" src="/src/main.ts"></script>
   </body>

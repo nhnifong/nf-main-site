@@ -920,7 +920,7 @@ h2 {
 }
 
 /* --- Component Details Panel --- */
-#component-details-overlay {
+#component-details-overlay, #controls-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -932,7 +932,7 @@ h2 {
   align-items: center;
   background: rgba(0, 0, 0, 0.6);
 }
-#component-details-overlay.hidden {
+#component-details-overlay.hidden, #controls-overlay.hidden {
   display: none !important;
 }
 .component-details-box {
@@ -978,4 +978,14 @@ h2 {
     -1px  1px 0 #000,
      1px  1px 0 #000,
      0px  2px 4px rgba(0,0,0,0.8);
+}
+
+/* --- Controls List Formatting --- */
+.controls-list div {
+  margin-bottom: 5px;
+}
+.controls-list strong {
+  display: inline-block;
+  width: 70px;
+  color: #fff;
 }
