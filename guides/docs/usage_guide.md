@@ -4,7 +4,8 @@ This guide covers installation of the headless server and the use of the web bas
 
 ## Installing and running the motion controller
 
-The motion controller for stringman must be run on a PC on the same network as the robot components.
+The control panel alone does not run a Stringman robot. A program called the motion controller runs it.
+The motion controller must be run on a PC on the same network as the robot components.
 If the motion controller is not running, the anchors simply hold position and transmit nothing.
 
 The brain of the robot is `stringman-headless` which is installed with pip. The components themselves are just light video streaming devices and motor command issuers. In other worfds, Stringman Pilot's compute is *external*.
@@ -22,16 +23,18 @@ The motion controller is a headless process, and the user interface is browser b
    
 === "Windows"
    
+    Either download the [bundled Stringman windows installer](https://storage.googleapis.com/stringman-models/Stringman) (4.3GB)
+    or if your machine already has cuda and you want to save space, install stringman directly into a system python installation.
+
     Installing Python via the Microsoft store is probably the easiest way to integrate it into your system without conflicting installations.
     Type "Microsft Store" in the start menu.  
     Search for python  
-    Install python 3.11
+    Install python 3.13
     
     Open Powershell
     
-        python -m virtualenv venv
-        .\venv\Scripts\activate.bat
-        pip3 install "nf_robot[host]"
+        cd ~
+        python3.13.exe -m pip install "nf_robot[host]"
 
 === "Mac"
 
@@ -49,7 +52,7 @@ Run stringman's motion controller from the virtualenv you set up during install
 
 === "Windows"
 
-        .\venv\Scripts\stringman-headless.sh
+        python3.11.exe -m nf_robot.host.observer
 
 === "Mac"
 
@@ -60,6 +63,8 @@ With no args, it runs in LAN mode, meaning it will listen for a UI connection on
 ![](images/usage/lanmode.png){ loading=lazy, width=45% } 
 
 If no configuration file is specified with `--config=<filename.json>` one will be created at `configuration.json` this will be where your specific robot's calibration parameters are stored and where your randomly generated robot id will be stored. if it is deleted, the id will change.
+
+For machines with no NPU or GPU capable of AI acceleration, run with `--no_ai`. This will cut down the resource usage enough that you can still drive manually but you will be unable to use autonomous behaviors.
 
 ### Connecting 
 
