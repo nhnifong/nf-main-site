@@ -668,6 +668,8 @@ function updateFloatingLabelsText() {
     }
 }
 
+const down15cm = new THREE.Vector3(0, -0.15, 0);
+
 function updateFloatingLabels() {
     const halfWidth = window.innerWidth / 2;
     const halfHeight = window.innerHeight / 2;
@@ -706,6 +708,7 @@ function updateFloatingLabels() {
     const gripperLabelEl = document.getElementById('label-gripper-force');
     if (gripper.grommet_pos && gripperLabelEl) {
         pos.copy(gripper.grommet_pos);
+        pos.add(down15cm);
         pos.project(camera);
 
         gripperLabelEl.classList.remove('hidden');
@@ -713,7 +716,7 @@ function updateFloatingLabels() {
         const y = -(pos.y * halfHeight) + halfHeight;
         
         // Offset slightly to the right and up so it floats beside the gripper
-        gripperLabelEl.style.transform = `translate(${x - 20}px, ${y}px)`;
+        gripperLabelEl.style.transform = `translate(${x - 25}px, ${y}px)`;
         const fillEl = document.getElementById('gripper-force-fill');
         const targetEl = document.getElementById('gripper-force-target');
 
