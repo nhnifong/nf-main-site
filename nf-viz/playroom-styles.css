@@ -980,6 +980,37 @@ h2 {
      0px  2px 4px rgba(0,0,0,0.8);
 }
 
+/* --- Floating Gauge --- */
+.floating-gauge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 12px;
+  border: 2px solid white;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 0 1px black; /* Outline & shadow */
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  transform-origin: center left;
+}
+.gauge-fill {
+  height: 100%;
+  background-color: #4CAF50;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+.gauge-target {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background-color: white;
+  box-shadow: 1px 1px 2px black;
+  z-index: 2;
+}
+
 /* --- Controls List Formatting --- */
 .controls-list div {
   margin-bottom: 5px;

@@ -7,7 +7,8 @@ export class GamepadController {
 
     // Constants
     private readonly DEADZONE = 0.1; // 10% deadzone
-    private readonly GAMEPAD_GRIP_DEG_PER_SEC = 90;
+    private readonly GAMEPAD_GRIP_SLOW = 40; // deg per second
+    private readonly GAMEPAD_GRIP_FAST = 90; // deg per second
     private readonly GAMEPAD_WINCH_METER_PER_SEC = 0.2;
     private readonly GAMEPAD_WRIST_DEG_PER_SEC = 70;
 
@@ -28,6 +29,12 @@ export class GamepadController {
     private dpadRightWasHeld = false;
     private selectWasHeld = false;
     private lclickWasHeld = false;
+    private aWasHeld = false
+    private bWasHeld = false;
+
+    // time of a and b presses for speed ramp up
+    private aPressTimestamp = 0;
+    private bPressTimestamp = 0;
 
     // keyboard input state
     private keys = new Set<string>();
@@ -340,10 +347,18 @@ export class GamepadController {
         // Finger Control A/B
         let fingerChange = 0;
         if (input.buttons.a) {
-            fingerChange = this.GAMEPAD_GRIP_DEG_PER_SEC;
+            if (!this.aWasHeld) {
+                this.aPressTimestamp = Date.now() / 1000;
+            }
+            fingerChange = now < this.aPressTimestamp+0.5 ? this.GAMEPAD_GRIP_SLOW : this.GAMEPAD_GRIP_FAST;
         } else if (input.buttons.b) {
-            fingerChange = -this.GAMEPAD_GRIP_DEG_PER_SEC;
+            if (!this.bWasHeld) {
+                this.bPressTimestamp = Date.now() / 1000;
+            }
+            fingerChange = now < this.bPressTimestamp+0.5 ? -this.GAMEPAD_GRIP_SLOW : -this.GAMEPAD_GRIP_FAST;
         }
+        this.aWasHeld = input.buttons.a;
+        this.bWasHeld = input.buttons.b;
         
         // Winch Control (X/Y)
         let lineSpeed = 0;

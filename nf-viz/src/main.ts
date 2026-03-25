@@ -32,6 +32,10 @@ let swingCancellationEnabled = false;
 let isFullCalibrationActive = false;
 let anchorsSeeingOriginCard: number[] = [];
 
+// Gripper Sensor State
+let currentGripperPressure = 0;
+let currentGripperTargetForce: number | null = null;
+
 // Motion perspective modes
 const perspViewport = 0; 
 const perspPerson = 1;
@@ -665,37 +669,67 @@ function updateFloatingLabelsText() {
 }
 
 function updateFloatingLabels() {
-  const halfWidth = window.innerWidth / 2;
-  const halfHeight = window.innerHeight / 2;
-  const pos = new THREE.Vector3();
+    const halfWidth = window.innerWidth / 2;
+    const halfHeight = window.innerHeight / 2;
+    const pos = new THREE.Vector3();
 
-  for (let i = 0; i < anchors.length; i++) {
-      const anchor = anchors[i];
-      const labelEl = document.getElementById(`label-anchor-${i}`);
-      
-      if (anchor.grommet_pos && labelEl) {
-          pos.copy(anchor.grommet_pos);
-          
-          // Project 3D position to 2D screen coordinates
-          pos.project(camera);
+    // anchors
+    for (let i = 0; i < anchors.length; i++) {
+        const anchor = anchors[i];
+        const labelEl = document.getElementById(`label-anchor-${i}`);
+        
+        if (anchor.grommet_pos && labelEl) {
+            pos.copy(anchor.grommet_pos);
+            
+            // Project 3D position to 2D screen coordinates
+            pos.project(camera);
 
-          // Hide label if anchor is behind the camera
-          if (pos.z > 1) {
-              labelEl.classList.add('hidden');
-              continue;
-          }
+            // Hide label if anchor is behind the camera
+            if (pos.z > 1) {
+                labelEl.classList.add('hidden');
+                continue;
+            }
 
-          labelEl.classList.remove('hidden');
+            labelEl.classList.remove('hidden');
 
-          // Convert to CSS coordinates
-          const x = (pos.x * halfWidth) + halfWidth;
-          const y = -(pos.y * halfHeight) + halfHeight;
+            // Convert to CSS coordinates
+            const x = (pos.x * halfWidth) + halfWidth;
+            const y = -(pos.y * halfHeight) + halfHeight;
 
-          // Apply translation. Subtracting 100% and 10px from Y dynamically ensures the
-          // bottom-left corner of the div tracks the anchor position precisely while hovering above it.
-          labelEl.style.transform = `translate(${x}px, calc(${y}px - 100% - 10px))`;
-      }
-  }
+            // Apply translation. Subtracting 100% and 10px from Y dynamically ensures the
+            // bottom-left corner of the div tracks the anchor position precisely while hovering above it.
+            labelEl.style.transform = `translate(${x}px, calc(${y}px - 100% - 10px))`;
+        }
+    }
+
+    // Gripper
+    const gripperLabelEl = document.getElementById('label-gripper-force');
+    if (gripper.grommet_pos && gripperLabelEl) {
+        pos.copy(gripper.grommet_pos);
+        pos.project(camera);
+
+        gripperLabelEl.classList.remove('hidden');
+        const x = (pos.x * halfWidth) + halfWidth;
+        const y = -(pos.y * halfHeight) + halfHeight;
+        
+        // Offset slightly to the right and up so it floats beside the gripper
+        gripperLabelEl.style.transform = `translate(${x - 20}px, ${y}px)`;
+        const fillEl = document.getElementById('gripper-force-fill');
+        const targetEl = document.getElementById('gripper-force-target');
+
+        if (fillEl) {
+            fillEl.style.width = `${Math.max(0, Math.min(100, currentGripperPressure * 100))}%`;
+        }
+
+        if (targetEl) {
+            if (currentGripperTargetForce !== null) {
+                targetEl.classList.remove('hidden');
+                targetEl.style.left = `${Math.max(0, Math.min(100, currentGripperTargetForce * 100))}%`;
+            } else {
+                targetEl.classList.add('hidden');
+            }
+        }
+    }
 }
 
 // --- Render Loop ---
@@ -963,6 +997,16 @@ function handleUplinkStatus(data: nf.telemetry.IUplinkStatus) {
 
 function handleGripSensors(data: nf.telemetry.IGripperSensors) {
   gripper.setSensorValues(data, laserReadings);
+  
+  if (data.pressure !== undefined && data.pressure !== null) {
+      currentGripperPressure = data.pressure;
+  }
+  
+  if (data.targetForce !== undefined && data.targetForce !== null) {
+      currentGripperTargetForce = data.targetForce;
+  } else {
+      currentGripperTargetForce = null;
+  }
 }
 
 function handleSwingCancellationState(data: nf.telemetry.ISwingCancellationState) {
