@@ -10,7 +10,7 @@ export class GamepadController {
     private readonly GAMEPAD_GRIP_SLOW = 40; // deg per second
     private readonly GAMEPAD_GRIP_FAST = 90; // deg per second
     private readonly GAMEPAD_WINCH_METER_PER_SEC = 0.2;
-    private readonly GAMEPAD_WRIST_DEG_PER_SEC = 70;
+    private readonly GAMEPAD_WRIST_DEG_PER_SEC = 150;
 
 
     // State Tracking
