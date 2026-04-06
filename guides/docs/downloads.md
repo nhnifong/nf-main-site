@@ -33,7 +33,7 @@ The UI is web based an accessed at [neufanged.com/control_panel](http://neufangl
 
 	#### CAD Design Document
 
-	Coming soon
+	**[Stringman Arpeggio in Onshape](https://cad.onshape.com/documents/77e88b7169e862e19bf6bec8/w/f928a6d6d1c2bc0bb4344ff8/e/0c00c4504b6f7bfe7b76b0bd?renderMode=0&uiState=69c70f9089ef4c064d32e25e)**
 
 	#### BOM
 

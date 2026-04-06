@@ -299,8 +299,11 @@ async def read_page(page_name: str):
         "playroom": "playroom.html",
         "stringman-pilot": "stringman-pilot.html",
         "stringman-arpeggio-pilot": "stringman-arpeggio-pilot.html",
+        "arp-gripper-kit": "arp-gripper-kit.html",
+        "consulting": "consulting.html",
         "company": "company.html",
-        "future": "future.html"
+        "future": "future.html",
+        "store": "store.html",
     }
     
     if page_name in page_map:

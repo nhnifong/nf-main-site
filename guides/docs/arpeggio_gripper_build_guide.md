@@ -24,46 +24,69 @@ I will make a final pass when the hardware is stable.
 
 ## Fingers
 
-Attach a fork to the back of a finger pad. Forks and finger pads are both symmetrical. There is no left and right finger. Insert an M3x30 bolt through the upper hole, followed by a washer and a lock nut. Tighten the nylock nut until no slack remains, then back off until the rod can swing with no out of plane motion. Repeat for the other finger.
+Attach a fork to the back of a finger pad. Forks and finger pads are both symmetrical. There is no left and right finger. Insert an M3x25 bolt through the upper hole, passing through both parts, followed by an M3 lock nut on the other side. Tighten the nylock nut until no slack remains, then back off until the rod can swing. Repeat for the other finger.
 
-![](images/grip_arp/PXL_20260202_230937789.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_231747398.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_232158785.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133246386.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133317023.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133400360.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133444670.jpg){ loading=lazy, width=45% }
 
-Slide in a geared lever into the finger assembly with it's flat face coplanar with the finger's flat flace.
-Insert an M4x25 bolt through the assembly and a M4 lock nut on the other side.
-
-If you are able to, try to get two M4 washers into the gaps as the bolt comes through. (its not necessary but reduces noise. I have found that you can use a pocket knife to push the washer in while holding it centered with an allen wrench in the hole)
+Select either geared lever. Slide in a geared lever into the finger assembly with it's flat face coplanar with the finger's flat flace.
+Insert an M3x25 bolt through the assembly and a M3 lock nut on the other side.
 
 Tighten and then back off just until the mechanism moves freely. Repeat with the other finger.
 
-![](images/grip_arp/PXL_20260202_232316889.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_232326116.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260202_232502475.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133509036.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133721043.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_133816709.jpg){ loading=lazy, width=45% }
 
-Locate the pressure sense connector. It is a 2-pin 1.00mm pitch male JST-SH connector with 20cm wire ends.
+### Assemble a pressure sensor
 
-Place heat shrink tubing on the wires and solder them to the pressure sensitive resistor. Polarity is irrelevant.
-If you purchase a hardware kit, you should have this pre soldered. Stick the resistor pad onto the finger which has a wire channel in it. Clip the wings off the JST-SH connector with flush cut wire clippers and feed the plug through the channel in the finger.
+Locate the pressure sense connector. It is a 2-pin 1.00mm pitch male JST-SH connector with 20cm wire ends. Place heat shrink tubing on the wires and solder them to the pressure sensitive resistor. Polarity is irrelevant. Clip the wings off the JST-SH connector with flush cut wire clippers and feed the plug through the channel in the finger.
 
-![](images/grip_arp/PXL_20260306_234806045.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260306_234823899.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260306_234902743.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260306_234931459.jpg){ loading=lazy, width=45% }
+In build kits, this part is pre-assembled.
+
+Select the finger that has a wire channel inside it. Feed the plug of the pressure sensor through the channel and then stick the resistor pad onto the finger.
+
+![](images/grip_arp/PXL_20260330_133909419.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_134037513.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_134113767.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_134148958.jpg){ loading=lazy, width=45% }
+
+### Apply grip tape on the fingers
+
+prepare at least four strips of 110x37mm fingerboard grip tape.
+
+Lay the finger on the table face up with the finger pad and gear lever's flat faces coplanar, using the linkage as support.
+
+Stick one pad of grip tape on the finger in the longer direction. Start from the top edge of the finger (nearest the gear) make one end of the foam meet this edge, stick down the foam and you will have about 10mm sticking off the end. Fold it over the edge.
+Press the finger flat against a desk to firmly stick it down everywhere.
+
+![](images/grip_arp/PXL_20260330_135418346.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135449560.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135501452.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135507886.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135521402.jpg){ loading=lazy, width=45% }
 
 
-Cover the flat face of the finger with a strip of adhesive backed foam. Start from the top edge of the finger (nearest the gear) make one end of the foam meet this edge, stick down the foam and you will have about 10mm sticking off the end. Fold it over the edge.
-Press the finger flat against a desk to firmly stick it down everywhere. Then with an exacto knife, cut the foam right down the crack where the two finger peices slide past eachother as pictured. finally, Cut a relief slit on both sides where finger pad curves and narrows so you can fold the remaining foam around the sides.
+In a perpendicular direction stick another sheet of adhesive foam over the fingertip, folding 10 mm around each side.
+
+![](images/grip_arp/PXL_20260330_135546329.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135613874.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135618907.jpg){ loading=lazy, width=45% }
+
+Then with a hobby knife, cut away any excess foam.
+
+![](images/grip_arp/PXL_20260330_135633225.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135719443.jpg){ loading=lazy, width=45% }
+
+Flip the finger face up and cut the foam right down the crack where the two finger peices slide past eachother as pictured, and flex the joint to make sure everything stays stuck in place.
 
 Repeat with the other finger.
 
-![](images/grip_arp/PXL_20260213_005100134.MP.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_005140781.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_005143687.MP.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_005303717.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260213_005448442.jpg){ loading=lazy, width=45% }
-
-Don't worry if it's not too precise. Foam grip tape is cheap and should be replaced at regular intervals anyway.
+![](images/grip_arp/PXL_20260330_135740587.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_135756602.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260330_140024529.jpg){ loading=lazy, width=45% }
 
 ## Motors
 
@@ -73,69 +96,68 @@ Attach the aluminum servo horns to both motors with the included M3x6 center scr
 ![](images/grip_arp/PXL_20260202_235805556.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000043825.jpg){ loading=lazy, width=45% }
 
-Snap two m3x6 screws into the finger drive gear from the sides. For this you cannot use the phillips head screws that come with the STS3215 you need to use the black hex screws that have a thinner head.
+Snap two of the m3x6 screws that come with the motor into the finger drive gear from the sides.
+Screw the drive gear down tightly to the aluminum servo horn of one of the motors.
 
 !!! tip "Print Settings"
 
     The drive gear will not have sufficient strength if printed with PLA. PCTG is known to work, but only at a higher than usual nozzle tempurature of 265°C.
 
-![](images/grip_arp/PXL_20260203_000259321.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_000335130.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_000403398.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_000448440.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_000606648.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214540392.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214646763.jpg){ loading=lazy, width=45% }
 
 Plug a three wire SPOX cable into each motor. (The wire that comes in the box with the motor)
 
 ## Body Assembly
 
-After printing, tear the ears off the mechanism lid print. Clean up the area the bridge was supporting with a sharp tool.
+After printing, tear the ears off the mechanism lid print. Clean up the area the sacreficial bridge was supporting with a sharp tool.
 
-![](images/grip_arp/PXL_20260203_000631994.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_000701647.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_000839400.jpg){ loading=lazy, width=45% }
 
-Attach the finger motor to the inside of mechanism_lid with four of the smallest screws included with the motors.
+Attach the finger motor to the outside of mechanism_lid with four of the smallest screws included with the motors.
 
-![](images/grip_arp/PXL_20260203_000923523.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001026556.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001106920.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_001205714.jpg){ loading=lazy, width=45% }
-
-Attach a 30mm fan to the mechanism lid using two M3x10 screws in opposite corners. ensure the airflow points outwards.
-
-![](images/grip_arp/PXL_20260306_233719266.MP.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260306_233758557.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214712028.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214759179.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214838930.jpg){ loading=lazy, width=45% }
 
 Locate the printed back plate (the largest piece)
-Insert two M4x25 bolts into the back plate from the bottom, hold them in as you place it on the table. Followed by two M4 washers.
+Insert two M3x25 bolts into the back plate from the bottom, hold them in as you place it on the table. A bean bag can also serve as a good place to put the device while assembling it. Place two M3 washers onto the screws.
 
-![](images/grip_arp/PXL_20260306_233949642.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260306_234013867.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214133074.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214236736.jpg){ loading=lazy, width=45% }
 
 Mesh the two geared levers together in the closed position, making sure they are aligned correctly. They must remain meshed the entire time. Use a rubber band to hold them together if necessary.  
 
 Feed the plug of the pressure sense wire through the smile shaped slot in back_plate, and place the fingers on the bolts simultaneously, keeping them meshed, and keeping the sense wire from being pinched anywhere.
 
-Place M4 washers over the bolts after they protrude from the fingers.
+Place M3 washers over the bolts after they protrude from the fingers.
 
-![](images/grip_arp/PXL_20260306_235338516.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260307_001018771.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214309109.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214349018.jpg){ loading=lazy, width=45% }
 
-Place the mechanism lid and finger motor assembly onto the back plate, gently wiggle everything in order to get it to fit. The two M4x25 bolts should go through the holes in mechanism_lid and the drive gear should mesh with the finger gears. The alignment tabs on the sides should line up. If you have trouble getting it on there, try pulling the m3x15 bolts back a bit into the fingers, make the gear mesh first, then push the bolts through.
+Place the mechanism lid and finger motor assembly onto the back plate, gently wiggle everything in order to get it to fit. The two M3x25 bolts should go through the holes in mechanism_lid and the drive gear should mesh with the finger gears. The alignment tabs on the sides should line up. If you have trouble getting it on there, try pulling the m3x15 bolts back a bit into the fingers, make the gear mesh first, then push the bolts through.
 
-Insert two M4 nuts into the hexagonal holes. Tighten the bolts from behind and then back off enough that the geared levers move freely.
+Insert two M3 lock nuts into the hexagonal holes. Tighten the bolts from behind and then back off enough that the geared levers move freely.
 
-![](images/grip_arp/PXL_20260307_001034652.jpg){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260307_001123623.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_214931771.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215008361.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215045528.jpg){ loading=lazy, width=45% }
 
-Screw in a single M4x10 screw into the center hole in the back plate. this provides some stability to the finger drive gear.
+Screw in a single M4x12 screw into the center hole in the back plate. this provides some stability to the finger drive gear.
 
-![](images/grip_arp/PXL_20260307_001143714.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215346279.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215421357.jpg){ loading=lazy, width=45% }
 
-Secure the lid around the edges with four M3x10 screws
+Secure the lid around the edges with four M3x8 screws
 
-![](images/grip_arp/PXL_20260307_001421462.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215229335.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215323818.jpg){ loading=lazy, width=45% }
+
+Swing the two fork-shaped linkages up and into their slots. Secure them on the mechanism_lid side with two M3x14 screws. The back side comes later.
+
+![](images/grip_arp/PXL_20260331_215453617.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260331_215530342.jpg){ loading=lazy, width=45% }
+
 
 ## Electronics
 
@@ -149,7 +171,7 @@ Press the Strinman Gripper Hat onto the raspberry pi.
 
 ![](images/grip_arp/PXL_20260203_002527211.jpg){ loading=lazy, width=45% }
 
-Insert spacers between the two boards, and insert M2.5x14 through the boards and spacers. Only three corners are used since the ribbon cable is in the path of one of them. use screws and spacers only in the three holes pictured.
+Insert spacers between the two boards, and insert M2.5x16 through the boards and spacers. Only three corners are used since the ribbon cable is in the path of one of them. use screws and spacers only in the three holes pictured.
 
 ![](images/grip_arp/PXL_20260307_163945036.jpg){ loading=lazy, width=45% }
 
@@ -168,9 +190,7 @@ Open the gripper fingers. Attach the camera mount assembly to the back plate wit
 ![](images/grip_arp/PXL_20260203_003125474.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_003143036.jpg){ loading=lazy, width=45% }
 
-Fold the two fork shaped linkages into place so their remaining holes align with the holes in the gripper body.  
-Attach these with four M3x14 screws.
-After connecting them all, test the movement of the gripper. If they do not move freely enough, loosen the screws a little.
+Screw two M3x14 screws into the holes that both hold on the electronics mount and secure the forks from the side that was left unfastened earlier.
 
 ![](images/grip_arp/PXL_20260203_004935923.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_005029210.jpg){ loading=lazy, width=45% }
@@ -191,7 +211,6 @@ Feed the other connector through the frame and connect the rangefinder to the gr
 ![](images/grip_arp/PXL_20260307_003643671.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_004822533.jpg){ loading=lazy, width=45% }
 
-Plug in the Fan into to 5V socket labelled FAN. Image coming soon.
 
 ## Wrist motor
 
@@ -200,12 +219,12 @@ Attach a bracket to the remaining motor in the pictured orientation. Secure with
 ![](images/grip_arp/PXL_20260203_005137842.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_005244290.jpg){ loading=lazy, width=45% }
 
-Attach the three-holed helical wrist drive gear to the motor horn with two M3x6 screws.
+Attach the three-holed helical wrist drive gear to the motor horn with two of the M3x6 screws that come with the servo motor.
 
 ![](images/grip_arp/PXL_20260203_005323886.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_005434275.jpg){ loading=lazy, width=45% }
 
-Attach this motor bracket to the gripper with two M3x6 screws.
+Attach this motor bracket to the gripper with two M3x8 screws.
 
 ![](images/grip_arp/PXL_20260203_005851153.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_005932229.jpg){ loading=lazy, width=45% }
@@ -214,6 +233,15 @@ Plug the finger motor into the motor port on he Gripper Hat. Leave the wrist mot
 
 ![](images/grip_arp/PXL_20260203_010458913.jpg){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260203_010504029.jpg){ loading=lazy, width=45% }
+
+## Fan
+
+Attach a 30mm fan to the mechanism lid using two M3x8 screws in opposite corners. ensure the airflow points outwards.
+
+![](images/grip_arp/PXL_20260306_233719266.MP.jpg){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260306_233758557.jpg){ loading=lazy, width=45% }
+
+Plug in the Fan into to 5V socket labelled FAN on the gripper PCB.
 
 ## Marker Display Box
 

@@ -256,6 +256,95 @@
             opacity: 0.9;
         }
 
+
+        /* --- COMMUNITY SECTION --- */
+        .community-section {
+            padding: 80px 20px;
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .community-title {
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .community-card {
+            background-color: #222;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        .community-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .community-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .community-card p {
+            color: #aaa;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            flex-grow: 1;
+            line-height: 1.5;
+        }
+
+        .community-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            border: 2px solid;
+            background-color: transparent;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 220px;
+        }
+
+        /* Unique button styling for each platform */
+        .btn-discord { border-color: #5865F2; }
+        .btn-discord:hover { background-color: #5865F2; }
+
+        .btn-mailing { border-color: #7cdbfb; }
+        .btn-mailing:hover { background-color: #7cdbfb; color: #000; }
+
+        .btn-youtube { border-color: #FF0000; }
+        .btn-youtube:hover { background-color: #FF0000; }
+
+        .btn-github { border-color: #ffffff; }
+        .btn-github:hover { background-color: #ffffff; color: #000; }
+
         /* --- CTA / ORDER SECTION --- */
         .cta-section {
             min-height: 50vh;
@@ -371,10 +460,10 @@
 
     <!-- Utility Navbar -->
     <nav class="navbar">
-        <a href="docs/">Docs</a>
-        <a href="https://www.youtube.com/@overengineer7691/videos">Youtube</a>
-        <a href="https://github.com/nhnifong/cranebot3-firmware#readme">Github</a>
-        <a href="https://discord.gg/T5HEvxVgbA">Discord</a>
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs">Docs</a>
+        <a href="/playroom">Playroom</a>
         <a href="/company">Company</a>
         <a href="/future">Future</a>
     </nav>
@@ -394,8 +483,8 @@
         </div>
 
         <div class="button-row">
-            <a href="stringman-arpeggio-pilot" class="hero-button">learn more</a>
-            <a href="control_panel/" class="hero-button">run simulator</a>
+            <a href="store" class="hero-button">Store</a>
+            <a href="playroom" class="hero-button">Playroom</a>
         </div>
     </section>
 
@@ -589,11 +678,37 @@
         </section>
     </div>
 
-    <section class="join-section">
-        <a href="https://groups.google.com/g/stringman-crew" class="join-button">Mailing List</a>
-        <a href="https://discord.gg/T5HEvxVgbA" class="join-button">Discord Group</a>
-    </section>
+    <!-- Community & Links Section -->
+    <section class="community-section">
+        <h2 class="community-title">Join the Community</h2>
+        <div class="community-grid">
+            
+            <div class="community-card">
+                <h3>Discord</h3>
+                <p>Join our community for support, live updates, and direct chat with the developer.</p>
+                <a href="https://discord.gg/T5HEvxVgbA" class="community-btn btn-discord">Join Server</a>
+            </div>
+            
+            <div class="community-card">
+                <h3>Mailing List</h3>
+                <p>Subscribe for major product announcements, software updates, and new hardware releases.</p>
+                <a href="https://groups.google.com/g/stringman-crew" class="community-btn btn-mailing">Subscribe</a>
+            </div>
 
+            <div class="community-card">
+                <h3>YouTube</h3>
+                <p>Watch full demonstrations, tutorials, and deep-dives into Stringman's kinematics and build processes.</p>
+                <a href="https://www.youtube.com/@overengineer7691/videos" class="community-btn btn-youtube">Watch Videos</a>
+            </div>
+
+            <div class="community-card">
+                <h3>GitHub</h3>
+                <p>Explore the open-source firmware, contribute to the codebase, and report technical issues.</p>
+                <a href="https://github.com/nhnifong/cranebot3-firmware#readme" class="community-btn btn-github">View Code</a>
+            </div>
+
+        </div>
+    </section>
 
     <!-- CTA Section -->
     <section class="cta-section">

@@ -345,6 +345,8 @@ export class GamepadController {
         }
 
         // Finger Control A/B
+        // Move slow at first, then faster.
+        // When button is released, send zero speed.
         let fingerChange = 0;
         if (input.buttons.a) {
             if (!this.aWasHeld) {
@@ -444,6 +446,7 @@ export class GamepadController {
                     fingerSpeed: fingerChange,
                     winch: lineSpeed,
                     wristSpeed: wristChange,
+                    directionIsInGripperFrame: !this.seatOrbitMode,
                 }
             }));
 

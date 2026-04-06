@@ -1,0 +1,241 @@
+/* --- RESET & TYPOGRAPHY --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #333;
+    line-height: 1.6;
+    background-color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- UTILITY NAVBAR (Dark Text Version) --- */
+.navbar {
+    position: relative; /* Changed from absolute to relative */
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px 40px;
+    z-index: 100;
+    background-color: #fff; /* Opaque white background */
+    flex-shrink: 0; /* Prevent navbar from shrinking */
+    border-bottom: 1px solid #f0f0f0; /* Optional: subtle separator */
+}
+
+.navbar a {
+    color: #333;
+    text-decoration: none;
+    margin-left: 30px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: opacity 0.3s;
+}
+
+.navbar a:hover {
+    opacity: 0.6;
+    text-decoration: underline;
+}
+
+/* --- TOP SECTION (SPLIT LAYOUT) --- */
+.product-hero {
+    display: flex;
+    flex: 1; /* Fill remaining vertical space below navbar */
+    width: 100%;
+    overflow: hidden; /* Contains the scrollable areas */
+}
+
+/* LEFT: GALLERY */
+.gallery-container {
+    flex: 1.2;
+    background-color: #f4f4f4;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    height: 100%;
+}
+
+.gallery-slide {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.gallery-slide.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+.gallery-slide img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    border-radius: 4px;
+}
+
+/* Gallery Controls */
+.arrow-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.8);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 1.2rem;
+    color: #333;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow-btn:hover {
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.prev-btn { left: 20px; }
+.next-btn { right: 20px; }
+
+/* RIGHT: INFO & PURCHASE */
+.info-container {
+    flex: 1;
+    /* Scroll configuration */
+    height: 100%;
+    overflow-y: auto;
+    
+    /* Layout */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    
+    padding: 60px; /* Reduced top padding since navbar doesn't overlap */
+    background: #fff;
+}
+
+.product-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.product-price {
+    font-size: 2rem;
+    font-weight: 400;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.product-intro {
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    max-width: 500px;
+    color: #666;
+}
+
+.purchase-btn {
+    display: inline-block;
+    background-color: #000;
+    color: #fff;
+    padding: 20px 60px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    text-align: center;
+    width: fit-content;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.purchase-btn:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+}
+
+.shipping-note {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* --- SCROLLING CONTENT --- */
+.details-section {
+    max-width: 800px;
+    margin: 0;
+    padding: 20px 0;
+}
+
+.details-section h3 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    margin-top: 40px;
+}
+
+.details-section p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #444;
+}
+
+.details-section ul {
+    margin-left: 20px;
+    margin-bottom: 30px;
+    color: #444;
+}
+
+.details-section li {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 900px) {
+    body {
+        /* Unlock body scroll on mobile */
+        height: auto;
+        overflow: auto;
+        overflow-x: hidden;
+        display: block; /* Revert flex layout on mobile */
+    }
+
+    .product-hero {
+        flex-direction: column;
+        height: auto;
+    }
+    .gallery-container {
+        height: 50vh;
+        width: 100%;
+    }
+    .info-container {
+        padding: 40px 20px;
+        height: auto;
+        overflow-y: visible;
+    }
+    .product-title {
+        font-size: 2.5rem;
+    }
+}

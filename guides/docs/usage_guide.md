@@ -140,10 +140,12 @@ Gamepad control is highly reccommended over keyboard as it gives you analog spee
 #### Perspective
 
 Whether in keyboard control or in gamepad control, you can select the viewpoint around which the robot orbits.
-In any of these perspective, forward moves away from you without changing height, back moves towards you.
+In any of these perspective but `gripper`, forward moves away from you without changing height, back moves towards you.
 Left orbits you counterclockwise, right orbits you clockwise.
 
 You can set the viewpoint to be any camera, the 3D viewport, or the seat tag, which is an Apriltag you can place anywhere in the room, such as near your seat.
+
+In gripper persepctive, forward is always in the direction the gripper is facing, which is up in the gripper camera view.
 
 ![](images/usage/perspective.png){ loading=lazy, width=45% }
 

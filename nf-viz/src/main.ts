@@ -4,6 +4,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { nf } from './generated/proto_bundle.js';
 import { Gripper } from './objects/gripper.ts';
 import { Anchor } from './objects/anchor.ts';
+import { ArpAnchor } from './objects/arp_anchor.ts';
+import { Eyelet } from './objects/eyelet.ts';
 import { Gantry } from './objects/gantry.ts';
 import { Cable } from './objects/cable.ts';
 import { DynamicRoom } from './objects/dynamic_room.ts'
@@ -99,7 +101,9 @@ const room = new DynamicRoom(scene);
 // Input handler
 const gamepad = new GamepadController();
 
-// Anchors
+let anchorType: nf.common.AnchorType = nf.common.AnchorType.ANCHORTYPE_UNSPECIFIED;
+
+// Shared corners array (holds 4 instances of either Anchor or Eyelet)
 const acoords = [
   { x: 2.5,  y: -2.5, rotZ: -Math.PI / 4 },
   { x: 2.5,  y: 2.5,  rotZ: -3 * Math.PI / 4 },
@@ -107,7 +111,7 @@ const acoords = [
   { x: -2.5, y: -2.5, rotZ: Math.PI / 4 },
 ];
 
-const anchors: Anchor[] = acoords.map((ac) => {
+const corners: (Anchor | Eyelet | ArpAnchor)[] = acoords.map((ac) => {
   const anchor = new Anchor(scene, room);
   anchor.setPose(nf.common.Pose.create({
     position: { x: ac.x, y: ac.y, z: 3 },
@@ -122,16 +126,21 @@ const gantry = new Gantry(scene);
 // Gripper
 const gripper = new Gripper(scene);
 
-// Anchor-Gantry Cables
+// Main support Cables
 const cables: Cable[] = [0, 1, 2, 3].map((i) => {
   const cable = new Cable(scene);
-  cable.update(anchors[i].grommet_pos, gantry.position, 0.0)
+  cable.update(corners[i].grommet_pos, gantry.position, 0.0)
   return cable; 
 });
+
+// Wall-Routing Cables for Arpeggio
+const wallCables: Cable[] = [];
 
 // Gantry-Gripper cable
 const winchCable = new Cable(scene);
 winchCable.update(gantry.position, gripper.grommet_pos, 0.0)
+
+
 
 // Visual gantry factor
 const gantryVisualCube = new THREE.Mesh(
@@ -148,6 +157,25 @@ const gantryHangCube = new THREE.Mesh(
 gantryHangCube.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 4 );
 gantryHangCube.position.set(0.2, 1.5, 0);
 scene.add(gantryHangCube);
+
+// // --- MJPEG Floor Stream ---
+// const floorStreamImg = new Image();
+// floorStreamImg.crossOrigin = "anonymous";
+// floorStreamImg.src = "http://localhost:8747/stream.mjpeg";
+// const floorStreamTexture = new THREE.Texture(floorStreamImg);
+// // Linear filtering and no mipmaps are required for non-power-of-two video streams
+// floorStreamTexture.minFilter = THREE.LinearFilter;
+// floorStreamTexture.magFilter = THREE.LinearFilter;
+// floorStreamTexture.generateMipmaps = false;
+// const floorQuadGeo = new THREE.PlaneGeometry(5, 5);
+// const floorQuadMat = new THREE.MeshStandardMaterial({ 
+//     map: floorStreamTexture,
+//     transparent: false
+// });
+// const floorQuad = new THREE.Mesh(floorQuadGeo, floorQuadMat);
+// floorQuad.rotation.x = -Math.PI / 2;
+// floorQuad.position.y = 0.01; // 1cm above floor
+// scene.add(floorQuad);
 
 // gantry sightings manager
 const sightingsManager = new SightingsManager(scene);
@@ -207,6 +235,20 @@ function initApp() {
     }
   });
 
+  // Bind all landing and panel buttons unconditionally
+  document.getElementById('btn-lan-mode')?.addEventListener('click', startLanFlow);
+  document.getElementById('btn-sim-mode')?.addEventListener('click', startSimFlow);
+  document.getElementById('btn-cloud-mode')?.addEventListener('click', handleCloudLogin);
+  
+  // Bind binding panel buttons
+  document.getElementById('btn-cancel-bind')?.addEventListener('click', () => {
+    document.getElementById('landing-layer')?.classList.add('hidden');
+    document.getElementById('bind-robot-panel')?.classList.add('hidden');
+    document.getElementById('landing-options')?.classList.remove('hidden');
+  });
+  
+  document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
+
   if (currentRobotId === 'lan') {
     startLanFlow();
   } else if (currentRobotId === 'sim') {
@@ -219,20 +261,6 @@ function initApp() {
     // No URL param -> Show landing page
     const landing = document.getElementById('landing-layer');
     if (landing) landing.classList.remove('hidden');
-
-    // Bind landing buttons
-    document.getElementById('btn-lan-mode')?.addEventListener('click', startLanFlow);
-    document.getElementById('btn-sim-mode')?.addEventListener('click', startSimFlow);
-    document.getElementById('btn-cloud-mode')?.addEventListener('click', handleCloudLogin);
-    
-    // Bind binding panel buttons
-    document.getElementById('btn-cancel-bind')?.addEventListener('click', () => {
-      document.getElementById('landing-layer')?.classList.add('hidden');
-      document.getElementById('bind-robot-panel')?.classList.add('hidden');
-      document.getElementById('landing-options')?.classList.remove('hidden');
-    });
-    
-    document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
   }
 }
 
@@ -656,13 +684,17 @@ function handleVisibilityStates(data: nf.telemetry.IVisibilityStates) {
 }
 
 function updateFloatingLabelsText() {
-    for (let i = 0; i < anchors.length; i++) {
+    for (let i = 0; i < corners.length; i++) {
         const labelEl = document.getElementById(`label-anchor-${i}`);
         if (labelEl) {
-            if (isFullCalibrationActive && !anchorsSeeingOriginCard.includes(i)) {
-                labelEl.textContent = `Anchor ${i} 🙈`;
+            if (corners[i] instanceof Eyelet) {
+                labelEl.textContent = `Eyelet ${i}`;
             } else {
-                labelEl.textContent = `Anchor ${i}`;
+                if (isFullCalibrationActive && !anchorsSeeingOriginCard.includes(i)) {
+                    labelEl.textContent = `Anchor ${i} 🙈`;
+                } else {
+                    labelEl.textContent = `Anchor ${i}`;
+                }
             }
         }
     }
@@ -675,18 +707,18 @@ function updateFloatingLabels() {
     const halfHeight = window.innerHeight / 2;
     const pos = new THREE.Vector3();
 
-    // anchors
-    for (let i = 0; i < anchors.length; i++) {
-        const anchor = anchors[i];
+    // Anchors and Eyelets
+    for (let i = 0; i < corners.length; i++) {
+        const corner = corners[i];
         const labelEl = document.getElementById(`label-anchor-${i}`);
         
-        if (anchor.grommet_pos && labelEl) {
-            pos.copy(anchor.grommet_pos);
+        if (corner.grommet_pos && labelEl) {
+            pos.copy(corner.grommet_pos);
             
             // Project 3D position to 2D screen coordinates
             pos.project(camera);
 
-            // Hide label if anchor is behind the camera
+            // Hide label if corner is behind the camera
             if (pos.z > 1) {
                 labelEl.classList.add('hidden');
                 continue;
@@ -715,7 +747,7 @@ function updateFloatingLabels() {
         const x = (pos.x * halfWidth) + halfWidth;
         const y = -(pos.y * halfHeight) + halfHeight;
         
-        // Offset slightly to the right and up so it floats beside the gripper
+        // Positioned centered below the gripper so it's near the fingers.
         gripperLabelEl.style.transform = `translate(${x - 25}px, ${y}px)`;
         const fillEl = document.getElementById('gripper-force-fill');
         const targetEl = document.getElementById('gripper-force-target');
@@ -741,6 +773,7 @@ function animate() {
   controls.update();
   sightingsManager.update();
   laserReadings.update();
+  // floorStreamTexture.needsUpdate = true;
   composer.render();
   sendGamepad();
   updateFloatingLabels();
@@ -760,19 +793,97 @@ window.addEventListener('resize', () => {
 
 //  ===== telemetry update handlers =====
 
-// Reposition anchors
+// Reposition anchors and determine anchor type
 function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
-  if (data.poses && data.poses.length == 4) {
-    data.poses.forEach((apose, i) => {
-      // When the anchor poses telemetry message is sent, a pose is sent for each of four anchors
-      // in order of their anchor number
-      anchors[i].setPose(apose)
-    });
+  if (data.eyelets && data.eyelets.length > 0) {
+      if (anchorType !== nf.common.AnchorType.ANCHORTYPE_ARPEGGIO) {
+          anchorType = nf.common.AnchorType.ANCHORTYPE_ARPEGGIO;
+          
+          for (let i = 0; i < 2; i++) {
+              if (!(corners[i] instanceof ArpAnchor)) {
+                  (corners[i] as any).dispose();
+                  const arpAnchor = new ArpAnchor(scene, room);
+                  arpAnchor.setPose(nf.common.Pose.create({
+                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+                  }));
+                  corners[i] = arpAnchor;
+              }
+          }
+          
+          for (let i = 2; i < 4; i++) {
+              if (!(corners[i] instanceof Eyelet)) {
+                  (corners[i] as any).dispose();
+                  const eyelet = new Eyelet(scene, room);
+                  eyelet.setPose(nf.common.Pose.create({
+                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+                  }));
+                  corners[i] = eyelet;
+              }
+          }
+
+          if (wallCables.length === 0) {
+              wallCables.push(new Cable(scene));
+              wallCables.push(new Cable(scene));
+          }
+          
+          updateComponentStatusUI();
+      }
+
+      if (data.poses && data.poses.length >= 2) {
+          (corners[0] as ArpAnchor).setPose(data.poses[0]);
+          (corners[1] as ArpAnchor).setPose(data.poses[1]);
+      }
+      if (data.eyelets && data.eyelets.length >= 2) {
+          (corners[2] as Eyelet).setPosition(data.eyelets[0]);
+          (corners[3] as Eyelet).setPosition(data.eyelets[1]);
+      }
+      
+      // Update wall cables (0 routes to 3, 1 routes to 2)
+      Promise.all([corners[0].ready, corners[2].ready]).then(() => {
+          wallCables[0].update((corners[0] as ArpAnchor).extra_grommet_pos, corners[2].grommet_pos, 0.0);
+          firstOverheadVideo.setVirtualCamera((corners[0] as ArpAnchor).camera!);
+      });
+      Promise.all([corners[1].ready, corners[3].ready]).then(() => {
+          wallCables[1].update((corners[1] as ArpAnchor).extra_grommet_pos, corners[3].grommet_pos, 0.0);
+          secondOverheadVideo.setVirtualCamera((corners[1] as ArpAnchor).camera!);
+      });
+
+  } else if (data.poses && data.poses.length === 4) {
+      if (anchorType !== nf.common.AnchorType.ANCHORTYPE_PILOT) {
+          anchorType = nf.common.AnchorType.ANCHORTYPE_PILOT;
+          for (let i = 2; i < 4; i++) {
+              if (corners[i] instanceof Eyelet) {
+                  (corners[i] as Eyelet).dispose();
+                  const anchor = new Anchor(scene, room);
+                  anchor.setPose(nf.common.Pose.create({
+                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+                  }));
+                  corners[i] = anchor;
+              }
+          }
+
+          if (wallCables.length > 0) {
+              wallCables[0].update(gantry.position, gantry.position, 0.0);
+              wallCables[1].update(gantry.position, gantry.position, 0.0);
+          }
+
+          updateComponentStatusUI();
+      }
+
+      data.poses.forEach((apose, i) => {
+          if (corners[i] instanceof Anchor) {
+              (corners[i] as Anchor).setPose(apose);
+          }
+      });
   }
+  updateFloatingLabelsText();
 
   // redraw cables
   cables.forEach((cable, i) => {
-    cable.update(anchors[i].grommet_pos, gantry.position, 0.0);
+    cable.update(corners[i].grommet_pos, gantry.position, 0.0);
   });
   winchCable.update(gantry.position, gripper.grommet_pos, 0.0);
 }
@@ -782,7 +893,7 @@ function handlePosEstimate(data: nf.telemetry.IPositionEstimate) {
     gantry.setPosition(data.gantryPosition);
     // redraw cables
     cables.forEach((cable, i) => {
-      cable.update(anchors[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0);
+      cable.update(corners[i].grommet_pos, gantry.position, data.slack![i] ? 0.2 : 0.0);
     });
     winchCable.update(gantry.position, gripper.grommet_pos, 0.0);
     // Inform input controller so it can calculate input orbits
@@ -983,8 +1094,9 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   // Assign the feed's anchor num and vitual camera for target overlay math
   if (!data.isGripper && data.anchorNum != null) {
     videoManager.assign(data.anchorNum); // anchor num is here
-    if (anchors[data.anchorNum].camera) {
-      videoManager.setVirtualCamera(anchors[data.anchorNum].camera!);
+    const corner = corners[data.anchorNum];
+    if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
+      videoManager.setVirtualCamera(corner.camera);
 
       // When the mouse moves on this video feed and a ray intersects the floor
       videoManager.onFloorPoint = (point) => {
@@ -1451,13 +1563,16 @@ window.addEventListener('pointermove', (event) => {
             break;
         }
         
-        for (let i = 0; i < anchors.length; i++) {
-            const anchorMesh = anchors[i].getInteractableMesh();
-            if (anchorMesh && isDescendant(obj, anchorMesh)) {
-                foundType = 'Anchor';
-                foundIndex = i;
-                hoverTarget = anchorMesh;
-                break;
+        for (let i = 0; i < corners.length; i++) {
+            const corner = corners[i];
+            if ((corner instanceof Anchor || corner instanceof ArpAnchor)) {
+                const anchorMesh = corner.getInteractableMesh();
+                if (anchorMesh && isDescendant(obj, anchorMesh)) {
+                    foundType = 'Anchor';
+                    foundIndex = i;
+                    hoverTarget = anchorMesh;
+                    break;
+                }
             }
         }
         

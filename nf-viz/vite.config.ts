@@ -48,8 +48,11 @@ export default defineConfig({
         playroom: resolve(__dirname, 'playroom.html'),
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
+        store: resolve(__dirname, 'store.html'),
         stringmanpilot: resolve(__dirname, 'stringman-pilot.html'),
         stringmanarpeggiopilot: resolve(__dirname, 'stringman-arpeggio-pilot.html'),
+        arpgripperkit: resolve(__dirname, 'arp-gripper-kit.html'),
+        consulting: resolve(__dirname, 'consulting.html'),
       }
     }
   }

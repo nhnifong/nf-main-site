@@ -124,4 +124,9 @@ export class Anchor {
             }
         }
     }
+
+    /** Cleanly wipe this anchor from the scene */
+    public dispose() {
+        this.scene.remove(this.root);
+    }
 }

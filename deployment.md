@@ -6,16 +6,16 @@ To be run in repo root in cloud shell
 Increase the tag version number and build and deploy to staging
 
 ```
-gcloud builds submit --config=cloudbuild-step1.yaml --substitutions=_TAG=3.3.1 .
+gcloud builds submit --config=cloudbuild-step1.yaml --substitutions=_TAG=3.5.0 .
 ```
-
+11
 Verify staging looks fine https://nf-site-monolith-staging-690802609278.us-east1.run.app/
 There is only one mediamtx server shared between staging and prod. Since it always asks prod for authentication to read a video stream, stream reads on cloud robots in staging only work if you also own the robot in production.
 
 Deploy to production
 
 ```
-gcloud builds submit --config=cloudbuild-step2.yaml --substitutions=_TAG=3.3.1 .
+gcloud builds submit --config=cloudbuild-step2.yaml --substitutions=_TAG=3.5.0 .
 ```
 
 ## Set up redis
