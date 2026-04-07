@@ -13,6 +13,7 @@ import { SightingsManager } from './objects/sightings_manager.ts'
 import { VideoFeed } from './ui/video_feed.ts'
 import { GamepadController } from './ui/gamepad.ts'
 import { TargetListManager } from './ui/target_list_manager.ts'
+import { Say } from './utils.ts';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -37,6 +38,16 @@ let anchorsSeeingOriginCard: number[] = [];
 // Gripper Sensor State
 let currentGripperPressure = 0;
 let currentGripperTargetForce: number | null = null;
+
+// LeRobot Session State
+let isLeRobotSessionActive = false;
+let leRobotState: nf.common.LerobotStatus = nf.common.LerobotStatus.EPISODESTATUS_NA;
+let numEpisodesRecorded = 0;
+let datasetEpCount = 0;
+let hfRepoId = "username/my-lerobot-dataset";
+let policyRepoId = "username/my-policy";
+let lerobotError: string | null = null;
+let episodeStartTime: number | null = null;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -611,6 +622,9 @@ function connect(wsUrl: string) {
         else if (update.visibilityStates) {
           handleVisibilityStates(update.visibilityStates);
         }
+        else if (update.episodeControl) {
+          handleEpisodeControl(update.episodeControl);
+        }
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -630,6 +644,38 @@ function connect(wsUrl: string) {
   socket.onerror = (err) => {
     console.error("WebSocket Error:", err);
   };
+}
+
+function handleEpisodeControl(data: nf.common.IEpisodeControl) {
+  if (data.status) {
+    const status = data.status;
+    const oldState = leRobotState;
+    isLeRobotSessionActive = status.status !== nf.common.LerobotStatus.EPISODESTATUS_REC_ALL_COMPLETE && status.status !== nf.common.LerobotStatus.EPISODESTATUS_NA;
+    leRobotState = status.status ?? nf.common.LerobotStatus.EPISODESTATUS_NA;
+    numEpisodesRecorded = status.sessionEpNumber ?? 0;
+    datasetEpCount = status.datasetEpCount ?? 0;
+    hfRepoId = status.datasetRepoId || hfRepoId;
+    policyRepoId = status.policyRepoId || policyRepoId;
+    lerobotError = status.error || null;
+
+    if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+        Say(`Starting episode ${numEpisodesRecorded}`);
+    } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+        Say(`Ready`);
+    }
+
+    // Handle timer reset/start logic
+    const becameActive = (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
+    const wasActive = (oldState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || oldState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
+    
+    if (becameActive && !wasActive) {
+        episodeStartTime = Date.now();
+    } else if (!becameActive) {
+        episodeStartTime = null;
+    }
+
+    updateLeRobotUI();
+  }
 }
 
 function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
@@ -671,7 +717,7 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
 initApp();
 
 function sendGamepad() {
-  const items = gamepad.checkInputsAndCreateControlItems();
+  const items = gamepad.checkInputsAndCreateControlItems(leRobotState);
   if (items.length > 0) {
     sendControl(items);
   }
@@ -767,6 +813,17 @@ function updateFloatingLabels() {
     }
 }
 
+function updateLerobotEpisodeTimer() {
+  const timerEl = document.getElementById('lerobot-timer');
+  if (episodeStartTime !== null && timerEl) {
+      const elapsed = (Date.now() - episodeStartTime) / 1000;
+      timerEl.textContent = elapsed.toFixed(1) + 's';
+      timerEl.classList.remove('hidden');
+  } else if (timerEl) {
+      timerEl.classList.add('hidden');
+  }
+}
+
 // --- Render Loop ---
 function animate() {
   requestAnimationFrame(animate);
@@ -774,6 +831,7 @@ function animate() {
   sightingsManager.update();
   laserReadings.update();
   // floorStreamTexture.needsUpdate = true;
+  updateLerobotEpisodeTimer();
   composer.render();
   sendGamepad();
   updateFloatingLabels();
@@ -1460,6 +1518,188 @@ function initControlsPanel() {
     catcher?.addEventListener('click', closePanel);
 }
 initControlsPanel();
+
+// --- LeRobot Recording Panel ---
+
+function sendEpisodeCommand(commandVal: nf.common.EpCommand) {
+  sendControl([nf.control.ControlItem.create({
+    episodeControl: { command: commandVal }
+  })]);
+}
+
+function updateLeRobotUI() {
+    const headerBtn = document.getElementById('btn-header-lerobot');
+    const panelInactive = document.getElementById('lerobot-panel-inactive');
+    const panelActive = document.getElementById('lerobot-panel-active');
+    const sessionEpsEl = document.getElementById('lerobot-session-eps');
+    const totalEpsEl = document.getElementById('lerobot-total-eps');
+    const repoEl = document.getElementById('lerobot-repo-id');
+    const repoLabel = document.getElementById('lerobot-repo-label');
+    const errorBox = document.getElementById('lerobot-error-box');
+    const titleEl = document.getElementById('lerobot-title');
+    const actionButtons = document.getElementById('lerobot-action-buttons');
+
+    if (headerBtn) {
+        if (isLeRobotSessionActive) {
+            let icon = '';
+            const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
+            
+            if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE) {
+                icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
+            } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE) {
+                icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
+            } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_PROCESSING) {
+                icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
+            }
+            headerBtn.innerHTML = `${icon} Session Connected`;
+        } else {
+            headerBtn.textContent = "Start LeRobot";
+        }
+    }
+
+    if (panelInactive && panelActive && actionButtons) {
+        if (isLeRobotSessionActive) {
+            panelInactive.classList.add('hidden');
+            panelActive.classList.remove('hidden');
+
+            // Handle Contextual Title and Labels
+            const isEval = (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
+            if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "Recording Session";
+            if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
+            if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
+
+            // Update Counts
+            if (sessionEpsEl) sessionEpsEl.textContent = numEpisodesRecorded.toString();
+            if (totalEpsEl) totalEpsEl.textContent = (datasetEpCount + numEpisodesRecorded).toString();
+
+            // Error display
+            if (lerobotError && errorBox) {
+                errorBox.textContent = lerobotError;
+                errorBox.classList.remove('hidden');
+            } else if (errorBox) {
+                errorBox.classList.add('hidden');
+            }
+
+            // Clear and rebuild contextual buttons
+            actionButtons.innerHTML = '';
+            
+            if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+                const btn = document.createElement('button');
+                btn.className = 'run-button btn-green';
+                btn.style.width = '100%';
+                btn.style.justifyContent = 'center';
+                btn.textContent = 'Start Episode';
+                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
+                actionButtons.appendChild(btn);
+            } 
+            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE) {
+                const btn = document.createElement('button');
+                btn.className = 'run-button btn-green';
+                btn.style.width = '100%';
+                btn.style.justifyContent = 'center';
+                btn.textContent = 'Start Episode';
+                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
+                actionButtons.appendChild(btn);
+            }
+            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+                // Wrapper for side-by-side buttons
+                const wrapper = document.createElement('div');
+                wrapper.className = 'side-by-side-container';
+                
+                const btnComp = document.createElement('button');
+                btnComp.className = 'run-button btn-green';
+                btnComp.style.flex = '1';
+                btnComp.style.justifyContent = 'center';
+                btnComp.textContent = 'Complete Episode';
+                btnComp.onclick = () => {
+                  sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+                  Say(`End episode`);
+                };
+                
+                const btnAban = document.createElement('button');
+                btnAban.className = 'run-button btn-red';
+                btnAban.style.flex = '1';
+                btnAban.style.justifyContent = 'center';
+                btnAban.textContent = 'Abandon Episode';
+                btnAban.onclick = () => {
+                  sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_ABANDON);
+                  Say(`Abandon episode`);
+                };
+                
+                wrapper.appendChild(btnComp);
+                wrapper.appendChild(btnAban);
+                actionButtons.appendChild(wrapper);
+            }
+            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE) {
+                const btn = document.createElement('button');
+                btn.className = 'run-button btn-green';
+                btn.style.width = '100%';
+                btn.style.justifyContent = 'center';
+                btn.textContent = 'Complete Episode';
+                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+                actionButtons.appendChild(btn);
+            }
+
+        } else {
+            panelInactive.classList.remove('hidden');
+            panelActive.classList.add('hidden');
+        }
+    }
+}
+
+function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
+    console.log(`Stub: Starting LeRobot ${type} session with ID: ${repoId}`);
+    isLeRobotSessionActive = true;
+    if (type === 'recording') {
+        hfRepoId = repoId;
+        leRobotState = nf.common.LerobotStatus.EPISODESTATUS_REC_READY;
+    } else {
+        policyRepoId = repoId;
+        leRobotState = nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE;
+    }
+    updateLeRobotUI();
+}
+
+function handleLeRobotFinalize() {
+    sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_END_RECORDING);
+}
+
+function initLeRobotPanel() {
+    const headerBtn = document.getElementById('btn-header-lerobot');
+    const overlay = document.getElementById('lerobot-overlay');
+    const closeBtn = document.getElementById('close-lerobot-panel');
+    const catcher = document.getElementById('lerobot-bg-catcher');
+    const startRecBtn = document.getElementById('btn-lerobot-start-rec');
+    const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
+    const finalizeBtn = document.getElementById('btn-lerobot-finalize');
+
+    headerBtn?.addEventListener('click', () => {
+        overlay?.classList.remove('hidden');
+        updateLeRobotUI();
+    });
+
+    const closePanel = () => overlay?.classList.add('hidden');
+    closeBtn?.addEventListener('click', closePanel);
+    catcher?.addEventListener('click', closePanel);
+
+    startRecBtn?.addEventListener('click', () => {
+        const input = document.getElementById('lerobot-input-dataset') as HTMLInputElement;
+        handleLeRobotStart('recording', input.value);
+    });
+
+    startEvalBtn?.addEventListener('click', () => {
+        const input = document.getElementById('lerobot-input-policy') as HTMLInputElement;
+        handleLeRobotStart('eval', input.value);
+    });
+
+    finalizeBtn?.addEventListener('click', () => {
+        handleLeRobotFinalize();
+        closePanel();
+    });
+
+    updateLeRobotUI();
+}
+initLeRobotPanel();
 
 // --- Component Status Menu ---
 function initComponentMenu() {

@@ -235,3 +235,14 @@ export function mapRange(
     const scaledValue = (value - inputMin) * outputRange / inputRange;
     return outputMin + scaledValue;
 }
+
+export function Say(text: string): void {
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.rate = 1.0; // Speed (0.1 to 10)
+  utterance.pitch = 1.0; // Pitch (0 to 2)
+  utterance.volume = 1.0; // Volume (0 to 1)
+
+  // 3. Tell the browser to speak
+  window.speechSynthesis.speak(utterance);
+}

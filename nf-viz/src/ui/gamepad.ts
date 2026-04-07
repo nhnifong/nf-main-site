@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
 import { TargetListManager } from './target_list_manager.js';
+import { Say } from '../utils.ts';
 
 export class GamepadController {
     private gamepadIndex: number | null = null;
@@ -235,7 +236,7 @@ export class GamepadController {
      * Main control loop logic. Call this every frame.
      * Returns an array of ControlItems to be sent over the network.
      */
-    public checkInputsAndCreateControlItems(): Array<nf.control.ControlItem> {
+    public checkInputsAndCreateControlItems(lerobotStatus: nf.common.LerobotStatus): Array<nf.control.ControlItem> {
         // first use keyboard input
         let input = this.getKeyboardState();
         const gpInput = this.getGamepadState();
@@ -377,9 +378,16 @@ export class GamepadController {
 
         // Start Button -> Episode Start/Stop
         if (input.buttons.start && !this.startWasHeld) {
-            messages.push(nf.control.ControlItem.create({
-                episodeControl: { command: nf.common.EpCommand.EPCOMMAND_START_OR_COMPLETE }
-            }));
+            if (lerobotStatus === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+                Say(`End episode`);
+                messages.push(nf.control.ControlItem.create({
+                    episodeControl: { command: nf.common.EpCommand.EPCOMMAND_EVAL_STOP }
+                }));
+            } else if (lerobotStatus === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+                messages.push(nf.control.ControlItem.create({
+                    episodeControl: { command: nf.common.EpCommand.EPCOMMAND_EVAL_START }
+                }));
+            }
         }
         this.startWasHeld = input.buttons.start;
 

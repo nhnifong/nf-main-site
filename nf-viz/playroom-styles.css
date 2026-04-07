@@ -258,6 +258,7 @@ body {
   cursor: pointer;
   font-size: 0.85rem;
   transition: all 0.2s;
+  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
 }
 .header-back-btn:hover {
   background: rgba(255,255,255,0.1);
@@ -539,6 +540,9 @@ h2 {
 
 .run-button.btn-red { background-color: #f44336; }
 .run-button.btn-red:hover:not(.disabled) { background-color: #d32f2f; }
+
+.run-button.btn-green { background-color: #4CAF50; }
+.run-button.btn-green:hover:not(.disabled) { background-color: #43a047; }
 
 /* Drop-up Content */
 .run-menu-content {
@@ -920,7 +924,7 @@ h2 {
 }
 
 /* --- Component Details Panel --- */
-#component-details-overlay, #controls-overlay {
+#component-details-overlay, #controls-overlay, #lerobot-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -932,7 +936,7 @@ h2 {
   align-items: center;
   background: rgba(0, 0, 0, 0.6);
 }
-#component-details-overlay.hidden, #controls-overlay.hidden {
+#component-details-overlay.hidden, #controls-overlay.hidden, #lerobot-overlay.hidden {
   display: none !important;
 }
 .component-details-box {
@@ -1019,4 +1023,40 @@ h2 {
   display: inline-block;
   width: 70px;
   color: #fff;
+}
+
+
+/* --- LeRobot Session Panel Styles --- */
+.session-section {
+  border-top: 1px solid #555;
+  padding-top: 15px;
+  margin-top: 15px;
+}
+.session-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+.session-input-group {
+  margin-bottom: 10px;
+}
+.side-by-side-container {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.timer-display {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.1rem;
+  color: #007fff;
+  margin-bottom: 15px;
+}
+.error-display {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid #f44336;
+  color: #f44336;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 15px;
 }
