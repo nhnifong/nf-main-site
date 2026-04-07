@@ -247,7 +247,14 @@ Plug in the Fan into to 5V socket labelled FAN on the gripper PCB.
 
 The marker display box is a passive component that displays april tags at the point where the lines meet.
 It was previously called the gantry and so you may find it referred to by that name.
-The marker display box is connected to the gripper by a [50cm ABS tube with a diameter of 10mm](https://www.aliexpress.us/item/3256804916904509.html).
+
+### 50 cm pole
+
+The marker display box is connected to the gripper by a [50cm ABS tube with a diameter of 10mm](https://www.aliexpress.us/item/3256804916904509.html). If you purchasded a kit from Neufangled, in order to use less expensive packaging, the pole is cut in two. It needs to be recombined using a printed coupler. If you have the full pole, skip this step. This joint is the same type as that used at the ends of the pole. It's good up to about 5kg. Put a ring of cyanoacrylate glue around the inside of the coupler on one side and jam a pole section into it in one quick motion. Super glue sets fast when the fit is tight. Repeat with the other side.
+
+![](images/grip_arp/PXL_20260405_151008393.jpg){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260405_151027084.jpg){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260405_151055436.jpg){ loading=lazy, width=45% } 
 
 Put a 10x15x4 bearing onto the ABS tube followed by a 3/8" x 7/8" steel washer. 
 
