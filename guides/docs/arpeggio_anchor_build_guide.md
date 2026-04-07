@@ -29,14 +29,14 @@ Glue side A to side B
 
 Press the dry spool onto the motor until fully seated. twist until the holes align, secure with 3 M3x8 screws.
 
-![](images/grip_arp/PXL_20260406_204326320.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_204329758.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_204458647.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_204326320.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_204329758.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_204458647.png){ loading=lazy, width=45% } 
 
 Put an M4x12 screw through a 4x13x5 bearing follow by 2 M4 washers, then screw it into the 4 mm hole in the center of the spool.
 
-![](images/grip_arp/PXL_20260406_223504485.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223525909.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223504485.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223525909.png){ loading=lazy, width=45% } 
 
 ### For powerline spools
 
@@ -44,45 +44,45 @@ Solder a JST ZH female plug housing onto the fixed end of the slip ring.
 
 Use an "imp" pipe cutter to cut an 10 mm long peice of 10 mm diameter ABS tube. The same tube used on the marker box of the arp gripper. Glue the piece of tube in the hole on spool side A. You can use a coin to press it in. 
 
-![](images/grip_arp/PXL_20260406_205618415.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_210024131.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_210115354.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_205618415.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_210115354.png){ loading=lazy, width=45% } 
 
 When dry, put 3/8 * 7/8 stainless steel washer on the plastic tube, followed by a 10x15x4 bearing.
 
-![](images/grip_arp/PXL_20260406_210024131.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_210024131.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
 
 Place the slip ring into the slip ring block and secure it using 2 M3x8 screws with an m4 washer on each in the 2/3 accessible screw holes. 
 
-![](images/grip_arp/PXL_20260406_222724209.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222724209.png){ loading=lazy, width=45% } 
 
 Thread the rotating wire end through the tube in the spool about half way, and using the access you still have to the back of the spool, thread the wire out the side of the spool through the wire hole. don't sinch it all the way down yet in order to leave room for the screws that secure the motor.
 
-![](images/grip_arp/PXL_20260406_222828687.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_222858249.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_222913517.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_222926713.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_222955593.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222828687.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222858249.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222913517.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222926713.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_222955593.png){ loading=lazy, width=45% } 
 
 Press the motor into the spool, align the holes and secure with 3 M3x8 screws.
 Now fully seat the slip ring against the side of the spool by gently pulling the wires through.
 
-![](images/grip_arp/PXL_20260406_224446321.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223012482.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223116803.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223140281.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_224446321.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223012482.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223116803.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223140281.png){ loading=lazy, width=45% } 
 
 
 ## Frame
 
 Install the lower spool first. Insert the plug downwards through the rectangular hole on the lower spool side of the frame. Align the motor's shaft so the gap points down and the flat sides are vertical. slide it into the slot, pulling the wire through as you go. seat it fimly in the slot, and in the bearing cup on the other side. spin and confirm it's not crooked. Secure the motor from the outside of the frame with 3 M3x8 screws.
 
-![](images/grip_arp/PXL_20260406_223235451.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223306060.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223630852.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223645100.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_223836849.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223235451.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223306060.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223630852.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223645100.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223836849.png){ loading=lazy, width=45% } 
 
 If the higher spool is a regular spool, print the variant of the slip ring block made for regular spools instead of slip rings. press it onto the bearing that protrudes from the unmounted spool.
 
@@ -90,11 +90,11 @@ If the higher spool is the powerline spool, it already has a bearing block on it
 
 Same as the other one, thread the plug, align the shaft, and align the bearing block on the other side. secure the motor with with 3 M3x8 screws from the outside of the frame, and secure the bearing block with two M3x8 screws.
 
-![](images/grip_arp/PXL_20260406_223922541.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_224601216.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_224701685.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_224812284.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_231646223.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_223922541.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_224601216.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_224701685.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_224812284.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_231646223.png){ loading=lazy, width=45% } 
 
 Secure the "sunglasses" rounded side down with 4 M3x14 screws.
 
@@ -103,8 +103,8 @@ Secure the "sunglasses" rounded side down with 4 M3x14 screws.
 Assemble a Raspberry Pi Zero 2W with a Stringman imaged SD card and heat sink.
 Press a Stringman anchor hat onto the raspberry pi.
 
-![](images/grip_arp/PXL_20260407_003331054.jpg){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260406_231720003.jpg){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_003331054.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_231720003.png){ loading=lazy, width=45% } 
 
 Connect a Camera Module 3 standard FOV to the pi with an 8cm or 4cm mini ribbon cable.
 

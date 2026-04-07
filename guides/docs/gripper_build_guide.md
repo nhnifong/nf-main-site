@@ -325,16 +325,16 @@ Verify that the spool in your gripper has the hole facing the window. If not spi
 
 Create a 2 meter peice of FEP tether power line and thread one end (all three strands) through the hole at the top of the gripper so it goes behind the spool and up and out the window as pictured. use your tweezers to grab it.
 
-![](images/grip/image13-g.jpg){ loading=lazy, width=45% }
-![](images/grip/image14-g.jpg){ loading=lazy, width=45% }
-![](images/grip/image1-g.jpg){ loading=lazy, width=45% }
+![](images/grip/image13-g.png){ loading=lazy, width=45% }
+![](images/grip/image14-g.png){ loading=lazy, width=45% }
+![](images/grip/image1-g.png){ loading=lazy, width=45% }
 
 Grab only the fishing line and insert the end into the small hole in the spool, such that it comes back out of the adjacent larger hole. Tie off the fishing line with a triple square knot. it is extremely tricky and the only way to do it is with the cross locking tweezers and maybe another normal pair of tweezers or needle nose pliers. 
 
 
-![](images/grip/image31-g.jpg){ loading=lazy, width=45% }
-![](images/grip/image32-g.jpg){ loading=lazy, width=45% }
-![](images/grip/image33-g.jpg){ loading=lazy, width=45% }
+![](images/grip/image31-g.png){ loading=lazy, width=45% }
+![](images/grip/image32-g.png){ loading=lazy, width=45% }
+![](images/grip/image33-g.png){ loading=lazy, width=45% }
 
 Cut the wires from the power-line and the wires from the slip ring to the shortest length that you can while still having space to comfortably splice them with helping hands.
 
@@ -347,11 +347,11 @@ Prepare one narrow heat shrink tube cut in two. Put them onto the wires before b
 
 Splice the grey-red and black-black. activate the heat shrink but keep your heat away from the braided fishing line. 
 
-![](images/grip/image15-g.jpg){ loading=lazy, width=45% }
+![](images/grip/image15-g.png){ loading=lazy, width=45% }
 
 Pull the line tight out of the top of the gripper. plug in the winch servo to a servo tester and use it to carefully wind your two meters of power line onto the spool.
 
-![](images/grip/image18-g.jpg){ loading=lazy, width=45% }
+![](images/grip/image18-g.png){ loading=lazy, width=45% }
 
 Print the outer shells in the color of your choice and trim any support material.
 The outer shells press onto each side. each shell half is secured with two M3x4 screws at the top, and one at the bottom.
