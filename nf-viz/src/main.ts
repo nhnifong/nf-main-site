@@ -41,6 +41,7 @@ let currentGripperTargetForce: number | null = null;
 
 // LeRobot Session State
 let isLeRobotSessionActive = false;
+let isLeRobotStarting = false; // Track pending startup
 let leRobotState: nf.common.LerobotStatus = nf.common.LerobotStatus.LEROBOTSTATUS_NA;
 let numEpisodesRecorded = 0;
 let datasetEpCount = 0;
@@ -206,13 +207,13 @@ const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
 
 // Listen for hover changes in the manager to trigger repaints in video feeds
 targetListManager.onTargetHover = () => {
-    firstOverheadVideo.refresh();
-    secondOverheadVideo.refresh();
+  firstOverheadVideo.refresh();
+  secondOverheadVideo.refresh();
 };
 
 targetListManager.onTargetSelect = () => {
-    firstOverheadVideo.refresh();
-    secondOverheadVideo.refresh();
+  firstOverheadVideo.refresh();
+  secondOverheadVideo.refresh();
 };
 
 // ------ Authorization and Connection Logic ------
@@ -649,12 +650,13 @@ function connect(wsUrl: string) {
 function handleEpisodeControl(data: nf.common.IEpisodeControl) {
   if (data.status) {
     const status = data.status;
+    isLeRobotStarting = false; // Once we get a status update, we are no longer in the "Starting..." phase
     const oldState = leRobotState;
     isLeRobotSessionActive = (
       status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE
       && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ALL_COMPLETE
       && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_NA
-    );
+      );
     leRobotState = status.status ?? nf.common.LerobotStatus.LEROBOTSTATUS_NA;
     numEpisodesRecorded = status.sessionEpNumber ?? 0;
     datasetEpCount = status.datasetEpCount ?? 0;
@@ -662,16 +664,12 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
     policyRepoId = status.policyRepoId || policyRepoId;
     lerobotError = status.error || null;
 
-    if (status.error) {
-      showPopup({ message: status.error });
-    }
-
     if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
-        Say(`Starting episode ${numEpisodesRecorded}`);
+      Say(`Starting episode ${numEpisodesRecorded}`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
-        Say(`Ready`);
+      Say(`Ready`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
-        Say(`Recording ended`);
+      Say(`Recording ended`);
     }
 
     // Handle timer reset/start logic
@@ -679,9 +677,9 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
     const wasActive = (oldState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || oldState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
     
     if (becameActive && !wasActive) {
-        episodeStartTime = Date.now();
+      episodeStartTime = Date.now();
     } else if (!becameActive) {
-        episodeStartTime = null;
+      episodeStartTime = null;
     }
 
     updateLeRobotUI();
@@ -697,12 +695,12 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
   // Track if we are inside the 'Full Calibration' operation to manage monkey emoji visibility
   let percentComplete = (data.percentComplete ?? 0);
   if (data.name?.toLowerCase().includes('alibration')) {
-      isFullCalibrationActive = percentComplete < 100;
-      if (percentComplete < 0.1) {
-        anchorsSeeingOriginCard = [];
-      }
+    isFullCalibrationActive = percentComplete < 100;
+    if (percentComplete < 0.1) {
+      anchorsSeeingOriginCard = [];
+    }
   } else if (percentComplete >= 100) {
-      isFullCalibrationActive = false;
+    isFullCalibrationActive = false;
   }
   updateFloatingLabelsText();
 
@@ -735,102 +733,102 @@ function sendGamepad() {
 
 // --- Floating Labels Updater ---
 function handleVisibilityStates(data: nf.telemetry.IVisibilityStates) {
-    anchorsSeeingOriginCard = data.anchorsSeeingOriginCard || [];
-    updateFloatingLabelsText();
+  anchorsSeeingOriginCard = data.anchorsSeeingOriginCard || [];
+  updateFloatingLabelsText();
 }
 
 function updateFloatingLabelsText() {
-    for (let i = 0; i < corners.length; i++) {
-        const labelEl = document.getElementById(`label-anchor-${i}`);
-        if (labelEl) {
-            if (corners[i] instanceof Eyelet) {
-                labelEl.textContent = `Eyelet ${i}`;
-            } else {
-                if (isFullCalibrationActive && !anchorsSeeingOriginCard.includes(i)) {
-                    labelEl.textContent = `Anchor ${i} 🙈`;
-                } else {
-                    labelEl.textContent = `Anchor ${i}`;
-                }
-            }
+  for (let i = 0; i < corners.length; i++) {
+    const labelEl = document.getElementById(`label-anchor-${i}`);
+    if (labelEl) {
+      if (corners[i] instanceof Eyelet) {
+        labelEl.textContent = `Eyelet ${i}`;
+      } else {
+        if (isFullCalibrationActive && !anchorsSeeingOriginCard.includes(i)) {
+          labelEl.textContent = `Anchor ${i} 🙈`;
+        } else {
+          labelEl.textContent = `Anchor ${i}`;
         }
+      }
     }
+  }
 }
 
 const down15cm = new THREE.Vector3(0, -0.15, 0);
 
 function updateFloatingLabels() {
-    const halfWidth = window.innerWidth / 2;
-    const halfHeight = window.innerHeight / 2;
-    const pos = new THREE.Vector3();
+  const halfWidth = window.innerWidth / 2;
+  const halfHeight = window.innerHeight / 2;
+  const pos = new THREE.Vector3();
 
     // Anchors and Eyelets
-    for (let i = 0; i < corners.length; i++) {
-        const corner = corners[i];
-        const labelEl = document.getElementById(`label-anchor-${i}`);
-        
-        if (corner.grommet_pos && labelEl) {
-            pos.copy(corner.grommet_pos);
-            
+  for (let i = 0; i < corners.length; i++) {
+    const corner = corners[i];
+    const labelEl = document.getElementById(`label-anchor-${i}`);
+
+    if (corner.grommet_pos && labelEl) {
+      pos.copy(corner.grommet_pos);
+
             // Project 3D position to 2D screen coordinates
-            pos.project(camera);
+      pos.project(camera);
 
             // Hide label if corner is behind the camera
-            if (pos.z > 1) {
-                labelEl.classList.add('hidden');
-                continue;
-            }
+      if (pos.z > 1) {
+        labelEl.classList.add('hidden');
+        continue;
+      }
 
-            labelEl.classList.remove('hidden');
+      labelEl.classList.remove('hidden');
 
             // Convert to CSS coordinates
-            const x = (pos.x * halfWidth) + halfWidth;
-            const y = -(pos.y * halfHeight) + halfHeight;
+      const x = (pos.x * halfWidth) + halfWidth;
+      const y = -(pos.y * halfHeight) + halfHeight;
 
             // Apply translation. Subtracting 100% and 10px from Y dynamically ensures the
             // bottom-left corner of the div tracks the anchor position precisely while hovering above it.
-            labelEl.style.transform = `translate(${x}px, calc(${y}px - 100% - 10px))`;
-        }
+      labelEl.style.transform = `translate(${x}px, calc(${y}px - 100% - 10px))`;
     }
+  }
 
     // Gripper
-    const gripperLabelEl = document.getElementById('label-gripper-force');
-    if (gripper.grommet_pos && gripperLabelEl) {
-        pos.copy(gripper.grommet_pos);
-        pos.add(down15cm);
-        pos.project(camera);
+  const gripperLabelEl = document.getElementById('label-gripper-force');
+  if (gripper.grommet_pos && gripperLabelEl) {
+    pos.copy(gripper.grommet_pos);
+    pos.add(down15cm);
+    pos.project(camera);
 
-        gripperLabelEl.classList.remove('hidden');
-        const x = (pos.x * halfWidth) + halfWidth;
-        const y = -(pos.y * halfHeight) + halfHeight;
-        
+    gripperLabelEl.classList.remove('hidden');
+    const x = (pos.x * halfWidth) + halfWidth;
+    const y = -(pos.y * halfHeight) + halfHeight;
+
         // Positioned centered below the gripper so it's near the fingers.
-        gripperLabelEl.style.transform = `translate(${x - 25}px, ${y}px)`;
-        const fillEl = document.getElementById('gripper-force-fill');
-        const targetEl = document.getElementById('gripper-force-target');
+    gripperLabelEl.style.transform = `translate(${x - 25}px, ${y}px)`;
+    const fillEl = document.getElementById('gripper-force-fill');
+    const targetEl = document.getElementById('gripper-force-target');
 
-        if (fillEl) {
-            fillEl.style.width = `${Math.max(0, Math.min(100, currentGripperPressure * 100))}%`;
-        }
-
-        if (targetEl) {
-            if (currentGripperTargetForce !== null) {
-                targetEl.classList.remove('hidden');
-                targetEl.style.left = `${Math.max(0, Math.min(100, currentGripperTargetForce * 100))}%`;
-            } else {
-                targetEl.classList.add('hidden');
-            }
-        }
+    if (fillEl) {
+      fillEl.style.width = `${Math.max(0, Math.min(100, currentGripperPressure * 100))}%`;
     }
+
+    if (targetEl) {
+      if (currentGripperTargetForce !== null) {
+        targetEl.classList.remove('hidden');
+        targetEl.style.left = `${Math.max(0, Math.min(100, currentGripperTargetForce * 100))}%`;
+      } else {
+        targetEl.classList.add('hidden');
+      }
+    }
+  }
 }
 
 function updateLerobotEpisodeTimer() {
   const timerEl = document.getElementById('lerobot-timer');
   if (episodeStartTime !== null && timerEl) {
-      const elapsed = (Date.now() - episodeStartTime) / 1000;
-      timerEl.textContent = elapsed.toFixed(1) + 's';
-      timerEl.classList.remove('hidden');
+    const elapsed = (Date.now() - episodeStartTime) / 1000;
+    timerEl.textContent = elapsed.toFixed(1) + 's';
+    timerEl.classList.remove('hidden');
   } else if (timerEl) {
-      timerEl.classList.add('hidden');
+    timerEl.classList.add('hidden');
   }
 }
 
@@ -864,88 +862,88 @@ window.addEventListener('resize', () => {
 // Reposition anchors and determine anchor type
 function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
   if (data.eyelets && data.eyelets.length > 0) {
-      if (anchorType !== nf.common.AnchorType.ANCHORTYPE_ARPEGGIO) {
-          anchorType = nf.common.AnchorType.ANCHORTYPE_ARPEGGIO;
-          
-          for (let i = 0; i < 2; i++) {
-              if (!(corners[i] instanceof ArpAnchor)) {
-                  (corners[i] as any).dispose();
-                  const arpAnchor = new ArpAnchor(scene, room);
-                  arpAnchor.setPose(nf.common.Pose.create({
-                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
-                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
-                  }));
-                  corners[i] = arpAnchor;
-              }
-          }
-          
-          for (let i = 2; i < 4; i++) {
-              if (!(corners[i] instanceof Eyelet)) {
-                  (corners[i] as any).dispose();
-                  const eyelet = new Eyelet(scene, room);
-                  eyelet.setPose(nf.common.Pose.create({
-                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
-                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
-                  }));
-                  corners[i] = eyelet;
-              }
-          }
+    if (anchorType !== nf.common.AnchorType.ANCHORTYPE_ARPEGGIO) {
+      anchorType = nf.common.AnchorType.ANCHORTYPE_ARPEGGIO;
 
-          if (wallCables.length === 0) {
-              wallCables.push(new Cable(scene));
-              wallCables.push(new Cable(scene));
-          }
-          
-          updateComponentStatusUI();
+      for (let i = 0; i < 2; i++) {
+        if (!(corners[i] instanceof ArpAnchor)) {
+          (corners[i] as any).dispose();
+          const arpAnchor = new ArpAnchor(scene, room);
+          arpAnchor.setPose(nf.common.Pose.create({
+            position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+            rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+          }));
+          corners[i] = arpAnchor;
+        }
       }
 
-      if (data.poses && data.poses.length >= 2) {
-          (corners[0] as ArpAnchor).setPose(data.poses[0]);
-          (corners[1] as ArpAnchor).setPose(data.poses[1]);
+      for (let i = 2; i < 4; i++) {
+        if (!(corners[i] instanceof Eyelet)) {
+          (corners[i] as any).dispose();
+          const eyelet = new Eyelet(scene, room);
+          eyelet.setPose(nf.common.Pose.create({
+            position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+            rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+          }));
+          corners[i] = eyelet;
+        }
       }
-      if (data.eyelets && data.eyelets.length >= 2) {
-          (corners[2] as Eyelet).setPosition(data.eyelets[0]);
-          (corners[3] as Eyelet).setPosition(data.eyelets[1]);
+
+      if (wallCables.length === 0) {
+        wallCables.push(new Cable(scene));
+        wallCables.push(new Cable(scene));
       }
-      
+
+      updateComponentStatusUI();
+    }
+
+    if (data.poses && data.poses.length >= 2) {
+      (corners[0] as ArpAnchor).setPose(data.poses[0]);
+      (corners[1] as ArpAnchor).setPose(data.poses[1]);
+    }
+    if (data.eyelets && data.eyelets.length >= 2) {
+      (corners[2] as Eyelet).setPosition(data.eyelets[0]);
+      (corners[3] as Eyelet).setPosition(data.eyelets[1]);
+    }
+
       // Update wall cables (0 routes to 3, 1 routes to 2)
-      Promise.all([corners[0].ready, corners[2].ready]).then(() => {
-          wallCables[0].update((corners[0] as ArpAnchor).extra_grommet_pos, corners[2].grommet_pos, 0.0);
-          firstOverheadVideo.setVirtualCamera((corners[0] as ArpAnchor).camera!);
-      });
-      Promise.all([corners[1].ready, corners[3].ready]).then(() => {
-          wallCables[1].update((corners[1] as ArpAnchor).extra_grommet_pos, corners[3].grommet_pos, 0.0);
-          secondOverheadVideo.setVirtualCamera((corners[1] as ArpAnchor).camera!);
-      });
+    Promise.all([corners[0].ready, corners[2].ready]).then(() => {
+      wallCables[0].update((corners[0] as ArpAnchor).extra_grommet_pos, corners[2].grommet_pos, 0.0);
+      firstOverheadVideo.setVirtualCamera((corners[0] as ArpAnchor).camera!);
+    });
+    Promise.all([corners[1].ready, corners[3].ready]).then(() => {
+      wallCables[1].update((corners[1] as ArpAnchor).extra_grommet_pos, corners[3].grommet_pos, 0.0);
+      secondOverheadVideo.setVirtualCamera((corners[1] as ArpAnchor).camera!);
+    });
 
   } else if (data.poses && data.poses.length === 4) {
-      if (anchorType !== nf.common.AnchorType.ANCHORTYPE_PILOT) {
-          anchorType = nf.common.AnchorType.ANCHORTYPE_PILOT;
-          for (let i = 2; i < 4; i++) {
-              if (corners[i] instanceof Eyelet) {
-                  (corners[i] as Eyelet).dispose();
-                  const anchor = new Anchor(scene, room);
-                  anchor.setPose(nf.common.Pose.create({
-                      position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
-                      rotation: { x: 0, y: 0, z: acoords[i].rotZ }
-                  }));
-                  corners[i] = anchor;
-              }
-          }
-
-          if (wallCables.length > 0) {
-              wallCables[0].update(gantry.position, gantry.position, 0.0);
-              wallCables[1].update(gantry.position, gantry.position, 0.0);
-          }
-
-          updateComponentStatusUI();
+    if (anchorType !== nf.common.AnchorType.ANCHORTYPE_PILOT) {
+      anchorType = nf.common.AnchorType.ANCHORTYPE_PILOT;
+      for (let i = 2; i < 4; i++) {
+        if (corners[i] instanceof Eyelet) {
+          (corners[i] as Eyelet).dispose();
+          const anchor = new Anchor(scene, room);
+          anchor.setPose(nf.common.Pose.create({
+            position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+            rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+          }));
+          corners[i] = anchor;
+        }
       }
 
-      data.poses.forEach((apose, i) => {
-          if (corners[i] instanceof Anchor) {
-              (corners[i] as Anchor).setPose(apose);
-          }
-      });
+      if (wallCables.length > 0) {
+        wallCables[0].update(gantry.position, gantry.position, 0.0);
+        wallCables[1].update(gantry.position, gantry.position, 0.0);
+      }
+
+      updateComponentStatusUI();
+    }
+
+    data.poses.forEach((apose, i) => {
+      if (corners[i] instanceof Anchor) {
+        (corners[i] as Anchor).setPose(apose);
+      }
+    });
   }
   updateFloatingLabelsText();
 
@@ -1111,13 +1109,13 @@ function handleTargetList(data: nf.telemetry.ITargetList) {
 }
 
 function showPopup(data: nf.telemetry.IPopup) {
-    const overlay = document.getElementById('popup-overlay');
-    const msgEl = document.getElementById('popup-message');
+  const overlay = document.getElementById('popup-overlay');
+  const msgEl = document.getElementById('popup-message');
 
-    if (overlay && msgEl && data.message) {
-        msgEl.textContent = data.message;
-        overlay.classList.remove('hidden');
-    }
+  if (overlay && msgEl && data.message) {
+    msgEl.textContent = data.message;
+    overlay.classList.remove('hidden');
+  }
 }
 
 function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
@@ -1131,7 +1129,7 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
         room.setPersonTagPosition(data.position);
       }
       // else if (data.name == 'gantry_goal_marker') {
-        
+
       // }
     } else {
       // hide the named object
@@ -1182,13 +1180,13 @@ function handleGripSensors(data: nf.telemetry.IGripperSensors) {
   gripper.setSensorValues(data, laserReadings);
   
   if (data.pressure !== undefined && data.pressure !== null) {
-      currentGripperPressure = data.pressure;
+    currentGripperPressure = data.pressure;
   }
   
   if (data.targetForce !== undefined && data.targetForce !== null) {
-      currentGripperTargetForce = data.targetForce;
+    currentGripperTargetForce = data.targetForce;
   } else {
-      currentGripperTargetForce = null;
+    currentGripperTargetForce = null;
   }
 }
 
@@ -1243,30 +1241,30 @@ function updateOnlineStatus(online: boolean) {
 // Function called when mode changes
 function onPerspectiveChanged(mode: number) {
   switch (mode) {
-    case perspViewport:
-      gamepad.setOrbitCenter(camera);
-      break;
+  case perspViewport:
+    gamepad.setOrbitCenter(camera);
+    break;
 
-    case perspPerson:
-      if (room.userPers) {
-        gamepad.setOrbitCenter(room.userPers);
-      }
-      break;
+  case perspPerson:
+    if (room.userPers) {
+      gamepad.setOrbitCenter(room.userPers);
+    }
+    break;
 
-    case perspTop:
-      if (firstOverheadVideo.virtualCamera) {
-        gamepad.setOrbitCenter(firstOverheadVideo.virtualCamera);
-      }
-      break;
+  case perspTop:
+    if (firstOverheadVideo.virtualCamera) {
+      gamepad.setOrbitCenter(firstOverheadVideo.virtualCamera);
+    }
+    break;
 
-    case perspBottom:
-      if (secondOverheadVideo.virtualCamera) {
-        gamepad.setOrbitCenter(secondOverheadVideo.virtualCamera);
-      }
-      break;
+  case perspBottom:
+    if (secondOverheadVideo.virtualCamera) {
+      gamepad.setOrbitCenter(secondOverheadVideo.virtualCamera);
+    }
+    break;
 
-    case perspGripper:
-      gamepad.setSeatOrbitMode(false);
+  case perspGripper:
+    gamepad.setSeatOrbitMode(false);
 
   }
 }
@@ -1274,52 +1272,52 @@ function onPerspectiveChanged(mode: number) {
 // Helper to handle state change and UI updates
 function setPerspective(mode: number) {
     // Update state
-    currentPerspective = mode;
+  currentPerspective = mode;
 
     // Update UI classes
-    const buttonIds: Record<number, string> = {
-        [perspViewport]: 'btn-viewport',
-        [perspPerson]: 'btn-person',
-        [perspTop]: 'btn-top',
-        [perspBottom]: 'btn-bottom',
-        [perspGripper]: 'btn-gripper'
-    };
+  const buttonIds: Record<number, string> = {
+    [perspViewport]: 'btn-viewport',
+    [perspPerson]: 'btn-person',
+    [perspTop]: 'btn-top',
+    [perspBottom]: 'btn-bottom',
+    [perspGripper]: 'btn-gripper'
+  };
 
     // Remove 'perspective-button-selected' from all buttons
-    Object.values(buttonIds).forEach(id => {
-        document.getElementById(id)?.classList.remove('perspective-button-selected');
-    });
+  Object.values(buttonIds).forEach(id => {
+    document.getElementById(id)?.classList.remove('perspective-button-selected');
+  });
 
     // Add 'perspective-button-selected' to the active button
-    const activeId = buttonIds[mode];
-    document.getElementById(activeId)?.classList.add('perspective-button-selected');
+  const activeId = buttonIds[mode];
+  document.getElementById(activeId)?.classList.add('perspective-button-selected');
 
-    onPerspectiveChanged(mode);
+  onPerspectiveChanged(mode);
 }
 
 // Initialize listeners for perspective button
 function initPerspectiveControls() {
-    document.getElementById('btn-viewport')?.addEventListener('click', () => setPerspective(perspViewport));
-    document.getElementById('btn-person')?.addEventListener('click', () => setPerspective(perspPerson));
-    document.getElementById('btn-top')?.addEventListener('click', () => setPerspective(perspTop));
-    document.getElementById('btn-bottom')?.addEventListener('click', () => setPerspective(perspBottom));
-    document.getElementById('btn-gripper')?.addEventListener('click', () => setPerspective(perspGripper));
-    
-    setPerspective(currentPerspective);
+  document.getElementById('btn-viewport')?.addEventListener('click', () => setPerspective(perspViewport));
+  document.getElementById('btn-person')?.addEventListener('click', () => setPerspective(perspPerson));
+  document.getElementById('btn-top')?.addEventListener('click', () => setPerspective(perspTop));
+  document.getElementById('btn-bottom')?.addEventListener('click', () => setPerspective(perspBottom));
+  document.getElementById('btn-gripper')?.addEventListener('click', () => setPerspective(perspGripper));
+
+  setPerspective(currentPerspective);
 }
 
 initPerspectiveControls();
 
 // One-time setup to bind the button in the popup window
 function initPopup() {
-    const overlay = document.getElementById('popup-overlay');
-    const btn = document.getElementById('popup-ok');
+  const overlay = document.getElementById('popup-overlay');
+  const btn = document.getElementById('popup-ok');
 
-    if (overlay && btn) {
-        btn.addEventListener('click', () => {
-            overlay.classList.add('hidden');
-        });
-    }
+  if (overlay && btn) {
+    btn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+    });
+  }
 }
 
 initPopup();
@@ -1347,22 +1345,22 @@ function sendControl(items: Array<nf.control.ControlItem>) {
 
 // Send a single command to the robot.
 function simpleCommand(cmdEnum: nf.control.Command) {
-    sendControl([nf.control.ControlItem.create({
-      command: {name: cmdEnum}
-    })]);
+  sendControl([nf.control.ControlItem.create({
+    command: {name: cmdEnum}
+  })]);
 }
 
 // send a command that concerns a single component
 function sendSingleComponentAction(type: string, index: number, actionEnum: nf.control.ComponentAction) {
-    const isGripper = (type === 'Gripper');
-    const action = nf.control.ControlItem.create({
-        singleComponentAction: {
-            isGripper: isGripper,
-            anchorNum: isGripper ? undefined : index,
-            action: actionEnum
-        }
-    });
-    sendControl([action]);
+  const isGripper = (type === 'Gripper');
+  const action = nf.control.ControlItem.create({
+    singleComponentAction: {
+      isGripper: isGripper,
+      anchorNum: isGripper ? undefined : index,
+      action: actionEnum
+    }
+  });
+  sendControl([action]);
 }
 
 overheadVideofeeds.forEach(feed => {feed.sendFn = sendControl});
@@ -1370,121 +1368,121 @@ targetListManager.sendFn = sendControl;
 
 // --- Run menu ---
 function initRunMenu() {
-    const runBtn = document.getElementById('run-btn');
-    const runMenu = document.getElementById('run-menu');
-    const maintMenu = document.getElementById('maintenance-menu');
-    const stopBtn = document.getElementById('stop-btn');
+  const runBtn = document.getElementById('run-btn');
+  const runMenu = document.getElementById('run-menu');
+  const maintMenu = document.getElementById('maintenance-menu');
+  const stopBtn = document.getElementById('stop-btn');
 
     // Toggle Main Menu
-    if (runBtn && runMenu) {
-        runBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); 
+  if (runBtn && runMenu) {
+    runBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); 
             // Close maint menu if open, toggle main menu
-            maintMenu?.classList.remove('show');
-            runMenu.classList.toggle('show');
-        });
-    }
+      maintMenu?.classList.remove('show');
+      runMenu.classList.toggle('show');
+    });
+  }
 
     // Toggle Maintenance Menu
-    const maintAction = document.getElementById('action-maintenance');
-    const maintBack = document.getElementById('action-maint-back');
+  const maintAction = document.getElementById('action-maintenance');
+  const maintBack = document.getElementById('action-maint-back');
 
-    if (maintAction && maintMenu && runMenu) {
-        maintAction.addEventListener('click', (e) => {
-            e.stopPropagation();
-            runMenu.classList.remove('show');
-            maintMenu.classList.add('show');
-        });
-    }
+  if (maintAction && maintMenu && runMenu) {
+    maintAction.addEventListener('click', (e) => {
+      e.stopPropagation();
+      runMenu.classList.remove('show');
+      maintMenu.classList.add('show');
+    });
+  }
 
-    if (maintBack && maintMenu && runMenu) {
-        maintBack.addEventListener('click', (e) => {
-            e.stopPropagation();
-            maintMenu.classList.remove('show');
-            runMenu.classList.add('show');
-        });
-    }
+  if (maintBack && maintMenu && runMenu) {
+    maintBack.addEventListener('click', (e) => {
+      e.stopPropagation();
+      maintMenu.classList.remove('show');
+      runMenu.classList.add('show');
+    });
+  }
 
     // Prevent input click from closing menu
-    const debugInput = document.getElementById('debug-input');
-    if (debugInput) {
-        debugInput.addEventListener('click', (e) => e.stopPropagation());
-    }
+  const debugInput = document.getElementById('debug-input');
+  if (debugInput) {
+    debugInput.addEventListener('click', (e) => e.stopPropagation());
+  }
 
     // Debug Send Action
-    const debugSendBtn = document.getElementById('action-debug-send');
-    if (debugSendBtn && debugInput) {
-        debugSendBtn.addEventListener('click', () => {
-            const val = (debugInput as HTMLInputElement).value;
-            if (val) {
-                console.log("Sending debug cmd:", val);
-                sendControl([nf.control.ControlItem.create({
-                    debug: {action: val}
-                })]);
+  const debugSendBtn = document.getElementById('action-debug-send');
+  if (debugSendBtn && debugInput) {
+    debugSendBtn.addEventListener('click', () => {
+      const val = (debugInput as HTMLInputElement).value;
+      if (val) {
+        console.log("Sending debug cmd:", val);
+        sendControl([nf.control.ControlItem.create({
+          debug: {action: val}
+        })]);
                 // Close menus after send? Optional. User said 'selected' triggers it.
                 // Keeping open might be better for debug tweaks, but standard behavior is close.
                 // Let's close it to be safe unless requested otherwise.
-                maintMenu?.classList.remove('show');
-            }
-        });
-    }
+        maintMenu?.classList.remove('show');
+      }
+    });
+  }
 
     // Close menu when clicking outside
-    document.addEventListener('click', () => {
-        if (runMenu && runMenu.classList.contains('show')) {
-            runMenu.classList.remove('show');
-        }
-        if (maintMenu && maintMenu.classList.contains('show')) {
-            maintMenu.classList.remove('show');
-        }
-    });
+  document.addEventListener('click', () => {
+    if (runMenu && runMenu.classList.contains('show')) {
+      runMenu.classList.remove('show');
+    }
+    if (maintMenu && maintMenu.classList.contains('show')) {
+      maintMenu.classList.remove('show');
+    }
+  });
 
     // Helper to bind menu items to simpleCommand
-    const bindCommand = (elementId: string, cmdEnum: nf.control.Command) => {
-        const el = document.getElementById(elementId);
-        if (el) {
-            el.addEventListener('click', () => {
-                if (!el.classList.contains('disabled')) {
-                    simpleCommand(cmdEnum);
+  const bindCommand = (elementId: string, cmdEnum: nf.control.Command) => {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.addEventListener('click', () => {
+        if (!el.classList.contains('disabled')) {
+          simpleCommand(cmdEnum);
                     // close menu after selection
-                    runMenu?.classList.remove('show');
-                    maintMenu?.classList.remove('show');
-                }
-            });
+          runMenu?.classList.remove('show');
+          maintMenu?.classList.remove('show');
         }
-    };
-
-    // Bind all menu actions
-    const Command = nf.control.Command;
-
-    bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
-    bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
-    bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
-    bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
-    bindCommand('action-grasp',          Command.COMMAND_GRASP);
-    bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
-    bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
-    bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
-    bindCommand('action-record-park',    Command.COMMAND_RECORD_PARK);
-    bindCommand('action-park',           Command.COMMAND_PARK);
-    bindCommand('action-unpark',         Command.COMMAND_UNPARK);
-    
-    // Bind bind action
-    const bindAction = document.getElementById('action-bind');
-    if (bindAction) {
-      bindAction.addEventListener('click', () => {
-        handleBindAction();
-        runMenu?.classList.remove('show');
       });
     }
+  };
+
+    // Bind all menu actions
+  const Command = nf.control.Command;
+
+  bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
+  bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
+  bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
+  bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
+  bindCommand('action-grasp',          Command.COMMAND_GRASP);
+  bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
+  bindCommand('action-collect-images', Command.COMMAND_COLLECT_GRIPPER_IMAGES);
+  bindCommand('action-update-firmware', Command.COMMAND_UPDATE_FIRMWARE);
+  bindCommand('action-record-park',    Command.COMMAND_RECORD_PARK);
+  bindCommand('action-park',           Command.COMMAND_PARK);
+  bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+
+    // Bind bind action
+  const bindAction = document.getElementById('action-bind');
+  if (bindAction) {
+    bindAction.addEventListener('click', () => {
+      handleBindAction();
+      runMenu?.classList.remove('show');
+    });
+  }
 
     // stop
-    if (stopBtn) {
-        stopBtn.addEventListener('click', () => {
-            console.log("Stop current task");
-            simpleCommand(Command.COMMAND_STOP_ALL);
-        });
-    }
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      console.log("Stop current task");
+      simpleCommand(Command.COMMAND_STOP_ALL);
+    });
+  }
 }
 
 // Initialize run menu listeners
@@ -1514,18 +1512,18 @@ initHeader();
 
 // --- Controls Panel ---
 function initControlsPanel() {
-    const btnControls = document.getElementById('btn-header-controls');
-    const overlay = document.getElementById('controls-overlay');
-    const closeBtn = document.getElementById('close-controls-panel');
-    const catcher = document.getElementById('controls-bg-catcher');
+  const btnControls = document.getElementById('btn-header-controls');
+  const overlay = document.getElementById('controls-overlay');
+  const closeBtn = document.getElementById('close-controls-panel');
+  const catcher = document.getElementById('controls-bg-catcher');
 
-    btnControls?.addEventListener('click', () => {
-        overlay?.classList.remove('hidden');
-    });
+  btnControls?.addEventListener('click', () => {
+    overlay?.classList.remove('hidden');
+  });
 
-    const closePanel = () => overlay?.classList.add('hidden');
-    closeBtn?.addEventListener('click', closePanel);
-    catcher?.addEventListener('click', closePanel);
+  const closePanel = () => overlay?.classList.add('hidden');
+  closeBtn?.addEventListener('click', closePanel);
+  catcher?.addEventListener('click', closePanel);
 }
 initControlsPanel();
 
@@ -1538,176 +1536,184 @@ function sendEpisodeCommand(commandVal: nf.common.EpCommand) {
 }
 
 function updateLeRobotUI() {
-    const headerBtn = document.getElementById('btn-header-lerobot');
-    const panelInactive = document.getElementById('lerobot-panel-inactive');
-    const panelActive = document.getElementById('lerobot-panel-active');
-    const sessionEpsEl = document.getElementById('lerobot-session-eps');
-    const totalEpsEl = document.getElementById('lerobot-total-eps');
-    const repoEl = document.getElementById('lerobot-repo-id');
-    const repoLabel = document.getElementById('lerobot-repo-label');
-    const errorBox = document.getElementById('lerobot-error-box');
-    const titleEl = document.getElementById('lerobot-title');
-    const actionButtons = document.getElementById('lerobot-action-buttons');
+  const headerBtn = document.getElementById('btn-header-lerobot');
+  const panelInactive = document.getElementById('lerobot-panel-inactive');
+  const panelActive = document.getElementById('lerobot-panel-active');
+  const inactiveContent = document.getElementById('lerobot-inactive-content');
+  const pendingOverlay = document.getElementById('lerobot-pending-overlay');
 
-    if (headerBtn) {
-        if (isLeRobotSessionActive) {
-            let icon = '';
-            const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
-            
-            if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
-                icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
-            } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
-                icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
-            } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING) {
-                icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
-            }
-            headerBtn.innerHTML = `${icon} Session Connected`;
-        } else {
-            headerBtn.textContent = "Start LeRobot";
-        }
+  const startRecBtn = document.getElementById('btn-lerobot-start-rec') as HTMLButtonElement;
+  const startEvalBtn = document.getElementById('btn-lerobot-start-eval') as HTMLButtonElement;
+
+  const sessionEpsEl = document.getElementById('lerobot-session-eps');
+  const totalEpsEl = document.getElementById('lerobot-total-eps');
+  const repoEl = document.getElementById('lerobot-repo-id');
+  const repoLabel = document.getElementById('lerobot-repo-label');
+  const errorBox = document.getElementById('lerobot-error-box');
+  const titleEl = document.getElementById('lerobot-title');
+  const actionButtons = document.getElementById('lerobot-action-buttons');
+
+  if (headerBtn) {
+    if (isLeRobotSessionActive) {
+      let icon = '';
+      const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
+
+      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
+        icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
+        icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING) {
+        icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
+      }
+      headerBtn.innerHTML = `${icon} Session Connected`;
+    } else {
+      headerBtn.textContent = "Start LeRobot";
     }
+  }
 
-    if (panelInactive && panelActive && actionButtons) {
-        if (isLeRobotSessionActive) {
-            panelInactive.classList.add('hidden');
-            panelActive.classList.remove('hidden');
+  if (panelInactive && panelActive && actionButtons) {
+    if (isLeRobotSessionActive) {
+      panelInactive.classList.add('hidden');
+      panelActive.classList.remove('hidden');
 
-            // Handle Contextual Title and Labels
-            const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
-            if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "Recording Session";
-            if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
-            if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
+      const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
+      if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "LeRobot Session";
+      if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
+      if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
 
-            // Update Counts
-            if (sessionEpsEl) sessionEpsEl.textContent = numEpisodesRecorded.toString();
-            if (totalEpsEl) totalEpsEl.textContent = (datasetEpCount + numEpisodesRecorded).toString();
+      if (sessionEpsEl) sessionEpsEl.textContent = numEpisodesRecorded.toString();
+      if (totalEpsEl) totalEpsEl.textContent = (datasetEpCount + numEpisodesRecorded).toString();
 
-            // Error display
-            if (lerobotError && errorBox) {
-                errorBox.textContent = lerobotError;
-                errorBox.classList.remove('hidden');
-            } else if (errorBox) {
-                errorBox.classList.add('hidden');
-            }
+      if (lerobotError && errorBox) {
+        errorBox.textContent = lerobotError;
+        errorBox.classList.remove('hidden');
+      } else if (errorBox) {
+        errorBox.classList.add('hidden');
+      }
 
-            // Clear and rebuild contextual buttons
-            actionButtons.innerHTML = '';
-            
-            if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
-                const btn = document.createElement('button');
-                btn.className = 'run-button btn-green';
-                btn.style.width = '100%';
-                btn.style.justifyContent = 'center';
-                btn.textContent = 'Start Episode';
-                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
-                actionButtons.appendChild(btn);
-            } 
-            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
-                const btn = document.createElement('button');
-                btn.className = 'run-button btn-green';
-                btn.style.width = '100%';
-                btn.style.justifyContent = 'center';
-                btn.textContent = 'Start Episode';
-                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
-                actionButtons.appendChild(btn);
-            }
-            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
-                // Wrapper for side-by-side buttons
-                const wrapper = document.createElement('div');
-                wrapper.className = 'side-by-side-container';
-                
-                const btnComp = document.createElement('button');
-                btnComp.className = 'run-button btn-green';
-                btnComp.style.flex = '1';
-                btnComp.style.justifyContent = 'center';
-                btnComp.textContent = 'Complete Episode';
-                btnComp.onclick = () => {
-                  sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
-                  Say(`End episode`);
-                };
-                
-                const btnAban = document.createElement('button');
-                btnAban.className = 'run-button btn-red';
-                btnAban.style.flex = '1';
-                btnAban.style.justifyContent = 'center';
-                btnAban.textContent = 'Abandon Episode';
-                btnAban.onclick = () => {
-                  sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_ABANDON);
-                  Say(`Abandon episode`);
-                };
-                
-                wrapper.appendChild(btnComp);
-                wrapper.appendChild(btnAban);
-                actionButtons.appendChild(wrapper);
-            }
-            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
-                const btn = document.createElement('button');
-                btn.className = 'run-button btn-green';
-                btn.style.width = '100%';
-                btn.style.justifyContent = 'center';
-                btn.textContent = 'Complete Episode';
-                btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
-                actionButtons.appendChild(btn);
-            }
+      actionButtons.innerHTML = '';
 
-        } else {
-            panelInactive.classList.remove('hidden');
-            panelActive.classList.add('hidden');
-        }
+      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
+        const btn = document.createElement('button');
+        btn.className = 'run-button btn-green';
+        btn.style.width = '100%';
+        btn.style.justifyContent = 'center';
+        btn.textContent = 'Start Episode';
+        btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
+        actionButtons.appendChild(btn);
+      } 
+      else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'side-by-side-container';
+
+        const btnComp = document.createElement('button');
+        btnComp.className = 'run-button btn-green';
+        btnComp.style.flex = '1';
+        btnComp.style.justifyContent = 'center';
+        btnComp.textContent = 'Complete Episode';
+        btnComp.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+
+        const btnAban = document.createElement('button');
+        btnAban.className = 'run-button btn-red';
+        btnAban.style.flex = '1';
+        btnAban.style.justifyContent = 'center';
+        btnAban.textContent = 'Abandon Episode';
+        btnAban.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_ABANDON);
+
+        wrapper.appendChild(btnComp);
+        wrapper.appendChild(btnAban);
+        actionButtons.appendChild(wrapper);
+      }
+      else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
+        const btn = document.createElement('button');
+        btn.className = 'run-button btn-green';
+        btn.style.width = '100%';
+        btn.style.justifyContent = 'center';
+        btn.textContent = 'Complete Episode';
+        btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+        actionButtons.appendChild(btn);
+      }
+
+    } else {
+      panelInactive.classList.remove('hidden');
+      panelActive.classList.add('hidden');
+
+            // Handle pending startup state
+      if (isLeRobotStarting) {
+        inactiveContent?.classList.add('hidden');
+        pendingOverlay?.classList.remove('hidden');
+        if (startRecBtn) startRecBtn.disabled = true;
+        if (startEvalBtn) startEvalBtn.disabled = true;
+      } else {
+        inactiveContent?.classList.remove('hidden');
+        pendingOverlay?.classList.add('hidden');
+        if (startRecBtn) startRecBtn.disabled = false;
+        if (startEvalBtn) startEvalBtn.disabled = false;
+      }
     }
+  }
 }
 
 function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
-    console.log(`Stub: Starting LeRobot ${type} session with ID: ${repoId}`);
-    isLeRobotSessionActive = true;
-    if (type === 'recording') {
-        hfRepoId = repoId;
-        leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY;
-    } else {
-        policyRepoId = repoId;
-        leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE;
-    }
-    updateLeRobotUI();
+  console.log(`Stub: Starting LeRobot ${type} session with Repo ID: ${repoId}`);
+  isLeRobotStarting = true;
+  if (type === 'recording') {
+    sendControl([nf.control.ControlItem.create({
+      manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
+    })]);
+  } else {
+    sendControl([nf.control.ControlItem.create({
+      manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_EVAL, repoId: repoId }
+    })]);
+  }
+    // TODO Don't immediately set a session active. put UI in some kind of pending state until feedback about session returns
+  updateLeRobotUI();
 }
 
 function handleLeRobotFinalize() {
+    // if there is an error status let the button fix the UI state, otherwise send a message
+  if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_ERROR) {
+    isLeRobotSessionActive = false;
+    updateLeRobotUI();
+  } else {
     sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_END_RECORDING);
+  }
 }
 
 function initLeRobotPanel() {
-    const headerBtn = document.getElementById('btn-header-lerobot');
-    const overlay = document.getElementById('lerobot-overlay');
-    const closeBtn = document.getElementById('close-lerobot-panel');
-    const catcher = document.getElementById('lerobot-bg-catcher');
-    const startRecBtn = document.getElementById('btn-lerobot-start-rec');
-    const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
-    const finalizeBtn = document.getElementById('btn-lerobot-finalize');
+  const headerBtn = document.getElementById('btn-header-lerobot');
+  const overlay = document.getElementById('lerobot-overlay');
+  const closeBtn = document.getElementById('close-lerobot-panel');
+  const catcher = document.getElementById('lerobot-bg-catcher');
+  const startRecBtn = document.getElementById('btn-lerobot-start-rec');
+  const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
+  const finalizeBtn = document.getElementById('btn-lerobot-finalize');
 
-    headerBtn?.addEventListener('click', () => {
-        overlay?.classList.remove('hidden');
-        updateLeRobotUI();
-    });
-
-    const closePanel = () => overlay?.classList.add('hidden');
-    closeBtn?.addEventListener('click', closePanel);
-    catcher?.addEventListener('click', closePanel);
-
-    startRecBtn?.addEventListener('click', () => {
-        const input = document.getElementById('lerobot-input-dataset') as HTMLInputElement;
-        handleLeRobotStart('recording', input.value);
-    });
-
-    startEvalBtn?.addEventListener('click', () => {
-        const input = document.getElementById('lerobot-input-policy') as HTMLInputElement;
-        handleLeRobotStart('eval', input.value);
-    });
-
-    finalizeBtn?.addEventListener('click', () => {
-        handleLeRobotFinalize();
-        closePanel();
-    });
-
+  headerBtn?.addEventListener('click', () => {
+    overlay?.classList.remove('hidden');
     updateLeRobotUI();
+  });
+
+  const closePanel = () => overlay?.classList.add('hidden');
+  closeBtn?.addEventListener('click', closePanel);
+  catcher?.addEventListener('click', closePanel);
+
+  startRecBtn?.addEventListener('click', () => {
+    const input = document.getElementById('lerobot-input-dataset') as HTMLInputElement;
+    handleLeRobotStart('recording', input.value);
+  });
+
+  startEvalBtn?.addEventListener('click', () => {
+    const input = document.getElementById('lerobot-input-policy') as HTMLInputElement;
+    handleLeRobotStart('eval', input.value);
+  });
+
+  finalizeBtn?.addEventListener('click', () => {
+    handleLeRobotFinalize();
+    closePanel();
+  });
+
+  updateLeRobotUI();
 }
 initLeRobotPanel();
 
@@ -1734,16 +1740,16 @@ function initComponentMenu() {
 initComponentMenu();
 
 function toggleSwingCancellation() {
-    sendControl([nf.control.ControlItem.create({
-        setSwingCancellation: { enabled: !swingCancellationEnabled, present: '.' }
-    })]);
+  sendControl([nf.control.ControlItem.create({
+    setSwingCancellation: { enabled: !swingCancellationEnabled, present: '.' }
+  })]);
 }
 
 // --- Swing Control Menu ---
 function initSwingControl() {
-    const btn = document.getElementById('btn-swing-cancel');
-    btn?.addEventListener('click', toggleSwingCancellation);
-    gamepad.toggleSwingC = toggleSwingCancellation;
+  const btn = document.getElementById('btn-swing-cancel');
+  btn?.addEventListener('click', toggleSwingCancellation);
+  gamepad.toggleSwingC = toggleSwingCancellation;
 }
 initSwingControl();
 
@@ -1756,184 +1762,184 @@ let currentHoverIndex: number = -1;
 let activeComponentData: { type: string, index: number, name: string } | null = null;
 
 function clearHover() {
-    outlinePass.selectedObjects = [];
-    currentHoverType = null;
-    currentHoverIndex = -1;
-    document.body.style.cursor = 'default';
+  outlinePass.selectedObjects = [];
+  currentHoverType = null;
+  currentHoverIndex = -1;
+  document.body.style.cursor = 'default';
 }
 
 function applyHover(targetMesh: THREE.Object3D, type: string, index: number) {
-    if (currentHoverType === type && currentHoverIndex === index) return;
-    clearHover();
-    
-    currentHoverType = type;
-    currentHoverIndex = index;
-    document.body.style.cursor = 'pointer';
+  if (currentHoverType === type && currentHoverIndex === index) return;
+  clearHover();
+
+  currentHoverType = type;
+  currentHoverIndex = index;
+  document.body.style.cursor = 'pointer';
 
     // OutlinePass natively handles traversing the hierarchy to draw the outline
     // without hacking any materials, preventing the shared material bug!
-    outlinePass.selectedObjects = [targetMesh];
+  outlinePass.selectedObjects = [targetMesh];
 }
 
 function isDescendant(child: THREE.Object3D, parent: THREE.Object3D): boolean {
-    let current: THREE.Object3D | null = child;
-    while (current) {
-        if (current === parent) return true;
-        current = current.parent;
-    }
-    return false;
+  let current: THREE.Object3D | null = child;
+  while (current) {
+    if (current === parent) return true;
+    current = current.parent;
+  }
+  return false;
 }
 
 window.addEventListener('pointermove', (event) => {
-    if (event.target !== renderer.domElement) {
-        clearHover();
-        return;
-    }
+  if (event.target !== renderer.domElement) {
+    clearHover();
+    return;
+  }
 
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
+  raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(scene.children, true);
+  const intersects = raycaster.intersectObjects(scene.children, true);
 
-    let foundType: string | null = null;
-    let foundIndex = -1;
-    let hoverTarget: THREE.Object3D | null = null;
+  let foundType: string | null = null;
+  let foundIndex = -1;
+  let hoverTarget: THREE.Object3D | null = null;
 
     // Check all intersections along the ray to bypass invisible room walls
-    for (const hit of intersects) {
-        const obj = hit.object;
-        
-        const gripperMesh = gripper.getInteractableMesh();
-        if (gripperMesh && isDescendant(obj, gripperMesh)) {
-            foundType = 'Gripper';
-            foundIndex = 0;
-            hoverTarget = gripperMesh;
-            break;
-        }
-        
-        for (let i = 0; i < corners.length; i++) {
-            const corner = corners[i];
-            if ((corner instanceof Anchor || corner instanceof ArpAnchor)) {
-                const anchorMesh = corner.getInteractableMesh();
-                if (anchorMesh && isDescendant(obj, anchorMesh)) {
-                    foundType = 'Anchor';
-                    foundIndex = i;
-                    hoverTarget = anchorMesh;
-                    break;
-                }
-            }
-        }
-        
-        if (foundType) break; // Stop checking further hits once we find a component
+  for (const hit of intersects) {
+    const obj = hit.object;
+
+    const gripperMesh = gripper.getInteractableMesh();
+    if (gripperMesh && isDescendant(obj, gripperMesh)) {
+      foundType = 'Gripper';
+      foundIndex = 0;
+      hoverTarget = gripperMesh;
+      break;
     }
 
-    if (foundType && hoverTarget) {
-        applyHover(hoverTarget, foundType, foundIndex);
-    } else {
-        clearHover();
+    for (let i = 0; i < corners.length; i++) {
+      const corner = corners[i];
+      if ((corner instanceof Anchor || corner instanceof ArpAnchor)) {
+        const anchorMesh = corner.getInteractableMesh();
+        if (anchorMesh && isDescendant(obj, anchorMesh)) {
+          foundType = 'Anchor';
+          foundIndex = i;
+          hoverTarget = anchorMesh;
+          break;
+        }
+      }
     }
-});
+
+        if (foundType) break; // Stop checking further hits once we find a component
+      }
+
+      if (foundType && hoverTarget) {
+        applyHover(hoverTarget, foundType, foundIndex);
+      } else {
+        clearHover();
+      }
+    });
 
 window.addEventListener('click', (event) => {
-    if (event.target !== renderer.domElement) return;
-    if (currentHoverType) {
-        openComponentPanel(currentHoverType, currentHoverIndex);
-    }
+  if (event.target !== renderer.domElement) return;
+  if (currentHoverType) {
+    openComponentPanel(currentHoverType, currentHoverIndex);
+  }
 });
 
 function openComponentPanel(type: string, index: number) {
-    const overlay = document.getElementById('component-details-overlay');
-    const title = document.getElementById('cd-title');
-    const ipEl = document.getElementById('cd-ip');
-    const statusEl = document.getElementById('cd-status');
-    const sensorsEl = document.getElementById('cd-sensors');
-    const anchorActions = document.getElementById('cd-anchor-actions');
+  const overlay = document.getElementById('component-details-overlay');
+  const title = document.getElementById('cd-title');
+  const ipEl = document.getElementById('cd-ip');
+  const statusEl = document.getElementById('cd-status');
+  const sensorsEl = document.getElementById('cd-sensors');
+  const anchorActions = document.getElementById('cd-anchor-actions');
 
-    if (!overlay || !title || !ipEl || !statusEl || !sensorsEl || !anchorActions) return;
+  if (!overlay || !title || !ipEl || !statusEl || !sensorsEl || !anchorActions) return;
 
-    let name = "";
-    if (type === 'Anchor') {
-        name = `Anchor ${index}`;
-        anchorActions.style.display = 'flex';
-    } else {
-        name = "Gripper";
-        for (const key of componentStates.keys()) {
-            if (componentStates.get(key)?.type === 'Gripper') {
-                name = key;
-                break;
-            }
-        }
-        anchorActions.style.display = 'none';
+  let name = "";
+  if (type === 'Anchor') {
+    name = `Anchor ${index}`;
+    anchorActions.style.display = 'flex';
+  } else {
+    name = "Gripper";
+    for (const key of componentStates.keys()) {
+      if (componentStates.get(key)?.type === 'Gripper') {
+        name = key;
+        break;
+      }
     }
+    anchorActions.style.display = 'none';
+  }
 
-    activeComponentData = { type, index, name };
-    title.textContent = `${name} Details`;
+  activeComponentData = { type, index, name };
+  title.textContent = `${name} Details`;
 
-    const state = componentStates.get(name);
-    ipEl.textContent = state?.ip || "Unknown";
-    let connected = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
-    statusEl.textContent = connected ? "Connected" : "Disconnected";
-    
-    if (state?.errorMessage) {
-        sensorsEl.textContent = state.errorMessage;
-    } else if (connected) {
-        sensorsEl.textContent = "sensors nominal";
-    } else {
-        sensorsEl.textContent = "";
-    }
+  const state = componentStates.get(name);
+  ipEl.textContent = state?.ip || "Unknown";
+  let connected = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+  statusEl.textContent = connected ? "Connected" : "Disconnected";
+
+  if (state?.errorMessage) {
+    sensorsEl.textContent = state.errorMessage;
+  } else if (connected) {
+    sensorsEl.textContent = "sensors nominal";
+  } else {
+    sensorsEl.textContent = "";
+  }
 
     // set 'disabled' state for all action buttons in this panel based on whether component is connected
-    const actionButtons = overlay.querySelectorAll('.run-button');
-    actionButtons.forEach(btn => {
-        btn.classList.toggle('disabled', !connected);
-    });
+  const actionButtons = overlay.querySelectorAll('.run-button');
+  actionButtons.forEach(btn => {
+    btn.classList.toggle('disabled', !connected);
+  });
 
-    overlay.classList.remove('hidden');
+  overlay.classList.remove('hidden');
 }
 
 function initComponentDetailsPanel() {
-    document.getElementById('cd-bg-catcher')?.addEventListener('click', () => {
-        document.getElementById('component-details-overlay')?.classList.add('hidden');
-        activeComponentData = null;
-    });
-    document.getElementById('close-component-panel')?.addEventListener('click', () => {
-        document.getElementById('component-details-overlay')?.classList.add('hidden');
-        activeComponentData = null;
-    });
+  document.getElementById('cd-bg-catcher')?.addEventListener('click', () => {
+    document.getElementById('component-details-overlay')?.classList.add('hidden');
+    activeComponentData = null;
+  });
+  document.getElementById('close-component-panel')?.addEventListener('click', () => {
+    document.getElementById('component-details-overlay')?.classList.add('hidden');
+    activeComponentData = null;
+  });
 
     // Helper to bind buttons and respect the 'disabled' class
-    const bindCdBtn = (id: string, actionFn: (type: string, index: number) => void) => {
-        document.getElementById(id)?.addEventListener('click', (e) => {
-            const btn = e.currentTarget as HTMLElement;
-            if (!btn.classList.contains('disabled') && activeComponentData) {
-                actionFn(activeComponentData.type, activeComponentData.index);
-            }
-        });
-    };
+  const bindCdBtn = (id: string, actionFn: (type: string, index: number) => void) => {
+    document.getElementById(id)?.addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLElement;
+      if (!btn.classList.contains('disabled') && activeComponentData) {
+        actionFn(activeComponentData.type, activeComponentData.index);
+      }
+    });
+  };
 
-    bindCdBtn('btn-cd-identify', handleComponentIdentify);
-    
-    bindCdBtn('btn-cd-tighten', (type, index) => {
-        if (type === 'Anchor') handleAnchorTighten(index);
-    });
-    bindCdBtn('btn-cd-relax', (type, index) => {
-        if (type === 'Anchor') handleAnchorRelax(index);
-    });
+  bindCdBtn('btn-cd-identify', handleComponentIdentify);
+
+  bindCdBtn('btn-cd-tighten', (type, index) => {
+    if (type === 'Anchor') handleAnchorTighten(index);
+  });
+  bindCdBtn('btn-cd-relax', (type, index) => {
+    if (type === 'Anchor') handleAnchorRelax(index);
+  });
 }
 
 
 function handleComponentIdentify(type: string, index: number) {
-    sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);
+  sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);
 }
 
 function handleAnchorTighten(index: number) {
-    sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_TIGHTEN);
+  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_TIGHTEN);
 }
 
 function handleAnchorRelax(index: number) {
-    sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_RELAX);
+  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_RELAX);
 }
 
 initComponentDetailsPanel();

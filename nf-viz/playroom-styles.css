@@ -1060,3 +1060,29 @@ h2 {
   font-size: 0.85rem;
   margin-bottom: 15px;
 }
+
+/* --- Spinner & Pending State --- */
+.pending-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  gap: 15px;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #4CAF50; /* Theme green */
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.starting-text { color: #FFFFFF; font-weight: bold; font-size: 0.9rem; }
