@@ -41,7 +41,7 @@ let currentGripperTargetForce: number | null = null;
 
 // LeRobot Session State
 let isLeRobotSessionActive = false;
-let leRobotState: nf.common.LerobotStatus = nf.common.LerobotStatus.EPISODESTATUS_NA;
+let leRobotState: nf.common.LerobotStatus = nf.common.LerobotStatus.LEROBOTSTATUS_NA;
 let numEpisodesRecorded = 0;
 let datasetEpCount = 0;
 let hfRepoId = "username/my-lerobot-dataset";
@@ -650,23 +650,33 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
   if (data.status) {
     const status = data.status;
     const oldState = leRobotState;
-    isLeRobotSessionActive = status.status !== nf.common.LerobotStatus.EPISODESTATUS_REC_ALL_COMPLETE && status.status !== nf.common.LerobotStatus.EPISODESTATUS_NA;
-    leRobotState = status.status ?? nf.common.LerobotStatus.EPISODESTATUS_NA;
+    isLeRobotSessionActive = (
+      status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE
+      && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ALL_COMPLETE
+      && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_NA
+    );
+    leRobotState = status.status ?? nf.common.LerobotStatus.LEROBOTSTATUS_NA;
     numEpisodesRecorded = status.sessionEpNumber ?? 0;
     datasetEpCount = status.datasetEpCount ?? 0;
     hfRepoId = status.datasetRepoId || hfRepoId;
     policyRepoId = status.policyRepoId || policyRepoId;
     lerobotError = status.error || null;
 
-    if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+    if (status.error) {
+      showPopup({ message: status.error });
+    }
+
+    if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
         Say(`Starting episode ${numEpisodesRecorded}`);
-    } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
         Say(`Ready`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
+        Say(`Recording ended`);
     }
 
     // Handle timer reset/start logic
-    const becameActive = (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
-    const wasActive = (oldState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || oldState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
+    const becameActive = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
+    const wasActive = (oldState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || oldState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
     
     if (becameActive && !wasActive) {
         episodeStartTime = Date.now();
@@ -1544,11 +1554,11 @@ function updateLeRobotUI() {
             let icon = '';
             const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
             
-            if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE) {
+            if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
                 icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
-            } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE) {
+            } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
                 icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
-            } else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_PROCESSING) {
+            } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING) {
                 icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
             }
             headerBtn.innerHTML = `${icon} Session Connected`;
@@ -1563,7 +1573,7 @@ function updateLeRobotUI() {
             panelActive.classList.remove('hidden');
 
             // Handle Contextual Title and Labels
-            const isEval = (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE);
+            const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
             if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "Recording Session";
             if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
             if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
@@ -1583,7 +1593,7 @@ function updateLeRobotUI() {
             // Clear and rebuild contextual buttons
             actionButtons.innerHTML = '';
             
-            if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+            if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
                 const btn = document.createElement('button');
                 btn.className = 'run-button btn-green';
                 btn.style.width = '100%';
@@ -1592,7 +1602,7 @@ function updateLeRobotUI() {
                 btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
                 actionButtons.appendChild(btn);
             } 
-            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE) {
+            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
                 const btn = document.createElement('button');
                 btn.className = 'run-button btn-green';
                 btn.style.width = '100%';
@@ -1601,7 +1611,7 @@ function updateLeRobotUI() {
                 btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
                 actionButtons.appendChild(btn);
             }
-            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
                 // Wrapper for side-by-side buttons
                 const wrapper = document.createElement('div');
                 wrapper.className = 'side-by-side-container';
@@ -1630,7 +1640,7 @@ function updateLeRobotUI() {
                 wrapper.appendChild(btnAban);
                 actionButtons.appendChild(wrapper);
             }
-            else if (leRobotState === nf.common.LerobotStatus.EPISODESTATUS_EVAL_ACTIVE) {
+            else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
                 const btn = document.createElement('button');
                 btn.className = 'run-button btn-green';
                 btn.style.width = '100%';
@@ -1652,10 +1662,10 @@ function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
     isLeRobotSessionActive = true;
     if (type === 'recording') {
         hfRepoId = repoId;
-        leRobotState = nf.common.LerobotStatus.EPISODESTATUS_REC_READY;
+        leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY;
     } else {
         policyRepoId = repoId;
-        leRobotState = nf.common.LerobotStatus.EPISODESTATUS_EVAL_IDLE;
+        leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE;
     }
     updateLeRobotUI();
 }

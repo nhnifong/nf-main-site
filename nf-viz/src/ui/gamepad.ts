@@ -378,12 +378,12 @@ export class GamepadController {
 
         // Start Button -> Episode Start/Stop
         if (input.buttons.start && !this.startWasHeld) {
-            if (lerobotStatus === nf.common.LerobotStatus.EPISODESTATUS_RECORDING) {
+            if (lerobotStatus === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
                 Say(`End episode`);
                 messages.push(nf.control.ControlItem.create({
                     episodeControl: { command: nf.common.EpCommand.EPCOMMAND_EVAL_STOP }
                 }));
-            } else if (lerobotStatus === nf.common.LerobotStatus.EPISODESTATUS_REC_READY) {
+            } else if (lerobotStatus === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
                 messages.push(nf.control.ControlItem.create({
                     episodeControl: { command: nf.common.EpCommand.EPCOMMAND_EVAL_START }
                 }));
