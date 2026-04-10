@@ -26,8 +26,7 @@ services:
       WEBRTC_USE_HTTPS: "yes"
       WEBRTC_ADDITIONAL_HOSTS: "[media.neufangled.com]"
     volumes:
-      - /etc/letsencrypt/live/media.neufangled.com/fullchain.pem:/https/fullchain.pem:ro
-      - /etc/letsencrypt/live/media.neufangled.com/privkey.pem:/https/privkey.pem:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
 
   # Production Database
   # postgresql+asyncpg://prod_user:<password>@10.142.0.2:5432/neufangled_prod
