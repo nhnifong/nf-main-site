@@ -8,11 +8,26 @@ The source for both the servers which run on the raspberri pi's in the robot com
 
 The UI is web based an accessed at [neufanged.com/control_panel](http://neufangled.com/control_panel)
 
-=== "Pilot Gripper"
+=== "Stringman Arpeggio (latest)"
 
 	#### STLs for 3D printing
 
-	 * **[Download STLs](assets/stringman_pilot_stls.zip)**
+	 * **[Download STLs](assets/stringman_arppegio_stls.zip)**
+	 * **[Print Guide](print_guide.md)**
+
+	#### CAD Design Document
+
+	**[Stringman Arpeggio in Onshape](https://cad.onshape.com/documents/77e88b7169e862e19bf6bec8/w/f928a6d6d1c2bc0bb4344ff8/e/0c00c4504b6f7bfe7b76b0bd?renderMode=0&uiState=69c70f9089ef4c064d32e25e)**
+
+	#### BOM
+
+	**[Bill of Materials](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)**
+
+=== "Arpeggio Pilot"
+
+	#### STLs for 3D printing
+
+	 * **[Download STLs](assets/stringman_arp_gripper_pilot_anchors_stls.zip)**
 	 * **[Print Guide](print_guide.md)**
 
 	#### CAD Design Document
@@ -25,22 +40,8 @@ The UI is web based an accessed at [neufanged.com/control_panel](http://neufangl
 
 	**[Bill Of Materials](https://docs.google.com/spreadsheets/d/1kLsbVjql81v7XJIGpkoWXCpJR9cWpTetd8mgG_NxFNU/edit?usp=sharing)**
 
-=== "Arpeggio Gripper"
-
-	#### STLs for 3D printing
-
-	 * **[Download STLs](assets/stringman_arp_gripper_pilot_anchors_stls.zip)**
-
-	#### CAD Design Document
-
-	**[Stringman Arpeggio in Onshape](https://cad.onshape.com/documents/77e88b7169e862e19bf6bec8/w/f928a6d6d1c2bc0bb4344ff8/e/0c00c4504b6f7bfe7b76b0bd?renderMode=0&uiState=69c70f9089ef4c064d32e25e)**
-
-	#### BOM
-
-	**[Bill of Materials](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)**
-
 ## License
 
-Stringman Pilot hardware designs (CAD document, STL files, Print Guide, and BOM) are released under the [CERN-OHL-W 2.0 license](https://ohwr.org/cern_ohl_w_v2.pdf) with the following addendum:
+Stringman hardware designs (CAD document, STL files, Print Guide, and BOM) are released under the [CERN-OHL-W 2.0 license](https://ohwr.org/cern_ohl_w_v2.pdf) with the following addendum:
 
  > The user assumes full responsibility for any injury, damage, or loss resulting from the installation or use of the hardware.

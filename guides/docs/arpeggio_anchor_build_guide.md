@@ -25,6 +25,9 @@ Spool side A is different on the powerline spool, it has a wider center hole.
 
 Glue side A to side B
 
+![](images/anc_arp/PXL_20260407_212731244.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_212833336.png){ loading=lazy, width=45% } 
+
 ### For regular spools
 
 Press the dry spool onto the motor until fully seated. twist until the holes align, secure with 3 M3x8 screws.
@@ -106,9 +109,11 @@ Press a Stringman anchor hat onto the raspberry pi.
 ![](images/anc_arp/PXL_20260407_003331054.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_231720003.png){ loading=lazy, width=45% } 
 
-Connect a Camera Module 3 standard FOV to the pi with an 8cm or 4cm mini ribbon cable.
-
 Screw a camera angle mount piece (printed) to the camera. (front right when looking at the lens with the ribbon connector on top)
+The angle can be chosen from 22, 26, or 30 degrees of downwart pitch from horizontal. The camera pitch should be chosen to keep the floor well centered.
+It can be changed out later but the config must be updated to inform the software of the chosen pitch.
+
+Connect a Camera Module 3 standard FOV to the pi with an 8cm or 4cm mini ribbon cable.
 
 put spacers in the corners between the two boards and screw it into the bottom of the frame with four M2.5x18 screws.
 
@@ -116,49 +121,50 @@ Screw the camera angle mount to the frame with 1 M2.5x6 screw.
 
 If a powerline is present, on this anchor thread the slip ring's JST-ZH connector through the vertical hole in the frame and plug it into the board in the header marked "slip ring 24v"
 
-For the powerline spool, with heat shrink tubing, splice the end of a 7 meter length of FEP cable onto the spools slip ring wire, tighen heatshrink and secure with tape.
+For the powerline spool, with [solder seal wire connectors](https://www.amazon.com/dp/B0CL1Q75VS), splice the end of a 7 meter length of FEP cable onto the spools slip ring wire, tighen heatshrink and secure with tape.
 
-# Spool winding
+Or if working from a spool of wire, like I do, splice the spool end on, let the script wind the correct amount, then power off and cut it.
+
+![](images/anc_arp/PXL_20260409_165941386.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260409_170034898.png){ loading=lazy, width=45% } 
+
+For fishing line spools, tie a peice of braided fishing line (Power Pro Super 8 Slick V2 40lb test is my reccomendation) onto the small tie off point on the spool with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
+
+## Spool winding
 
 Power on the device and ssh into it with 
 
-    ssh -L 5000:localhost:5000 pi@<hostname or ip>
+    ssh pi@<hostname or ip>
 
 run
 
-    source /opt/robot/env/bin/activate
-    damiao gui
+    /opt/robot/env/bin/qa-anchor-arp
 
-On your local machine visit `http://localhost:5000`
-
-Plug in only the lower motor into the hat.
-
-Click scan. A single motor with id = 0x001 should appear.
-in the registers, edit the feeback id to be 0x001. click save, then click store parameters
-
-unplug this motor from the hat and plug in the other motor. scan again to find a motor with id 1
-set it's feedback id to 0x002 and it's receive id to 0x002. click save and store parameters.
-
-Unplug it, replug it, and then plug in the other motor too. Now both are plugged in and have different ids and are properly initialized.
-
-Rescan for motors and confirm you have both of them.
-
-Tie on your fishing line to the spool at the little point meant for this purpose and prepare to wind it.
-
-The lower motor has id 1. with the motor you are winding selected, change the control mode to VEL and vel=0 click enable. the motor should feel rigid.
-
-On low motors, use negative velocities to wind. on high motors use positive velocities. the wire should come off the top of the spool.
-
-Set a velocity between 1 and 3, check "continuous" and click *send command* to spin the motor. let 7 meters wind on, and click stop.
+And follow the prompts. It will ask you to plug in one motor at a time and wind the spools.
 
 When you have both wound, power off.
 
+!!! tip "Warning"
+
+    When trimming the power line to length, pull the motor power first. the wire is live when winding.
+
+
 Feed the end of the wires/lines through the hole in the sunglasses.
 
-For fishing lines, tie on a small carabiner with a palomar knot.
-For power lines, tie on a carabiner *above the splice* with a buntline hitch.
+For fishing lines, tie on a small carabiner with a [palomar knot](https://www.animatedknots.com/palomar-knot).
+For power lines, tie on a carabiner *above the splice* with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
 
-## mount on the wall
+## Create the Eyelets
+
+Create two eyelets. Print the body on the flat edge on the lower left side, for strength. print two retainers.
+Press a size 20 Alconite ring into the ring slot. Put a drop of superglue into the remaining space, and press on the retainer with a coin and a pair of pliers.
+
+![](images/anc_arp/PXL_20260407_020206256.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_020236086.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_020438208.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_020629830.png){ loading=lazy, width=45% } 
+
+## Mount on the wall
 
 Pick two opposing corners to be where the anchors are mounted. they should be the corners with the best view of the floor.
 

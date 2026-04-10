@@ -49,6 +49,7 @@ let hfRepoId = "username/my-lerobot-dataset";
 let policyRepoId = "username/my-policy";
 let lerobotError: string | null = null;
 let episodeStartTime: number | null = null;
+let sentFinalizeCommand = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -656,20 +657,24 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
       status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE
       && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ALL_COMPLETE
       && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_NA
+      && status.status !== null
       );
     leRobotState = status.status ?? nf.common.LerobotStatus.LEROBOTSTATUS_NA;
     numEpisodesRecorded = status.sessionEpNumber ?? 0;
-    datasetEpCount = status.datasetEpCount ?? 0;
-    hfRepoId = status.datasetRepoId || hfRepoId;
-    policyRepoId = status.policyRepoId || policyRepoId;
-    lerobotError = status.error || null;
+    if (status.datasetEpCount) datasetEpCount = status.datasetEpCount;
+    if (status.datasetRepoId) hfRepoId = status.datasetRepoId;
+    if (status.policyRepoId) policyRepoId = status.policyRepoId;
 
     if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
       Say(`Starting episode ${numEpisodesRecorded}`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
       Say(`Ready`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING && sentFinalizeCommand) {
+      Say(`Recording Ended, Processing video`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
-      Say(`Recording ended`);
+      Say(`Complete`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
+      Say(`Abandoned Episode`);
     }
 
     // Handle timer reset/start logic
@@ -1017,7 +1022,7 @@ interface ComponentState {
 const componentStates = new Map<string, ComponentState>();
 
 function updateComponentStatusUI() {
-  let anchorCount = 4;
+  let anchorCount = anchorType === nf.common.AnchorType.ANCHORTYPE_ARPEGGIO ? 2 : 4;
   let anchorConnected = 0;
   let gripperCount = 1;
   let gripperConnected = 0;
@@ -1541,6 +1546,7 @@ function updateLeRobotUI() {
   const panelActive = document.getElementById('lerobot-panel-active');
   const inactiveContent = document.getElementById('lerobot-inactive-content');
   const pendingOverlay = document.getElementById('lerobot-pending-overlay');
+  const pendingText = document.getElementById('lerobot-pending-text');
 
   const startRecBtn = document.getElementById('btn-lerobot-start-rec') as HTMLButtonElement;
   const startEvalBtn = document.getElementById('btn-lerobot-start-eval') as HTMLButtonElement;
@@ -1552,12 +1558,13 @@ function updateLeRobotUI() {
   const errorBox = document.getElementById('lerobot-error-box');
   const titleEl = document.getElementById('lerobot-title');
   const actionButtons = document.getElementById('lerobot-action-buttons');
+  const completionLink = document.getElementById('lerobot-completion-link');
+  const hfBtn = document.getElementById('hf-vis-btn') as HTMLAnchorElement;
 
   if (headerBtn) {
     if (isLeRobotSessionActive) {
       let icon = '';
       const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
-
       if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
         icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
       } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
@@ -1572,9 +1579,24 @@ function updateLeRobotUI() {
   }
 
   if (panelInactive && panelActive && actionButtons) {
+    // Special case: Successful Session Finish
+    if (!isLeRobotSessionActive && leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
+      panelInactive.classList.add('hidden');
+      panelActive.classList.remove('hidden');
+      completionLink?.classList.remove('hidden');
+      if (hfBtn) {
+        const encodedPath = encodeURIComponent('/' + hfRepoId.replace(/^\//, ''));
+        hfBtn.href = `https://huggingface.co/spaces/lerobot/visualize_dataset?path=${encodedPath}`;
+      }
+      actionButtons.innerHTML = '';
+      document.getElementById('btn-lerobot-finalize')?.classList.add('hidden');
+      return;
+    }
+
     if (isLeRobotSessionActive) {
       panelInactive.classList.add('hidden');
       panelActive.classList.remove('hidden');
+      completionLink?.classList.add('hidden');
 
       const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
       if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "LeRobot Session";
@@ -1587,61 +1609,72 @@ function updateLeRobotUI() {
       if (lerobotError && errorBox) {
         errorBox.textContent = lerobotError;
         errorBox.classList.remove('hidden');
-      } else if (errorBox) {
-        errorBox.classList.add('hidden');
-      }
+      } else if (errorBox) { errorBox.classList.add('hidden'); }
 
       actionButtons.innerHTML = '';
 
-      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
-        const btn = document.createElement('button');
-        btn.className = 'run-button btn-green';
-        btn.style.width = '100%';
-        btn.style.justifyContent = 'center';
-        btn.textContent = 'Start Episode';
-        btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
-        actionButtons.appendChild(btn);
-      } 
-      else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'side-by-side-container';
+            // Handle Spinner state during Finalization within the active panel
+      if (sentFinalizeCommand && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_ERROR) {
+        actionButtons.innerHTML = `
+                    <div class="pending-container">
+                        <div class="spinner"></div>
+                        <div class="starting-text">FINALIZING DATASET...</div>
+                    </div>
+        `;
+        document.getElementById('btn-lerobot-finalize')?.classList.add('hidden');
+      } else {
+        document.getElementById('btn-lerobot-finalize')?.classList.remove('hidden');
 
-        const btnComp = document.createElement('button');
-        btnComp.className = 'run-button btn-green';
-        btnComp.style.flex = '1';
-        btnComp.style.justifyContent = 'center';
-        btnComp.textContent = 'Complete Episode';
-        btnComp.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+        if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
+          const btn = document.createElement('button');
+          btn.className = 'run-button btn-green';
+          btn.style.width = '100%';
+          btn.style.justifyContent = 'center';
+          btn.textContent = 'Start Episode';
+          btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_START);
+          actionButtons.appendChild(btn);
+        } 
+        else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'side-by-side-container';
 
-        const btnAban = document.createElement('button');
-        btnAban.className = 'run-button btn-red';
-        btnAban.style.flex = '1';
-        btnAban.style.justifyContent = 'center';
-        btnAban.textContent = 'Abandon Episode';
-        btnAban.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_ABANDON);
+          const btnComp = document.createElement('button');
+          btnComp.className = 'run-button btn-green';
+          btnComp.style.flex = '1';
+          btnComp.style.justifyContent = 'center';
+          btnComp.textContent = 'Complete Episode';
+          btnComp.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
 
-        wrapper.appendChild(btnComp);
-        wrapper.appendChild(btnAban);
-        actionButtons.appendChild(wrapper);
-      }
-      else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
-        const btn = document.createElement('button');
-        btn.className = 'run-button btn-green';
-        btn.style.width = '100%';
-        btn.style.justifyContent = 'center';
-        btn.textContent = 'Complete Episode';
-        btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
-        actionButtons.appendChild(btn);
+          const btnAban = document.createElement('button');
+          btnAban.className = 'run-button btn-red';
+          btnAban.style.flex = '1';
+          btnAban.style.justifyContent = 'center';
+          btnAban.textContent = 'Abandon Episode';
+          btnAban.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_ABANDON);
+
+          wrapper.appendChild(btnComp);
+          wrapper.appendChild(btnAban);
+          actionButtons.appendChild(wrapper);
+        }
+        else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
+          const btn = document.createElement('button');
+          btn.className = 'run-button btn-green';
+          btn.style.width = '100%';
+          btn.style.justifyContent = 'center';
+          btn.textContent = 'Stop Episode';
+          btn.onclick = () => sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_EVAL_STOP);
+          actionButtons.appendChild(btn);
+        }
       }
 
     } else {
       panelInactive.classList.remove('hidden');
       panelActive.classList.add('hidden');
 
-            // Handle pending startup state
       if (isLeRobotStarting) {
         inactiveContent?.classList.add('hidden');
         pendingOverlay?.classList.remove('hidden');
+        if (pendingText) pendingText.textContent = "STARTING SESSION...";
         if (startRecBtn) startRecBtn.disabled = true;
         if (startEvalBtn) startEvalBtn.disabled = true;
       } else {
@@ -1657,6 +1690,7 @@ function updateLeRobotUI() {
 function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   console.log(`Stub: Starting LeRobot ${type} session with Repo ID: ${repoId}`);
   isLeRobotStarting = true;
+  sentFinalizeCommand = false;
   if (type === 'recording') {
     sendControl([nf.control.ControlItem.create({
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
@@ -1666,7 +1700,6 @@ function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_EVAL, repoId: repoId }
     })]);
   }
-    // TODO Don't immediately set a session active. put UI in some kind of pending state until feedback about session returns
   updateLeRobotUI();
 }
 
@@ -1676,7 +1709,9 @@ function handleLeRobotFinalize() {
     isLeRobotSessionActive = false;
     updateLeRobotUI();
   } else {
+    sentFinalizeCommand = true;
     sendEpisodeCommand(nf.common.EpCommand.EPCOMMAND_END_RECORDING);
+    updateLeRobotUI();
   }
 }
 
@@ -1694,7 +1729,13 @@ function initLeRobotPanel() {
     updateLeRobotUI();
   });
 
-  const closePanel = () => overlay?.classList.add('hidden');
+  const closePanel = () => {
+    overlay?.classList.add('hidden');
+    // if closing a panel after completing a dataset, reset status
+    if (!isLeRobotSessionActive && leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
+      leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_NA;
+    }
+  }
   closeBtn?.addEventListener('click', closePanel);
   catcher?.addEventListener('click', closePanel);
 
@@ -1710,7 +1751,6 @@ function initLeRobotPanel() {
 
   finalizeBtn?.addEventListener('click', () => {
     handleLeRobotFinalize();
-    closePanel();
   });
 
   updateLeRobotUI();

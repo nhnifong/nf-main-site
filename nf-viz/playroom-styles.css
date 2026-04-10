@@ -1086,3 +1086,17 @@ h2 {
 }
 
 .starting-text { color: #FFFFFF; font-weight: bold; font-size: 0.9rem; }
+
+/* HF Visualization Link Styling */
+.hf-link {
+  display: inline-block;
+  background-color: #ffcc00;
+  color: #000;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-top: 15px;
+  transition: transform 0.1s;
+}
+.hf-link:hover { transform: scale(1.05); }
