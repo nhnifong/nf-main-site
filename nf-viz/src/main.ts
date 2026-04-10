@@ -1614,7 +1614,7 @@ function updateLeRobotUI() {
       actionButtons.innerHTML = '';
 
             // Handle Spinner state during Finalization within the active panel
-      if (sentFinalizeCommand && status.status !== nf.common.LerobotStatus.LEROBOTSTATUS_ERROR) {
+      if (sentFinalizeCommand && leRobotState !== nf.common.LerobotStatus.LEROBOTSTATUS_ERROR) {
         actionButtons.innerHTML = `
                     <div class="pending-container">
                         <div class="spinner"></div>
