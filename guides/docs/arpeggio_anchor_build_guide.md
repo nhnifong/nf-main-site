@@ -76,8 +76,45 @@ Now fully seat the slip ring against the side of the spool by gently pulling the
 ![](images/anc_arp/PXL_20260406_223116803.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_223140281.png){ loading=lazy, width=45% } 
 
+## Electronics
+
+Assemble a Raspberry Pi Zero 2W with a Stringman imaged SD card and heat sink.
+If the pi does not have header pins, solder on a full set.
+
+![](images/anc_arp/PXL_20260407_003331054.png){ loading=lazy, width=45% } 
+
+Carefully unpack the a Camera Module 3 standard FOV and remove whatever ribbon cable came attached to it.
+
+Screw a camera angle mount piece (printed) to. (front right when looking at the lens with the ribbon connector on top)
+The angle can be chosen from 22, 26, or 30 degrees of downwart pitch from horizontal. The camera pitch should be chosen to keep the floor well centered.
+It can be changed out later but the config must be updated to inform the software of the chosen pitch.
+
+![](images/anc_arp/PXL_20260410_195123214.png){ loading=lazy, width=45% } 
+
+Install a 4cm mini ribbon cable on the camera. the gold pads always face down towards the board.
+Attach the smaller end of the ribbon cable to the pi. Be very careful with the delicate connector.
+
+![](images/anc_arp/PXL_20260410_195147352.png){ loading=lazy, width=45% } 
+
+Press a Stringman Anchor Hat onto the pi.
+put spacers in the corners between the two boards and insert four M2.5x18 screws.
+
+![](images/anc_arp/PXL_20260410_200453917.png){ loading=lazy, width=45% } 
+
+Screw the raspberry pi into the conical standoffs in the electronics box on the bottom of the frame.
+The camera should hang out of the window at the front
+
+![](images/anc_arp/PXL_20260410_200807137.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260410_200814489.png){ loading=lazy, width=45% } 
+
+Screw the camera angle mount to the frame with 1 M2.5x6 screw. The small protrusion is what determines the final angle of the camera. It only fits one way.
+
+![](images/anc_arp/PXL_20260410_200844631.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260410_200908703.png){ loading=lazy, width=45% } 
 
 ## Frame
+
+Flip the frame over. From this point on it can be very helpful to have a beanbag to place the mechanism on at any angle while driving screws.
 
 Install the lower spool first. Insert the plug downwards through the rectangular hole on the lower spool side of the frame. Align the motor's shaft so the gap points down and the flat sides are vertical. slide it into the slot, pulling the wire through as you go. seat it fimly in the slot, and in the bearing cup on the other side. spin and confirm it's not crooked. Secure the motor from the outside of the frame with 3 M3x8 screws.
 
@@ -101,23 +138,7 @@ Same as the other one, thread the plug, align the shaft, and align the bearing b
 
 Secure the "sunglasses" rounded side down with 4 M3x14 screws.
 
-## Electronics
-
-Assemble a Raspberry Pi Zero 2W with a Stringman imaged SD card and heat sink.
-Press a Stringman anchor hat onto the raspberry pi.
-
-![](images/anc_arp/PXL_20260407_003331054.png){ loading=lazy, width=45% } 
-![](images/anc_arp/PXL_20260406_231720003.png){ loading=lazy, width=45% } 
-
-Screw a camera angle mount piece (printed) to the camera. (front right when looking at the lens with the ribbon connector on top)
-The angle can be chosen from 22, 26, or 30 degrees of downwart pitch from horizontal. The camera pitch should be chosen to keep the floor well centered.
-It can be changed out later but the config must be updated to inform the software of the chosen pitch.
-
-Connect a Camera Module 3 standard FOV to the pi with an 8cm or 4cm mini ribbon cable.
-
-put spacers in the corners between the two boards and screw it into the bottom of the frame with four M2.5x18 screws.
-
-Screw the camera angle mount to the frame with 1 M2.5x6 screw.
+## Spool winding
 
 If a powerline is present, on this anchor thread the slip ring's JST-ZH connector through the vertical hole in the frame and plug it into the board in the header marked "slip ring 24v"
 
@@ -129,8 +150,6 @@ Or if working from a spool of wire, like I do, splice the spool end on, let the 
 ![](images/anc_arp/PXL_20260409_170034898.png){ loading=lazy, width=45% } 
 
 For fishing line spools, tie a peice of braided fishing line (Power Pro Super 8 Slick V2 40lb test is my reccomendation) onto the small tie off point on the spool with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
-
-## Spool winding
 
 Power on the device and ssh into it with 
 
