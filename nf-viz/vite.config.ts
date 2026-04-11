@@ -51,6 +51,7 @@ export default defineConfig({
         store: resolve(__dirname, 'store.html'),
         stringmanpilot: resolve(__dirname, 'stringman-pilot.html'),
         stringmanarpeggiopilot: resolve(__dirname, 'stringman-arpeggio-pilot.html'),
+        stringmanarpeggio: resolve(__dirname, 'stringman-arpeggio.html'),
         arpgripperkit: resolve(__dirname, 'arp-gripper-kit.html'),
         consulting: resolve(__dirname, 'consulting.html'),
       }
