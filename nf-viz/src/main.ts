@@ -1461,7 +1461,7 @@ function initRunMenu() {
   const Command = nf.control.Command;
 
   bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
-  bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
+  // bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
   bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
   bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
   bindCommand('action-grasp',          Command.COMMAND_GRASP);
