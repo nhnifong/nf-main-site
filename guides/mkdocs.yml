@@ -38,3 +38,22 @@ extra_css:
   - stylesheets/extra.css
 hooks:
   - url_replacer.py
+nav:
+    - index.md
+    - Stringman Arpeggio (Latest):
+        - arpeggio_anchor_build_guide.md
+        - arpeggio_gripper_build_guide.md
+        - arp_install_guide.md
+    - Earlier Versions:
+        - gripper_build_guide.md
+        - anchor_build_guide.md
+        - gantry_build_guide.md
+        - installation_guide.md
+        - print_guide.md
+        - wire_guide.md
+    - downloads.md
+    - imitation_learning.md
+    - lan_only_guide.md
+    - quality_assurance.md
+    - raspi_setup.md
+    - usage_guide.md

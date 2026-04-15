@@ -23,7 +23,11 @@ The UI is web based an accessed at [neufanged.com/control_panel](http://neufangl
 
 	**[Bill of Materials](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)**
 
-=== "Arpeggio Pilot"
+	#### PCBs
+
+	**[Stringman Kicad projects](https://github.com/nhnifong/stringman-pcbs)**
+
+=== "Pilot"
 
 	#### STLs for 3D printing
 

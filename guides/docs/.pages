@@ -1,0 +1,13 @@
+nav:
+    - index.md
+    - Build Guides (Latest):
+        - arpeggio_anchor_build_guide.md
+        - arpeggio_gripper_build_guide.md
+    - Build Guides (Earlier Versions):
+        - Pilot
+            - gripper_build_guide.md
+            - anchor_build_guide.md
+            - gantry_build_guide.md
+            - installation_guide.md
+            - print_guide.md
+    - ...
