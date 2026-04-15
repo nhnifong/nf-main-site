@@ -12,6 +12,7 @@ export interface RobotInfo {
   nickname: string;
   robotid: string;
   online: boolean;
+  role: string;
 }
 
 let auth: Auth | null = null;

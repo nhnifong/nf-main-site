@@ -30,6 +30,7 @@ const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 let currentRobotId: string | null = urlParams.get('robotid'); 
 let detectedRobotId: string | null = null; // Stored from incoming telemetry
 let swingCancellationEnabled = false;
+let userRobots: AuthManager.RobotInfo[] = [];
 
 // Calibration tracking variables
 let isFullCalibrationActive = false;
@@ -236,14 +237,20 @@ function setUrlParam(id: string | null) {
 
 // Entry Point
 function initApp() {
-  // Always init firebase to check auth state for button label
-  AuthManager.initAuth((user) => {
+  // If a user is already logged in via Firebase session, 
+  // trigger a silent fetch of their robots list so that bound check works in LAN mode.
+  AuthManager.initAuth(async (user) => {
     const btn = document.getElementById('btn-cloud-mode');
-    if (btn) {
-      if (user) {
-        btn.innerHTML = `My Robots<div class="landing-hint">Manage your cloud-connected robots</div>`;
-      } else {
-        btn.innerHTML = `Log in<div class="landing-hint">Manage your cloud-connected robots</div>`;
+    if (btn && user) {
+      btn.innerHTML = `My Robots<div class="landing-hint">Manage your cloud-connected robots</div>`;
+      
+      try {
+        const token = await AuthManager.getAuthToken();
+        userRobots = await AuthManager.apiListRobots(token);
+        // If the robot already detected (LAN), update button now that we have the list
+        refreshRunMenuAuth();
+      } catch (e) {
+        console.warn("Silent robot list fetch failed:", e);
       }
     }
   });
@@ -306,42 +313,24 @@ function startSimFlow() {
 
 // Cloud Mode Flow
 async function handleCloudLogin() {
-  // Ensure Auth init is called (lazy)
   AuthManager.initAuth();
-  
   try {
     const token = await AuthManager.getAuthToken();
-    
-    // Switch to list view in landing panel
     document.getElementById('landing-options')?.classList.add('hidden');
-    const listPanel = document.getElementById('robot-list-panel');
-    listPanel?.classList.remove('hidden');
-
-    // Fetch robot list
-    const robots = await AuthManager.apiListRobots(token);
-    renderRobotList(robots);
-  } catch (error) {
-    console.error("Login failed:", error);
-    alert("Login failed. Check console for details.");
-  }
+    document.getElementById('robot-list-panel')?.classList.remove('hidden');
+    userRobots = await AuthManager.apiListRobots(token);
+    renderRobotList(userRobots);
+  } catch (error) { console.error("Login failed:", error); }
 }
 
 async function startCloudFlow(robotId: string) {
   AuthManager.initAuth();
-  
   try {
     const token = await AuthManager.getAuthToken();
-    
-    // Hide landing if visible
     document.getElementById('landing-layer')?.classList.add('hidden');
-    
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/control/${robotId}?token=${encodeURIComponent(token)}`;
-    
-    connect(wsUrl);
-  } catch (error) {
-    console.error("Cloud connection failed:", error);
-  }
+    connect(`${protocol}//${window.location.host}/control/${robotId}?token=${encodeURIComponent(token)}`);
+  } catch (error) { console.error("Cloud connection failed:", error); }
 }
 
 // --- Binding Logic ---
@@ -375,26 +364,45 @@ async function handleBindAction() {
 }
 
 async function executeBind() {
-  const nicknameInput = document.getElementById('bind-nickname') as HTMLInputElement;
-  const nickname = nicknameInput?.value || "Stringman";
-  
+  const nickname = (document.getElementById('bind-nickname') as HTMLInputElement)?.value || "Stringman";
   if (!detectedRobotId) return;
-
   try {
     const token = await AuthManager.getAuthToken();
-    
+    await new Promise(r => setTimeout(r, 100));
     await AuthManager.apiBindRobot(detectedRobotId, nickname, token);
-
-    // Success
     document.getElementById('landing-layer')?.classList.add('hidden');
     document.getElementById('bind-robot-panel')?.classList.add('hidden');
-    
-    // Show nice confirmation
-    showPopup({message: "Success! Robot bound to your account.\n\nPlease restart stringman-headless with --telemetry_env=production"});
+    showPopup({message: "Success! Robot bound to your account."});
+    // Refresh robots list
+    userRobots = await AuthManager.apiListRobots(token);
+    refreshRunMenuAuth();
+  } catch (error) { console.error(error); }
+}
 
-  } catch (error) {
-    console.error(error);
-    alert("Failed to bind robot. See console.");
+function refreshRunMenuAuth() {
+  const authMenuItem = document.getElementById('action-robot-auth');
+  if (!authMenuItem) return;
+
+  if (!detectedRobotId) {
+    authMenuItem.classList.add('hidden');
+    return;
+  }
+
+  const robotInfo = userRobots.find(b => b.robotid === detectedRobotId);
+
+  if (!robotInfo) {
+    // Robot is not bound to this user
+    authMenuItem.classList.remove('hidden');
+    authMenuItem.textContent = "Bind to account";
+    authMenuItem.onclick = handleBindAction;
+  } else if (robotInfo.role === 'owner') {
+    // User is the owner
+    authMenuItem.classList.remove('hidden');
+    authMenuItem.textContent = "Share access";
+    authMenuItem.onclick = handleShareAction;
+  } else {
+    // User is a guest
+    authMenuItem.classList.add('hidden');
   }
 }
 
@@ -539,23 +547,13 @@ function disconnect() {
 
 function connect(wsUrl: string) {
   if (socket) {
-    // Clear onclose to prevent the old socket from triggering a reconnect loop
-    // or interfering with the new connection
     socket.onclose = null;
     socket.close();
   }
-
-  console.log("Connecting to:", wsUrl);
   socket = new WebSocket(wsUrl);
   socket.binaryType = 'arraybuffer';
-
   socket.onopen = () => {
-    console.log('Connected to telemetry stream');
-    
-    // In LAN/Sim mode, we don't get UplinkStatus, so we assume online immediately
-    if (isLanMode || isSimMode) {
-      updateOnlineStatus(true);
-    }
+    if (isLanMode || isSimMode) updateOnlineStatus(true);
   };
 
   socket.onmessage = (event: MessageEvent) => {
@@ -570,63 +568,28 @@ function connect(wsUrl: string) {
         if (isLanMode) {
           updateRobotIdUI(detectedRobotId);
         }
+        refreshRunMenuAuth();
       }
 
       for (const update of batch.updates) {
-        if (update.newAnchorPoses) {
-          handleNewAnchorPoses(update.newAnchorPoses);
-        }
-        else if (update.posEstimate) {
-          handlePosEstimate(update.posEstimate);
-        }
-        else if (update.posFactorsDebug) {
-          handlePosFactorsDebug(update.posFactorsDebug);
-        }
-        else if (update.lastCommandedVel) {
-          handleLastCommandedVel(update.lastCommandedVel);
-        }
-        else if (update.vidStats) {
-          handleVidStats(update.vidStats);
-        }
-        else if (update.componentConnStatus) {
-          handleComponentConnStatus(update.componentConnStatus);
-        }
-        else if (update.targetList) {
-          handleTargetList(update.targetList);
-        }
-        else if (update.gantrySightings) {
-          sightingsManager.handleSightings(update.gantrySightings);
-        }
-        else if (update.popMessage) {
-          showPopup(update.popMessage);
-        }
-        else if (update.namedPosition) {
-          handleNamedPosition(update.namedPosition);
-        }
-        else if (update.videoReady) {
-          handleVideoReady(update.videoReady);
-        }
-        else if (update.uplinkStatus) {
-          handleUplinkStatus(update.uplinkStatus);
-        }
-        else if (update.gripSensors) {
-          handleGripSensors(update.gripSensors);
-        }
-        else if (update.gripCamPreditions) {
-          gripperVideo.setGripperPredictions(update.gripCamPreditions);
-        }
-        else if (update.operationProgress) {
-          handleOperationProgress(update.operationProgress);
-        }
-        else if (update.swingCancellationState) {
-          handleSwingCancellationState(update.swingCancellationState);
-        }
-        else if (update.visibilityStates) {
-          handleVisibilityStates(update.visibilityStates);
-        }
-        else if (update.episodeControl) {
-          handleEpisodeControl(update.episodeControl);
-        }
+        if (update.newAnchorPoses) handleNewAnchorPoses(update.newAnchorPoses);
+        else if (update.posEstimate) handlePosEstimate(update.posEstimate);
+        else if (update.posFactorsDebug) handlePosFactorsDebug(update.posFactorsDebug);
+        else if (update.lastCommandedVel) handleLastCommandedVel(update.lastCommandedVel);
+        else if (update.vidStats) handleVidStats(update.vidStats);
+        else if (update.componentConnStatus) handleComponentConnStatus(update.componentConnStatus);
+        else if (update.targetList) handleTargetList(update.targetList);
+        else if (update.gantrySightings) sightingsManager.handleSightings(update.gantrySightings);
+        else if (update.popMessage) showPopup(update.popMessage);
+        else if (update.namedPosition) handleNamedPosition(update.namedPosition);
+        else if (update.videoReady) handleVideoReady(update.videoReady);
+        else if (update.uplinkStatus) handleUplinkStatus(update.uplinkStatus);
+        else if (update.gripSensors) handleGripSensors(update.gripSensors);
+        else if (update.gripCamPreditions) gripperVideo.setGripperPredictions(update.gripCamPreditions);
+        else if (update.operationProgress) handleOperationProgress(update.operationProgress);
+        else if (update.swingCancellationState) handleSwingCancellationState(update.swingCancellationState);
+        else if (update.visibilityStates) handleVisibilityStates(update.visibilityStates);
+        else if (update.episodeControl) handleEpisodeControl(update.episodeControl);
       }
     } catch (err) {
       console.error("Decode error:", err);
@@ -1472,7 +1435,7 @@ function initRunMenu() {
   bindCommand('action-park',           Command.COMMAND_PARK);
   bindCommand('action-unpark',         Command.COMMAND_UNPARK);
 
-    // Bind bind action
+  // Bind bind action (connecting your robot to your account so you can use cloud relay)
   const bindAction = document.getElementById('action-bind');
   if (bindAction) {
     bindAction.addEventListener('click', () => {
@@ -1481,7 +1444,7 @@ function initRunMenu() {
     });
   }
 
-    // stop
+  // stop
   if (stopBtn) {
     stopBtn.addEventListener('click', () => {
       console.log("Stop current task");
@@ -1531,6 +1494,71 @@ function initControlsPanel() {
   catcher?.addEventListener('click', closePanel);
 }
 initControlsPanel();
+
+
+
+// --- Share Access Dialog ---
+
+async function handleShareAction() {
+    const overlay = document.getElementById('share-overlay');
+    overlay?.classList.remove('hidden');
+    await openShareDialog();
+}
+
+async function openShareDialog() {
+    const container = document.getElementById('share-list-container');
+    if (!container || !detectedRobotId) return;
+    container.innerHTML = '<div style="padding:15px; color:#888;">Loading...</div>';
+
+    const token = await AuthManager.getAuthToken();
+    const response = await fetch(`/list_authorized/${detectedRobotId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    // A list of email addresses
+    const users: string[] = (await response.json())['shared_with'];
+    console.log(response);
+
+    container.innerHTML = '';
+    if (users.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:#666; font-size:0.85rem;">Not shared with anyone yet.</div>';
+        return;
+    }
+
+    users.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'share-user-row';
+        row.innerHTML = `
+            <span class="share-email">${u}</span>
+            <button class="btn-revoke" data-email="${u}">Revoke</button>
+        `;
+        const btn = row.querySelector('.btn-revoke') as HTMLButtonElement;
+        btn.onclick = async () => {
+            if (btn.classList.contains('confirming')) {
+                btn.disabled = true;
+                btn.textContent = "...";
+                await executeRevoke(u);
+                openShareDialog(); // refresh
+            } else {
+                btn.textContent = "confirm?";
+                btn.classList.add('confirming');
+                // Reset others
+                container.querySelectorAll('.btn-revoke').forEach(other => {
+                    if (other !== btn) { other.textContent = "Revoke"; other.classList.remove('confirming'); }
+                });
+            }
+        };
+        container.appendChild(row);
+    });
+}
+
+async function executeRevoke(email: string) {
+    if (!detectedRobotId) return;
+    const token = await AuthManager.getAuthToken();
+    await fetch(`/share/${detectedRobotId}/${encodeURIComponent(email)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+}
 
 // --- LeRobot Recording Panel ---
 
@@ -1756,6 +1784,28 @@ function initLeRobotPanel() {
   updateLeRobotUI();
 }
 initLeRobotPanel();
+
+function initSharePanel() {
+    document.getElementById('close-share-panel')?.addEventListener('click', () => document.getElementById('share-overlay')?.classList.add('hidden'));
+    document.getElementById('share-bg-catcher')?.addEventListener('click', () => document.getElementById('share-overlay')?.classList.add('hidden'));
+    document.getElementById('btn-share-submit')?.addEventListener('click', async () => {
+        const input = document.getElementById('share-input-email') as HTMLInputElement;
+        const email = input.value.trim();
+        if (!email || !detectedRobotId) return;
+        const btn = document.getElementById('btn-share-submit') as HTMLButtonElement;
+        btn.disabled = true; btn.textContent = "Sharing...";
+        try {
+            const token = await AuthManager.getAuthToken();
+            await fetch(`/share/${detectedRobotId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guest_email: email })
+            });
+            input.value = ''; openShareDialog();
+        } finally { btn.disabled = false; btn.textContent = "Share Access"; }
+    });
+}
+initSharePanel();
 
 // --- Component Status Menu ---
 function initComponentMenu() {

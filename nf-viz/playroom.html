@@ -163,7 +163,7 @@
             <div id="action-unpark" class="menu-item">UnPark</div>
             <div id="action-grasp" class="menu-item">Auto Grasp Here (D-right)</div>
             <div id="action-maintenance" class="menu-item" style="border-top: 1px solid #ccc; font-weight: bold;">Calibration and Maintenance</div>
-            <div id="action-bind" class="menu-item hidden" style="border-top: 1px solid #ccc; color: #007fff; font-weight: bold;">Bind to account</div>
+            <div id="action-robot-auth" class="menu-item">Bind to account</div> <!-- Text updated by main.ts -->
           </div>
 
           <!-- Maintenance Sub-Menu -->
@@ -414,6 +414,26 @@
       </div>
     </div>
     
+    <!-- Share Access Overlay -->
+    <div id="share-overlay" class="hidden">
+      <div id="share-bg-catcher" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+      <div class="panel component-details-box" style="min-width: 400px;">
+        <button id="close-share-panel" class="cd-close-btn">&times;</button>
+        <h3 style="margin-top: 0; color: white; margin-bottom: 15px;">Share Access</h3>
+        <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">frens with access to this robot:</p>
+        <div id="share-list-container" class="share-list">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="session-section">
+          <div class="session-input-group">
+            <div style="font-size: 0.75rem; color: #888; margin-bottom: 4px; text-transform: uppercase;">Grant access to (Email)</div>
+            <input type="email" id="share-input-email" class="input-text" style="margin: 0;" placeholder="user@example.com">
+          </div>
+          <button id="btn-share-submit" class="run-button btn-blue" style="width: 100%; justify-content: center;">Share Access</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Logic -->
     <script type="module" src="/src/main.ts"></script>
   </body>

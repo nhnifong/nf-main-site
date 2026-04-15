@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, select
+from sqlalchemy import String, select, UniqueConstraint
 
 # Format: postgresql+asyncpg://user:password@host:port/dbname
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -33,6 +33,22 @@ class RobotOwnership(Base):
     robot_id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     # The nickname provided by the user during the binding process
     nickname: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+class RobotSharedAccess(Base):
+    __tablename__ = "robot_shared_access"
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # The robot being shared
+    robot_id: Mapped[str] = mapped_column(String, index=True)
+    # The Firebase UID of the owner who granted this access
+    owner_id: Mapped[str] = mapped_column(String)
+    # The email of the person granted access. Normalized to lowercase.
+    guest_email: Mapped[str] = mapped_column(String, index=True)
+    
+    # Prevent duplicate sharing of the same robot to the same email
+    __table_args__ = (
+        UniqueConstraint('robot_id', 'guest_email', name='_robot_guest_uc'),
+    )
 
 async def init_db():
     async with engine.begin() as conn:
