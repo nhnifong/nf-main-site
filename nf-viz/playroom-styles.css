@@ -924,7 +924,7 @@ h2 {
 }
 
 /* --- Component Details Panel --- */
-#component-details-overlay, #controls-overlay, #lerobot-overlay {
+#component-details-overlay, #controls-overlay, #lerobot-overlay, #share-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -1100,3 +1100,58 @@ h2 {
   transition: transform 0.1s;
 }
 .hf-link:hover { transform: scale(1.05); }
+
+/* Share Access Styles */
+.share-list { margin: 15px 0; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; }
+.share-user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.share-user-row:last-child { border-bottom: none; }
+.share-email { color: #eee; font-size: 0.9rem; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; }
+
+.btn-revoke {
+  background: transparent;
+  border: 1px solid #f44336;
+  color: #f44336;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 70px;
+}
+.btn-revoke.confirming { background: #f44336; color: white; font-weight: bold; }
+
+/* --- Go To Target Popup --- */
+.goto-popup-btn {
+    position: fixed;
+    z-index: 2000;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    pointer-events: auto;
+    transform: translate(-50%, -130%); /* Center horizontally and float above cursor */
+    animation: popUpSmall 0.15s ease-out;
+    white-space: nowrap;
+}
+.goto-popup-btn:hover {
+    background-color: #43a047;
+}
+.goto-popup-btn:active {
+    transform: translate(-50%, -130%) scale(0.95);
+}
+
+@keyframes popUpSmall {
+  from { opacity: 0; transform: translate(-50%, -100%) scale(0.8); }
+  to { opacity: 1; transform: translate(-50%, -130%) scale(1); }
+}

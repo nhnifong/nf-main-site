@@ -7,15 +7,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .telemetry_manager import telemetry_manager
-from .auth import verify_google_token, validate_stream_auth, check_robot_ownership
+from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
-from .database import init_db, get_db, RobotOwnership
+from .database import init_db, get_db, RobotOwnership, RobotSharedAccess
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,11 +28,9 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# TODO explain what the hell this is.
-# CORS is vital for the frontend to communicate with this backend from a browser
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to your domain
+    allow_origins=["*"],  # TODO, use env variable. In production, restrict this to neufangled.com
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,6 +79,9 @@ class StreamAuthRequest(BaseModel):
     action: str
     query: str
 
+class ShareRequest(BaseModel):
+    guest_email: EmailStr
+
 # --- HTTP Endpoints ---
 
 @app.post("/internal/auth")
@@ -99,8 +100,6 @@ async def media_server_auth(req: StreamAuthRequest):
         logger.info(f"is_valid = {is_valid}")
         raise HTTPException(status_code=403, detail="Forbidden 2")
     return {"status": "OK"}
-
-# --- Robot Control Endpoint ---
 
 @app.websocket("/telemetry/{robot_id}")
 async def robot_websocket_endpoint(
@@ -129,8 +128,6 @@ async def robot_websocket_endpoint(
         await websocket.close(code=1011)
         raise e # raise so trace can be seen in logs
 
-# --- User Interface for robot Endpoint ---
-
 @app.websocket("/control/{robot_id}")
 async def ui_websocket_endpoint(
     websocket: WebSocket, 
@@ -153,14 +150,11 @@ async def ui_websocket_endpoint(
         # Verify Identity
         user_token = await verify_google_token(token)
         user_id = user_token["uid"]
+        user_email = user_token.get("email")
         
         # Check Authorization
-        # does the logged in user have permission to
-        # 1. observe the robot?
-        # 2. issue target or motion commands?
-        # 3. issue calibration or shutdown commands?
-        # For now, it's just all or nothing.
-        if not await check_robot_ownership(user_token["uid"], robot_id):
+        # does the logged in user have permission to control the robot?
+        if not await check_robot_access(user_id, user_email, robot_id):
             logger.warning(f"Unauthorized access attempt to {robot_id}")
             await websocket.close(code=1008)
             return
@@ -259,33 +253,137 @@ async def unbind_robot(
     await db.commit()
     return {"status": "unbound", "robot_id": robot_id}
 
+# --- Sharing Endpoints ---
+
+@app.post("/share/{robot_id}")
+async def share_robot(
+    robot_id: str,
+    req: ShareRequest,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Allows the owner to grant access to another user via email."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    # Verify the user is the strict owner
+    if not await check_robot_ownership(user_id, robot_id):
+        raise HTTPException(status_code=403, detail="Only the owner can share this robot.")
+
+    guest_email_lower = req.guest_email.lower()
+
+    # Check if already shared
+    existing = await db.execute(
+        select(RobotSharedAccess).where(
+            RobotSharedAccess.robot_id == robot_id,
+            RobotSharedAccess.guest_email == guest_email_lower
+        )
+    )
+    if existing.scalar_one_or_none():
+        return {"status": "already_shared", "guest_email": guest_email_lower}
+
+    # Grant access
+    new_share = RobotSharedAccess(
+        robot_id=robot_id, 
+        owner_id=user_id, 
+        guest_email=guest_email_lower
+    )
+    db.add(new_share)
+    await db.commit()
+
+    return {"status": "shared", "guest_email": guest_email_lower}
+
+@app.delete("/share/{robot_id}/{guest_email}")
+async def revoke_robot_access(
+    robot_id: str,
+    guest_email: str,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Revokes a previously granted access."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    if not await check_robot_ownership(user_id, robot_id):
+        raise HTTPException(status_code=403, detail="Only the owner can revoke access.")
+
+    result = await db.execute(
+        delete(RobotSharedAccess).where(
+            RobotSharedAccess.robot_id == robot_id,
+            RobotSharedAccess.guest_email == guest_email.lower()
+        )
+    )
+    await db.commit()
+
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Share record not found")
+
+    return {"status": "revoked", "guest_email": guest_email}
+
+@app.get("/list_authorized/{robot_id}")
+async def list_shared_users(
+    robot_id: str,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns a list of emails this robot is shared with (Owner only)."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    if not await check_robot_ownership(user_id, robot_id):
+        raise HTTPException(status_code=403, detail="Only the owner can view sharing settings.")
+
+    result = await db.execute(
+        select(RobotSharedAccess.guest_email).where(RobotSharedAccess.robot_id == robot_id)
+    )
+    emails = result.scalars().all()
+    
+    return {"shared_with": emails}
+
 @app.get("/listrobots")
 async def list_robots(
     creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
     db: AsyncSession = Depends(get_db)
 ):
-    """Returns all robots owned by the logged-in user."""
+    """Returns robots owned by OR shared with the logged-in user."""
     user_token = await verify_google_token(creds.credentials)
     user_id = user_token["uid"]
+    user_email = user_token.get("email", "").lower()
 
-    result = await db.execute(
+    # Fetch strictly owned robots
+    owned_res = await db.execute(
         select(RobotOwnership).where(RobotOwnership.user_id == user_id)
     )
-    owned_bots = result.scalars().all()
+    owned_bots = owned_res.scalars().all()
 
-    # We fetch the online status for each robot from Redis
-    # The telemetry_manager maintains these states as the robots connect/disconnect
+    # Fetch robots shared with this user's email
+    shared_bots = []
+    if user_email:
+        # Join against RobotOwnership to get the nickname set by the owner
+        shared_res = await db.execute(
+            select(RobotOwnership)
+            .join(RobotSharedAccess, RobotOwnership.robot_id == RobotSharedAccess.robot_id)
+            .where(RobotSharedAccess.guest_email == user_email)
+        )
+        shared_bots = shared_res.scalars().all()
+
     bots_with_status = []
-    for b in owned_bots:
-        # Fetch the hash containing the online flag for this specific robot
-        up_status = await telemetry_manager.decoding_redis.hgetall(f"robot:{b.robot_id}:uplink_state")
+    
+    async def append_bot_data(bot, role):
+        up_status = await telemetry_manager.decoding_redis.hgetall(f"robot:{bot.robot_id}:uplink_state")
         is_online = up_status.get('online') == 'true' if up_status else False
-        
         bots_with_status.append({
-            'robotid': b.robot_id,
-            'nickname': b.nickname or "Unnamed Robot",
-            'online': is_online
+            'robotid': bot.robot_id,
+            'nickname': bot.nickname or "Unnamed Robot",
+            'online': is_online,
+            'role': role # Frontend can use this to disable the "Unbind" or "Share" UI buttons
         })
+
+    for b in owned_bots:
+        await append_bot_data(b, "owner")
+        
+    for b in shared_bots:
+        await append_bot_data(b, "guest")
 
     return {'bots': bots_with_status}
 
@@ -299,6 +397,7 @@ async def read_page(page_name: str):
         "playroom": "playroom.html",
         "stringman-pilot": "stringman-pilot.html",
         "stringman-arpeggio-pilot": "stringman-arpeggio-pilot.html",
+        "stringman-arpeggio": "stringman-arpeggio.html",
         "arp-gripper-kit": "arp-gripper-kit.html",
         "consulting": "consulting.html",
         "company": "company.html",

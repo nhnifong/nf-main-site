@@ -6,7 +6,7 @@ ARG ASSET_BUCKET_URL
 # We use a Python base image so we can easily install 'nf_robot' 
 # and give 'sync_protos.py' access to the installed protos.
 # We then install Node.js to handle the frontend build.
-FROM python:3.11 AS build-stage
+FROM python:3.12 AS build-stage
 
 ARG ASSET_BUCKET_URL
 ENV VITE_ASSET_BUCKET_URL=$ASSET_BUCKET_URL
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
 
 # Install latest nf_robot for the proto files
 # This ensures sync_protos.py can find 'nf_robot' in the site-packages
-RUN pip install --no-cache-dir nf_robot==3.9.5
+RUN pip install --no-cache-dir nf_robot==3.10.0
 
 # Setup Frontend Directory
 WORKDIR /app/nf-viz
@@ -39,7 +39,7 @@ RUN npm run build
 # ==========================================
 # Stage 2: Final Runtime Image
 # ==========================================
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 

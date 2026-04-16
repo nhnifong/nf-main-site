@@ -20,7 +20,6 @@ export default defineConfig({
       },
       '/listrobots': {
         target: 'http://127.0.0.1:8080',
-        ws: true,
         changeOrigin: true
       },
       '/simulated/pilot': {
@@ -30,12 +29,18 @@ export default defineConfig({
       },
       '/bind': {
         target: 'http://127.0.0.1:8080',
-        ws: true,
         changeOrigin: true
       },
       '/unbind': {
         target: 'http://127.0.0.1:8080',
-        ws: true,
+        changeOrigin: true
+      },
+      '/share': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
+      },
+      '/list_authorized': {
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true
       }
     }

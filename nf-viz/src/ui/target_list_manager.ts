@@ -1,8 +1,10 @@
+import * as THREE from 'three';
 import { nf } from '../generated/proto_bundle.js';
 
 export class TargetListManager {
     private selectedId: string | null = null;
     private hoveredId: string | null = null;
+    private activeGotoBtn: HTMLElement | null = null;
     
     // Callbacks for external components
     public onTargetSelect: ((id: string | null) => void) | null = null;
@@ -119,11 +121,17 @@ export class TargetListManager {
             });
 
             // Selection (Click)
-            div.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent container from clearing selection
-                this.setSelectedId(tid);
+            div.addEventListener('click', (e: MouseEvent) => {
+                e.stopPropagation();
+                
+                // If already selected, show the "GO TO" popup under mouse
+                if (this.selectedId === tid) {
+                    this.showGotoPopup(e.clientX, e.clientY, tid);
+                } else {
+                    this.setSelectedId(tid);
+                    this.hideGotoPopup();
+                }
             });
-
             // Hover (Mouse Enter)
             div.addEventListener('mouseenter', () => {
                 this.setHoveredId(tid);
@@ -134,6 +142,62 @@ export class TargetListManager {
 
             container.appendChild(div);
         });
+    }
+
+    private showGotoPopup(x: number, y: number, tid: string) {
+        this.hideGotoPopup();
+
+        const btn = document.createElement('button');
+        btn.className = 'goto-popup-btn';
+        btn.textContent = 'Go here';
+        btn.style.left = `${x}px`;
+        btn.style.top = `${y}px`;
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.sendFn) {
+                // Issue command to move gripper to target
+                this.sendFn([nf.control.ControlItem.create({
+                  moveGripperTo: { targetId: tid }
+                })]);
+            }
+            this.hideGotoPopup();
+        });
+
+        document.body.appendChild(btn);
+        this.activeGotoBtn = btn;
+    }
+
+    // Shows a "Go here" popup for floor clicks in the 3D scene.
+    public showFloorGotoPopup(x: number, y: number, worldPoint: THREE.Vector3) {
+        this.hideGotoPopup();
+
+        const btn = document.createElement('button');
+        btn.className = 'goto-popup-btn';
+        btn.textContent = 'Go here';
+        btn.style.left = `${x}px`;
+        btn.style.top = `${y}px`;
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (this.sendFn) {
+                this.sendFn([nf.control.ControlItem.create({
+                  moveGripperTo: {pos: { x: worldPoint.x, y: -worldPoint.z, z: 0.3 }
+                }
+            })]);
+            }
+            this.hideGotoPopup();
+        });
+
+        document.body.appendChild(btn);
+        this.activeGotoBtn = btn;
+    }
+
+    private hideGotoPopup() {
+        if (this.activeGotoBtn) {
+            this.activeGotoBtn.remove();
+            this.activeGotoBtn = null;
+        }
     }
 
     public deleteSelectedItem() {
