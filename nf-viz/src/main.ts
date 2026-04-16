@@ -1922,20 +1922,35 @@ window.addEventListener('pointermove', (event) => {
       }
     }
 
-        if (foundType) break; // Stop checking further hits once we find a component
+    // Check if hitting the room mesh (floor)
+    if (obj === room.mesh) {
+      // Verify if hit point is roughly at the floor plane (Y=0) because the mesh also includes the walls and celing.
+      if (Math.abs(hit.point.y) < 0.05) {
+        room.setReticule(hit.point);
       }
+    }
+  }
 
-      if (foundType && hoverTarget) {
-        applyHover(hoverTarget, foundType, foundIndex);
-      } else {
-        clearHover();
-      }
-    });
+  if (foundType && hoverTarget) {
+    applyHover(hoverTarget, foundType, foundIndex);
+  } else {
+    clearHover();
+  }
+});
 
 window.addEventListener('click', (event) => {
   if (event.target !== renderer.domElement) return;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children, true);
   if (currentHoverType) {
     openComponentPanel(currentHoverType, currentHoverIndex);
+  } else {
+    for (const hit of intersects) {
+      if (hit.object === room.mesh && Math.abs(hit.point.y) < 0.05) {
+        targetListManager.showFloorGotoPopup(event.clientX, event.clientY, hit.point); 
+        break;
+      }
+    }
   }
 });
 

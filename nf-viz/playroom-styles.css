@@ -1125,3 +1125,33 @@ h2 {
   min-width: 70px;
 }
 .btn-revoke.confirming { background: #f44336; color: white; font-weight: bold; }
+
+/* --- Go To Target Popup --- */
+.goto-popup-btn {
+    position: fixed;
+    z-index: 2000;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    pointer-events: auto;
+    transform: translate(-50%, -130%); /* Center horizontally and float above cursor */
+    animation: popUpSmall 0.15s ease-out;
+    white-space: nowrap;
+}
+.goto-popup-btn:hover {
+    background-color: #43a047;
+}
+.goto-popup-btn:active {
+    transform: translate(-50%, -130%) scale(0.95);
+}
+
+@keyframes popUpSmall {
+  from { opacity: 0; transform: translate(-50%, -100%) scale(0.8); }
+  to { opacity: 1; transform: translate(-50%, -130%) scale(1); }
+}
