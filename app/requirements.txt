@@ -11,3 +11,6 @@ betterproto2>=0.9.0
 firebase-admin>=6.5.0
 sqlalchemy>=2.0.0
 asyncpg
+markdown>=3.5.0
+python-frontmatter>=1.1.0
+jinja2>=3.0.0

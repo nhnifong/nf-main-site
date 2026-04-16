@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>{{ product.title }} | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/detail-page-styles.css" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <section class="product-hero">
+
+        <!-- Left: Image Gallery -->
+        <div class="gallery-container">
+            <button class="arrow-btn prev-btn" onclick="changeSlide(-1)">&#10094;</button>
+
+            {% for url in product.image_urls %}
+            <div class="gallery-slide{% if loop.first %} active{% endif %}">
+                <img src="{{ url }}" alt="{{ product.title }}">
+            </div>
+            {% endfor %}
+
+            <button class="arrow-btn next-btn" onclick="changeSlide(1)">&#10095;</button>
+        </div>
+
+        <!-- Right: Info & Purchase -->
+        <div class="info-container">
+            <h1 class="product-title">{{ product.title }}</h1>
+
+            {% if product.intro %}
+            <p class="product-intro">{{ product.intro }}</p>
+            {% endif %}
+
+            {% if product.shipping %}
+            <p class="shipping-note">{{ product.shipping }}</p>
+            {% endif %}
+
+            {{ product.buy_button | safe }}
+
+            <section class="details-section">
+                {{ product.content | safe }}
+            </section>
+        </div>
+
+    </section>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.gallery-slide');
+
+    function changeSlide(direction) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide += direction;
+        if (currentSlide >= slides.length) currentSlide = 0;
+        else if (currentSlide < 0) currentSlide = slides.length - 1;
+        slides[currentSlide].classList.add('active');
+    }
+</script>
+</body>
+</html>

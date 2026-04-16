@@ -48,17 +48,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // We list every HTML file we want Vite to process here
+        // We list every HTML file we want Vite to process here.
+        // Product pages are now server-side rendered from products/ — do not add them here.
         main: resolve(__dirname, 'index.html'),
         playroom: resolve(__dirname, 'playroom.html'),
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
-        store: resolve(__dirname, 'store.html'),
-        stringmanpilot: resolve(__dirname, 'stringman-pilot.html'),
-        stringmanarpeggiopilot: resolve(__dirname, 'stringman-arpeggio-pilot.html'),
-        stringmanarpeggio: resolve(__dirname, 'stringman-arpeggio.html'),
-        arpgripperkit: resolve(__dirname, 'arp-gripper-kit.html'),
-        consulting: resolve(__dirname, 'consulting.html'),
       }
     }
   }
