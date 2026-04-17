@@ -54,6 +54,7 @@ export default defineConfig({
         playroom: resolve(__dirname, 'playroom.html'),
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
+        payment_options: resolve(__dirname, 'payment_options.html'),
       }
     }
   }

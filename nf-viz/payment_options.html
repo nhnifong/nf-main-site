@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <title>Stringman - Payment Options</title>
+    <style>
+        /* --- RESET & TYPOGRAPHY --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #e0e0e0;
+            line-height: 1.6;
+            background-color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        /* --- UTILITY NAVBAR --- */
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 100;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #7cdbfb;
+            text-decoration: underline;
+        }
+
+        .title-section {
+            position: relative;
+            height: 30vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #111 0%, #2a2a2a 100%);
+            padding: 0 20px;
+        }
+
+        .title-section h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, #7cdbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-section p {
+            font-size: 1.5rem;
+            max-width: 600px;
+            color: #aaa;
+        }
+
+        /* --- ROADMAP SECTIONS --- */
+        .section {
+            padding: 80px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            border-bottom: 1px solid #333;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: #888;
+        }
+
+        /* Content Layout */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        /* Alternate Layout */
+        .section:nth-child(even) .roadmap-grid {
+            direction: rtl; /* simple way to swap columns visually */
+        }
+        
+        .section:nth-child(even) .roadmap-grid > * {
+            direction: ltr; /* reset text direction */
+        }
+
+        .text-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #7cdbfb;
+        }
+
+        .text-content ul {
+            list-style: none;
+        }
+
+        .text-content li {
+            margin-bottom: 25px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .text-content li::before {
+            content: "•";
+            color: #7cdbfb;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .text-content strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .image-content img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            transition: transform 0.3s ease;
+        }
+
+        .image-content img:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .title-section h1 { font-size: 3rem; }
+            .roadmap-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                direction: ltr !important; /* disable alternation on mobile */
+            }
+            .section { padding: 60px 20px; }
+            .image-content { order: -1; } /* Images always on top on mobile */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <section class="title-section">
+        <h1>Payment Options</h1>
+        <p>Stable money prices and settlment details.</p>
+    </section>
+
+    <!-- Events & Demos -->
+    <section class="section">
+        <div class="roadmap-grid">
+            <div class="text-content">
+                <h3>Gold or Silver</h3>
+                <p>I love to build things, and I would prefer if we lived under a sound currency system in which money was earned honestly by creating value.
+                To that end, Neufangled Robotics is always willing to settle in gold or silver - honest currencies which are not subject to the constant inflation of the ponzi economy.</p>
+                <br>
+
+                <h4>Prices</h4>
+                <strong style="color: #d89c36">Stringman Arpeggio - 1/4 ozt gold or 16 ozt silver.</strong>
+                <br>
+                <ul>
+                    <li>
+                        <strong></strong>
+                        If shipping to central NC, settlement in any 0.999 pure bullion or any soverign gold or silver coinage can be arranged in person at a variety of different coin shops who are capable of verifying purity.
+                    </li>
+                    <li>
+                        If you choose, you may also mail payment to Neufangled Robotics, we will verify, and ship your robot or return your coins if they are incorrect. I understand that this method requires an undue amount of trust, but at this scale, the overhead cost of a third party escrow service is unwarranted.
+                    </li>
+                    <li>
+                        <a href="mailto:naavox@gmail.com"><span style="color: #d89c36">Contact me</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/gold_ducat.png" alt="Events and Demos">
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

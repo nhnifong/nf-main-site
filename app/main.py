@@ -414,6 +414,7 @@ async def read_page(request: Request, page_name: str):
         "playroom": "playroom.html",
         "company": "company.html",
         "future": "future.html",
+        "payment_options": "payment_options.html",
     }
 
     if page_name in page_map:

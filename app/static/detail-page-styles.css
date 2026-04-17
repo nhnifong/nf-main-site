@@ -182,6 +182,12 @@ body {
     color: #999;
 }
 
+.gold-note {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: #d89c36;
+}
+
 /* --- SCROLLING CONTENT --- */
 .details-section {
     max-width: 800px;
