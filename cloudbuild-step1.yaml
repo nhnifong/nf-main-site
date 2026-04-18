@@ -59,7 +59,7 @@ steps:
 # ==============================================================================
 # Build MkDocs and Replace URLs in docs
 # ==============================================================================
-- name: 'python:3.11-slim'
+- name: 'python:3.12-slim'
   id: 'build-docs'
   entrypoint: 'bash'
   args:

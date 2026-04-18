@@ -6,7 +6,7 @@ intro: >
   second hardware version of Stringman. This product contains the newest gripper
   based on the ST3215 motors featuring a wrist joint, and powerful, quiet,
   Damiao hub motor based anchors in a 2+2 configuration.
-price: "$1200"
+price: "$1235"
 shipping: Ships in 5-8 days to the United States or Canada
 badge: In Stock
 store_description: >
