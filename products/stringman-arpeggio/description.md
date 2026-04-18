@@ -12,16 +12,17 @@ badge: In Stock
 store_description: >
   The complete and latest Stringman system, fully assembled. Includes 2 anchors,
   2 eyelets, gripper, and accessories.
-store_image: pilot-arp-main-white.jpg
+store_image: stringman_white.jpg
 image_folder: ""
 images:
-  - pilot-arp-main-white.jpg
-  - pilot-arp-laid-out-white.jpg
-  - arp-gripper-panda-white.jpg
-  - pilot-corner-anchor.jpg
-  - pilot-corner-anchor-nocover.jpg
+  - stringman_white.jpg
+  - everything_white.jpg
+  - arp-anchor-face.jpg
+  - arp-anchor-bottom.jpg
   - arp-gripper-white.jpg
   - arp-gripper-nocover.jpg
+  - arp-gripper-panda-copper.jpg
+  - stringman_copper.jpg
 show_in_store: true
 store_order: 1
 ---
@@ -32,7 +33,7 @@ store_order: 1
 
 By utilizing an anchors-overhead architecture, Stringman remains entirely off the floor, offering a unique sandbox for **Imitation Learning (IL)**, **Teleoperation**, and **Home Automation** experimentation on more than just desk toys. The work area can be an entire room.
 
-Why the ceiling? Avoiding the floor means avoiding navigation, so you can focus on higher-level tasks and start automating the organization of objects in the room while keeping it low cost.
+Why the ceiling? Avoiding the floor means avoiding navigation and balance, so you can focus on higher-level tasks and start automating the organization of objects in the room while keeping it low cost.
 
 ### **The Platform**
 
@@ -59,19 +60,25 @@ Stringman is an open source hardware platform and software stack. It is fully co
 
 ### **Control & Intelligence**
 
-Stringman is built for experimentation. The **Stringman motion controller** is the brain of the robot, running headless on a host machine. The robot can be controlled by connecting to its protobuf-based telemetry server. Two UIs are available for 3D visualization of the workspace, tension monitoring, and automatic calibration. One is a LAN-only local application, and a web-based control panel uses Neufangled Robotics' servers to allow secure access to your robot from anywhere.
+Stringman is built for experimentation. The **Stringman motion controller** is the brain of the robot, running headless on a host machine. The robot can be controlled by connecting to its protobuf-based telemetry server.
 
-Stringman currently utilizes a custom control stack in which a model for identifying targets, a model for centering the gripper, and a procedure for target-pick-and-place are combined for a pseudo-intelligent laundry pickup behavior out of the box.
+A [web-based UI](/playroom) allows 3D visualization of the workspace, tension monitoring, and automatic calibration. The robot can operate in LAN-only local mode where no data leaves your network, or in a cloud telemetry mode that uses Neufangled Robotics' servers to allow secure access to your robot from anywhere.
 
-- **Intuitive Teleop:** Use a gamepad to navigate the room. The system handles the complex inverse kinematics of the four-cable system for you.
+A cloud connected robot can also be shared with other logged in users for remote operation.
+
+Stringman currently utilizes a custom control stack using one model for identifying targets, and lerobot trained models for grasping tasks. Dropoff locations are specified by attaching April tags to bins such as the laundry hamper. A procedure combines these for continuous target-pick-and-place.
+
+- **Intuitive Teleop:** Use a gamepad to navigate the room. The system handles the complex inverse kinematics of the four-cable system for you, and can be made to orbit your position in the room.
 - **Custom control:** The `nf_robot` Python module makes it easy to hook into the robot's state and write your own high-level behaviors.
-- **The Roadmap:** We are actively working to re-integrate **LeRobot** support. The goal is to allow users to once again record datasets for ACT and Diffusion policies using our new, lower latency telemetry protocol.
+- **Lerobot:** Record teleoperation datasets from the control panel and train your own AI using Google colab to imitate any behavior you need.
 
 ---
 
-### **Pilot Launch Disclosure**
+### **Arpeggio Launch**
 
-This is a **Pilot Launch**. Both hardware and software are in active development. We are looking for "pioneer" users who want to try a new robot, share datasets, and provide feedback that will help us eventually create a fully autonomous household utility.
+Arpeggio is the code name of the second hardware version of Stringman. Software is in active development but this hardware is planned to be the latest until 2027. The flagship features of this version are the motors which have roughtly 8x the torque of their predecessors, as well as the gripper's wrist, which allows networks to learn to grasp objects at the ideal angle.
+
+We are looking for pioneer users who want to try a new robot, share datasets, and provide feedback that will help us eventually create a fully autonomous household utility.
 
 **Note:** The current "out of the box" autonomous behavior is to pick up laundry and drop it into the hamper with a hybrid approach. This platform is for those who are ok with trying something that may not always work, downloading the latest updates and trying things again, or training models themselves.
 
@@ -81,19 +88,21 @@ This listing is for a fully assembled Stringman consisting of several components
 
 ### **System Requirements**
 
-- **Host PC:** A dedicated machine (Ubuntu Linux recommended) with 6+ cores. All image processing occurs here. GPU accelerated inference is ideal, but the CPU fallback is still workable at 1 Hz since neither target nor camera are moving in this unique design.
+- **Host PC:** A dedicated machine (Ubuntu Linux recommended) with 6+ cores. If no GPU or NPU is present the robot can still be driven manually, but no AI based control will be possible.
 - **Environment:** Consistent and strong indoor lighting in the work area is needed to maintain high precision.
 
 ---
 
 ### **Appearance and Livability**
 
-- **Parked out of reach:** The support lines remain connected when powered off and hang taut across the ceiling of the room. They are thin and very hard to see from a distance, and out of reach when parked. They can be disconnected using fishing "speed clips" if needed.
-- **Crown moulding look:** The spool anchors have a decorative cover that looks like white crown moulding to blend in. They are intended to be mounted to studs with wood screws. If removed, holes would need to be spackled and painted.
+- **Parked out of reach:** The support lines remain connected when powered off and hang taut across the ceiling of the room. They are thin and very hard to see from a distance, and out of reach when parked. They can be disconnected in about 1 minute using carabiners. The gripper hangs on a parking structure also mounted to the wall, with the flexibility to place this structure on any wall above head level.
+- **Quick disconnect:** If necessary the whole system can be removed from the walls without tools and stored in about five minutes, leaving only small white butterfly shaped brackets on the wall.
+- **Mounting options:** Anchors can be mounted into studs behind drywall, onto drop-ceiling T-bars, or on tripods if they are sufficiently stable and weighed down.
+- **Crown moulding look:** The spool anchors have a decorative cover that looks like white crown moulding to blend in.
 - **Gripper customization:** The gripper face shell is shipped in copper silk PLA but is easy to reprint in any color you like. STLs are provided on the [downloads page](/docs/downloads/).
 
 ---
 
 ### **Early Adopter Perks**
 
-**Legacy Discount:** All Pilot Launch supporters receive a **permanent 10% discount** on all future Neufangled Robotics hardware.
+**Supporter Discount:** All early launch supporters receive a **permanent 10% discount** on all future Neufangled Robotics hardware.

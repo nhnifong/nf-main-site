@@ -10,8 +10,13 @@ badge: In Stock
 store_description: >
   Build your own Arpeggio anchors with this complete hardware kit featuring
   powerful and quiet Damiao hub motors.
-store_image: arp/anchor.jpg
-image_folder: "arp"
+store_image: arp_anchor_kit_top_down.jpg
+image_folder: ""
+images:
+  - arp_anchor_kit_angle.jpg
+  - arp_anchor_kit_top_down.jpg
+  - arp-anchor-face.jpg
+  - arp-anchor-bottom.jpg
 show_in_store: true
 store_order: 4
 ---
@@ -22,7 +27,26 @@ This pair of anchors features four powerful and silent Damiao hub motors. They c
 
 ## What's Included
 
-- TODO
+- 4 Damiao DM-H6215 Motors
+- 5A 2-wire slip ring
+- 50m of braided fishing line
+- 7m FEP power tether line
+- 2 Raspberry Pi Zero 2W
+- 2 aluminum heatsinks
+- 2 Raspberry Pi Camera Module 3 (not pictured above)
+- 2 4cm ribbon cables
+- 2 Neufangled Arpgeggio Anchor Hats (PCBs)
+- bearing kit for powerline spool
+- bearings for support spools
+- 4 small carabiners
+- 2 ceramic rings
+- 1 JST-ZH connector male
+- 2 JST-ZH connector female
+- solder seal connectors
+- heat shrink tubing
+- All necessary screws and washers
+- 2 DC barrel jack extension cables.
+- 2 5A power supplies (north american plugs) (not pictured)
 
 ## What You Need to Provide
 
