@@ -21,6 +21,7 @@ class TelemetryManager:
     def __init__(self):
         self.active_user_connections: Dict[str, List[WebSocket]] = {} # robot_id -> [ws, ws]
         self.active_robot_connections: Dict[str, WebSocket] = {}      # robot_id -> ws
+        self.user_email: Dict[WebSocket, str] = {}                    # ws -> email
         
         self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         self.pub_redis = None
@@ -49,6 +50,7 @@ class TelemetryManager:
             connections = self.active_user_connections.get(robot_id, [])
             if websocket in connections:
                 connections.remove(websocket)
+            self.user_email.pop(websocket, None)
 
     async def mark_robot_online(self, robot_id: str, online: bool):
         await self.decoding_redis.hset(f"robot:{robot_id}:uplink_state", 'online', 'true' if online else 'false')
@@ -93,16 +95,15 @@ class TelemetryManager:
             await self.mark_robot_online(robot_id, False)
 
 
-    async def handle_user_connection(self, websocket: WebSocket, robot_id: str, user_id: str):
+    async def handle_user_connection(self, websocket: WebSocket, robot_id: str, user_id: str, user_email: str = ""):
         """
-        Logic for a Browser User connecting with a web UI to control or spectate a given robot
-        1. Any messages received on websocket are ControlBatchUpdate
-        2. Check permissions (Is Owner? Is Playroom Driver?).
-        3. Publish Command to Redis so connected robot receives it. (it may be connected to a different server)
+        Logic for a Browser User connecting with a web UI to control a given robot.
+        Authentication is handled at the API layer.
         """
         if robot_id not in self.active_user_connections:
             self.active_user_connections[robot_id] = []
         self.active_user_connections[robot_id].append(websocket)
+        self.user_email[websocket] = user_email.lower()
 
         try:
             startup_batch = await self.get_startup_state(robot_id)
@@ -112,26 +113,7 @@ class TelemetryManager:
             while True:
                 # data is a serialized ControlBatchUpdate. leave it serialized
                 data = await websocket.receive_bytes()
-                
-                # --- PERMISSION CHECK ---
-                # 1. Is it a private robot? (Check DB owner) -> Allow
-                # 2. Is it a public demo? (Check Queue)
-                is_allowed = False
-                
-                # assume public demo logic if robot_id starts with 'playroom'
-                if robot_id.startswith("playroom"):
-                    if await queue_manager.is_driver(robot_id, user_id):
-                        is_allowed = True
-                    else:
-                        # Optional: Send "Not your turn" error back to user
-                        pass
-                else:
-                    # Assume Private owner for now
-                    is_allowed = True
-
-                if is_allowed:
-                    # Publish command to Redis channel that the Robot is listening to
-                    await self.pub_redis.publish(f"commands:{robot_id}", data)
+                await self.pub_redis.publish(f"commands:{robot_id}", data)
 
         except Exception as e:
             logger.error(f"User disconnected: {e}")
@@ -179,21 +161,22 @@ class TelemetryManager:
             try:
                 psub = self.sub_redis.pubsub()
                 async with psub as p:
-                    await p.psubscribe("state:*", "commands:*")
+                    await p.psubscribe("state:*", "commands:*", "revoke:*")
                     logger.info("Redis Pub/Sub listener subscribed to channels.")
-                    
+
                     # Reset delay on successful subscription
-                    retry_delay = 1 
+                    retry_delay = 1
 
                     async for msg in p.listen():
                         if msg["type"] != "pmessage":
                             continue
-                        
+
                         channel = msg["channel"].decode("utf-8")
                         payload = msg["data"]
-                        prefix, robot_id = channel.split(":", 1)
+                        prefix, rest = channel.split(":", 1)
 
                         if prefix == "state":
+                            robot_id = rest
                             if robot_id in self.active_user_connections:
                                 for ws in self.active_user_connections[robot_id][:]:
                                     try:
@@ -201,14 +184,27 @@ class TelemetryManager:
                                     except Exception:
                                         # Stale WS, cleanup handled by handle_user_connection
                                         pass
-                                        
+
                         elif prefix == "commands":
+                            robot_id = rest
                             if robot_id in self.active_robot_connections:
                                 ws = self.active_robot_connections[robot_id]
                                 try:
                                     await ws.send_bytes(payload)
                                 except Exception:
                                     pass
+
+                        elif prefix == "revoke":
+                            # rest is the guest email; payload is the robot_id bytes
+                            revoked_email = rest.lower()
+                            robot_id = payload.decode("utf-8")
+                            for ws in self.active_user_connections.get(robot_id, [])[:]:
+                                if self.user_email.get(ws) == revoked_email:
+                                    logger.info(f"Booting revoked user {revoked_email} from {robot_id}")
+                                    try:
+                                        await ws.close(code=1008)
+                                    except Exception:
+                                        pass
 
             except Exception:
                 # Log full traceback to identify why the listener died

@@ -177,7 +177,7 @@ async def ui_websocket_endpoint(
             return
 
         logger.info(f"User {user_id} authorized for robot {robot_id}")
-        await telemetry_manager.handle_user_connection(websocket, robot_id, user_id)
+        await telemetry_manager.handle_user_connection(websocket, robot_id, user_id, user_email or "")
 
     except WebSocketDisconnect:
         logger.info(f"Client disconnected from {robot_id}")
@@ -334,6 +334,9 @@ async def revoke_robot_access(
 
     if result.rowcount == 0:
         raise HTTPException(status_code=404, detail="Share record not found")
+
+    # Boot the user if they're currently connected, across all server instances
+    await telemetry_manager.pub_redis.publish(f"revoke:{guest_email.lower()}", robot_id.encode())
 
     return {"status": "revoked", "guest_email": guest_email}
 

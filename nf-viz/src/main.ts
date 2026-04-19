@@ -598,7 +598,10 @@ function connect(wsUrl: string) {
 
   socket.onclose = (event) => {
     if (event.code === 1008) {
-      console.error("Authentication failed. Not retrying automatically.");
+      console.error("Access revoked. Closing video connections.");
+      firstOverheadVideo.setOffline();
+      secondOverheadVideo.setOffline();
+      gripperVideo.setOffline();
     } else {
       console.warn("Disconnected. Retrying in 2s...");
       updateOnlineStatus(false);
