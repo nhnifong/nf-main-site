@@ -981,6 +981,8 @@ interface ComponentState {
   status: number;
   ip: string;
   errorMessage?: string;
+  temp?: number;
+  motorTorque?: nf.telemetry.MotorTorque;
 }
 const componentStates = new Map<string, ComponentState>();
 
@@ -1062,7 +1064,9 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
     type: type,
     status: data.websocketStatus ?? nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED,
     ip: data.ipAddress ?? "",
-    errorMessage: data.errorMessage ?? undefined
+    errorMessage: data.errorMessage ?? undefined,
+    temp: data.temp ?? undefined,
+    motorTorque: data.motorEnabled ?? undefined,
   });
 
   updateComponentStatusUI();
@@ -1434,6 +1438,8 @@ function initRunMenu() {
   bindCommand('action-record-park',    Command.COMMAND_RECORD_PARK);
   bindCommand('action-park',           Command.COMMAND_PARK);
   bindCommand('action-unpark',         Command.COMMAND_UNPARK);
+  bindCommand('action-disable-torque', Command.COMMAND_DISABLE_TORQUE);
+  bindCommand('action-enable-torque', Command.COMMAND_ENABLE_TORQUE);
 
   // Bind bind action (connecting your robot to your account so you can use cloud relay)
   const bindAction = document.getElementById('action-bind');
@@ -1964,10 +1970,12 @@ function openComponentPanel(type: string, index: number) {
   const title = document.getElementById('cd-title');
   const ipEl = document.getElementById('cd-ip');
   const statusEl = document.getElementById('cd-status');
+  const tempEl = document.getElementById('cd-temp');
+  const motorTorqueEl = document.getElementById('cd-motor-torque');
   const sensorsEl = document.getElementById('cd-sensors');
   const anchorActions = document.getElementById('cd-anchor-actions');
 
-  if (!overlay || !title || !ipEl || !statusEl || !sensorsEl || !anchorActions) return;
+  if (!overlay || !title || !ipEl || !statusEl || !tempEl || !motorTorqueEl || !sensorsEl || !anchorActions) return;
 
   let name = "";
   if (type === 'Anchor') {
@@ -1991,6 +1999,16 @@ function openComponentPanel(type: string, index: number) {
   ipEl.textContent = state?.ip || "Unknown";
   let connected = state?.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
   statusEl.textContent = connected ? "Connected" : "Disconnected";
+
+  tempEl.textContent = state?.temp != null ? `${state.temp.toFixed(1)} °C` : "—";
+
+  if (state?.motorTorque === nf.telemetry.MotorTorque.MOTORTORQUE_ENABLED) {
+    motorTorqueEl.textContent = "Enabled";
+  } else if (state?.motorTorque === nf.telemetry.MotorTorque.MOTORTORQUE_DISABLED) {
+    motorTorqueEl.textContent = "Disabled";
+  } else {
+    motorTorqueEl.textContent = "—";
+  }
 
   if (state?.errorMessage) {
     sensorsEl.textContent = state.errorMessage;
@@ -2037,19 +2055,35 @@ function initComponentDetailsPanel() {
   bindCdBtn('btn-cd-relax', (type, index) => {
     if (type === 'Anchor') handleAnchorRelax(index);
   });
+  bindCdBtn('btn-cd-set-cam-angle', (type, index) => {
+    if (type === 'Anchor') handleSetCamAngle(index);
+  });
 }
 
 
 function handleComponentIdentify(type: string, index: number) {
-  sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENT_ACTION_IDENTIFY);
+  sendSingleComponentAction(type, index, nf.control.ComponentAction.COMPONENTACTION_IDENTIFY);
 }
 
 function handleAnchorTighten(index: number) {
-  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_TIGHTEN);
+  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENTACTION_TIGHTEN);
 }
 
 function handleAnchorRelax(index: number) {
-  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENT_ACTION_RELAX);
+  sendSingleComponentAction('Anchor', index, nf.control.ComponentAction.COMPONENTACTION_RELAX);
+}
+
+function handleSetCamAngle(index: number) {
+  const input = document.getElementById('cd-cam-angle-input') as HTMLInputElement;
+  const angle = parseFloat(input?.value ?? '22.0');
+  sendControl([nf.control.ControlItem.create({
+    singleComponentAction: {
+      isGripper: false,
+      anchorNum: index,
+      action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
+      camAngle: isNaN(angle) ? 22.0 : angle,
+    }
+  })]);
 }
 
 initComponentDetailsPanel();
