@@ -5,6 +5,7 @@ export class TargetListManager {
     private selectedId: string | null = null;
     private hoveredId: string | null = null;
     private activeGotoBtn: HTMLElement | null = null;
+    private activeGotoTimeout: ReturnType<typeof setTimeout> | null = null;
     
     // Callbacks for external components
     public onTargetSelect: ((id: string | null) => void) | null = null;
@@ -191,9 +192,14 @@ export class TargetListManager {
 
         document.body.appendChild(btn);
         this.activeGotoBtn = btn;
+        this.activeGotoTimeout = setTimeout(() => this.hideGotoPopup(), 10000);
     }
 
-    private hideGotoPopup() {
+    public hideGotoPopup() {
+        if (this.activeGotoTimeout) {
+            clearTimeout(this.activeGotoTimeout);
+            this.activeGotoTimeout = null;
+        }
         if (this.activeGotoBtn) {
             this.activeGotoBtn.remove();
             this.activeGotoBtn = null;

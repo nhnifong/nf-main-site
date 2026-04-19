@@ -85,12 +85,16 @@ class RobotState:
         self.last_update = time.time()
         self.last_control_time = time.time()
 
+MOVE_SPEED = 0.3  # m/s
+MOVE_ARRIVAL_THRESHOLD = 0.05  # meters
+
 class SimulatedRobot:
     def __init__(self, websocket):
         self.websocket = websocket
         self.state = RobotState()
         self.tasks: List[asyncio.Task] = []
         self._running = False
+        self._move_task: Optional[asyncio.Task] = None
 
     def _get_anchor_poses(self):
         """
@@ -263,6 +267,21 @@ class SimulatedRobot:
             await self.websocket.send_bytes(bytes(batch))
             await asyncio.sleep(DT)
 
+    async def _execute_move_to(self, gantry_goal: np.ndarray):
+        """Move gantry to goal at MOVE_SPEED m/s, stopping on arrival or cancellation."""
+        try:
+            while self._running:
+                delta = gantry_goal - self.state.pos
+                dist = np.linalg.norm(delta)
+                if dist < MOVE_ARRIVAL_THRESHOLD:
+                    self.state.target_vel = np.array([0.0, 0.0, 0.0])
+                    break
+                self.state.target_vel = (delta / dist) * MOVE_SPEED
+                await asyncio.sleep(DT)
+        except asyncio.CancelledError:
+            self.state.target_vel = np.array([0.0, 0.0, 0.0])
+            raise
+
     async def _receive_loop(self):
         """
         Listens for ControlBatchUpdate messages and updates state.
@@ -319,6 +338,19 @@ class SimulatedRobot:
                         # Update Wrist
                         if move.wrist_speed is not None:
                             self.state.wrist_angle = np.clip(self.state.wrist_angle + move.wrist_speed*DT, 0, 1080)
+
+                    elif item.move_gripper_to:
+                        mgt = item.move_gripper_to
+                        if mgt.pos:
+                            gripper_goal = np.array([mgt.pos.x, mgt.pos.y, mgt.pos.z])
+                            gantry_goal = gripper_goal + np.array([0.0, 0.0, 0.5])
+                            gantry_goal = np.clip(gantry_goal, MIN_BOUNDS, MAX_BOUNDS)
+                            logger.debug(f"MoveGripperTo pos={gripper_goal}, gantry_goal={gantry_goal}")
+                            if self._move_task and not self._move_task.done():
+                                self._move_task.cancel()
+                            self._move_task = asyncio.create_task(self._execute_move_to(gantry_goal))
+                        elif mgt.target_id:
+                            logger.warning(f"MoveGripperTo target_id not supported in simulation: {mgt.target_id}")
 
                     else:
                         # Log other commands but do nothing

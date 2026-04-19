@@ -1945,11 +1945,16 @@ window.addEventListener('click', (event) => {
   if (currentHoverType) {
     openComponentPanel(currentHoverType, currentHoverIndex);
   } else {
+    let hitFloor = false;
     for (const hit of intersects) {
       if (hit.object === room.mesh && Math.abs(hit.point.y) < 0.05) {
-        targetListManager.showFloorGotoPopup(event.clientX, event.clientY, hit.point); 
+        targetListManager.showFloorGotoPopup(event.clientX, event.clientY, hit.point);
+        hitFloor = true;
         break;
       }
+    }
+    if (!hitFloor) {
+      targetListManager.hideGotoPopup();
     }
   }
 });
