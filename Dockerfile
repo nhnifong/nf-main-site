@@ -32,7 +32,7 @@ COPY ./nf-viz .
 
 # Build Frontend
 # This runs "npm run proto" -> "python3 sync_protos.py" -> extracts protos -> "pbjs" -> build
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 

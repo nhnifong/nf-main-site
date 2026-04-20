@@ -9,7 +9,7 @@ Once (idempotent though)
     nvm install 22
     nvm use 22
     cd nf-viz
-    npm install
+    npm install --legacy-peer-deps
     python3 -m venv venv
     source venv/bin/activate
     pip install nf_robot

@@ -1484,6 +1484,14 @@ function initHeader() {
     document.getElementById('landing-layer')?.classList.remove('hidden');
     document.getElementById('landing-options')?.classList.remove('hidden');
   });
+
+  // sign-in overlay: close on X button or background click
+  document.getElementById('btn-signin-back')?.addEventListener('click', () => {
+    AuthManager.hideSignInUI();
+  });
+  document.getElementById('signin-overlay')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) AuthManager.hideSignInUI();
+  });
 }
 initHeader();
 
