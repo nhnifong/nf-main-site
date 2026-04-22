@@ -3,7 +3,7 @@ import json
 import logging
 import traceback
 from typing import Dict, List
-from fastapi import WebSocket
+from fastapi import WebSocket, HTTPException
 import redis.asyncio as redis
 import os
 from nf_robot.generated.nf import telemetry, control, common
@@ -67,6 +67,13 @@ class TelemetryManager:
         Every message on the websocket will be a serialized TelemetryBatchUpdate
         Every message sent must be a serialized ControlBatchUpdate
         """
+        online = False
+        up_status = await self.decoding_redis.hgetall(f"robot:{robot_id}:uplink_state")
+        if up_status and 'online' in up_status:
+            online = up_status['online'] == 'true'
+        if online:
+            raise HTTPException(status_code=409, detail="A robot with this ID is already connected and active.")
+
         self.active_robot_connections[robot_id] = websocket
         await self.mark_robot_online(robot_id, True)
 
