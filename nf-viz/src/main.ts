@@ -1121,15 +1121,16 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
     videoManager.connectLocal(data.localUri);
   } else if (data.streamPath) {
     // Connect with WebRTC to the production server at data.streamPath
-    let token: string | undefined;
-    if (!isSimMode) {
+    let ticket: string | undefined;
+    if (!isSimMode && currentRobotId) {
       try {
-        token = await AuthManager.getAuthToken();
+        const token = await AuthManager.getAuthToken();
+        ticket = await AuthManager.apiGetStreamTicket(currentRobotId, token);
       } catch (e) {
-        console.warn("Could not get a token to authenticate video stream. Not logged in?", e);
+        console.warn("Could not get a stream ticket for video auth:", e);
       }
     }
-    videoManager.connectWebRTC(data.streamPath, token);
+    videoManager.connectWebRTC(data.streamPath, ticket);
   }
 
   // Assign the feed's anchor num and vitual camera for target overlay math

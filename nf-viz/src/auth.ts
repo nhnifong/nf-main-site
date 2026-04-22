@@ -122,6 +122,20 @@ export async function apiBindRobot(robotId: string, nickname: string, token: str
 }
 
 /**
+ * API: Obtain a short-lived stream ticket for the given robot.
+ * Pass the returned ticket as ?ticket= on the WHEP URL instead of a Firebase token.
+ */
+export async function apiGetStreamTicket(robotId: string, token: string): Promise<string> {
+  const response = await fetch(`/ticket/${robotId}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error(`Failed to get stream ticket: ${response.statusText}`);
+  const data = await response.json();
+  return data.ticket as string;
+}
+
+/**
  * API: Unlink a robot from the user's account.
  */
 export async function apiUnbindRobot(robotId: string, token: string): Promise<void> {

@@ -7,6 +7,7 @@ from fastapi import HTTPException, status, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from .database import async_session, RobotOwnership, RobotSharedAccess
+from .tickets import get_ticket
 from urllib.parse import parse_qs
 
 logger = logging.getLogger(__name__)
@@ -93,7 +94,7 @@ async def check_robot_access(user_id: str, user_email: Optional[str], robot_id: 
         logger.warning(f"Access denied: User {user_id} ({user_email}) has no access to Robot {robot_id}")
         return False
 
-async def validate_stream_auth(req, redis_conn) -> bool:
+async def validate_stream_auth(req, redis_conn, telemetry_manager) -> bool:
     """
     Validates MediaMTX webhook requests.
     req.action is either 'publish' (Robot) or 'read' (User)
@@ -116,25 +117,53 @@ async def validate_stream_auth(req, redis_conn) -> bool:
         return False
 
     elif req.action == 'read':
-        # Prefer token from password field (HTTP Basic Auth / URL credentials);
-        # fall back to query param for backwards compatibility.
+        query_params = parse_qs(req.query)
+
+        # --- Ticket auth (preferred) ---
+        if 'ticket' in query_params:
+            ticket_id = query_params['ticket'][0]
+            ticket = await get_ticket(redis_conn, ticket_id)
+
+            if not ticket or ticket.get('robot_id') != robot_id:
+                logger.info(f'Rejecting stream auth: invalid ticket or robot_id mismatch for {robot_id}')
+                return False
+
+            user_email = ticket.get('user_email', '').lower()
+            user_id = ticket['user_id']
+
+            # Ticket is only valid while the user has an active /control connection.
+            connections = telemetry_manager.active_user_connections.get(robot_id, [])
+            user_is_connected = any(
+                telemetry_manager.user_email.get(ws, '').lower() == user_email
+                for ws in connections
+            )
+            if not user_is_connected:
+                logger.info(f'Rejecting stream auth: user {user_email} has no active connection to {robot_id}')
+                return False
+
+            # Re-check access in case it was revoked since the ticket was issued.
+            if not await check_robot_access(user_id, user_email, robot_id):
+                logger.info(f'Rejecting stream auth: user {user_email} no longer has access to {robot_id}')
+                return False
+
+            logger.info(f'Stream auth approved via ticket for user {user_email} on {robot_id}')
+            return True
+
+        # --- Token auth (backwards compatibility) ---
+        # Prefer token from password field (HTTP Basic Auth / URL credentials).
         token = req.password if req.password else None
 
         if not token:
-            query_params = parse_qs(req.query)
             if 'token' not in query_params:
-                logger.info('Rejecting auth request from mediaMTX: no token in password or query params')
+                logger.info('Rejecting stream auth: no ticket, no token in password or query params')
                 return False
             token = query_params['token'][0]
 
         user_token = await verify_google_token(token)
-        
-        # Extracted email from the Firebase JWT
         user_email = user_token.get("email")
-        
-        # Use check_robot_access instead of strictly check_robot_ownership
+
         if not await check_robot_access(user_token['uid'], user_email, robot_id):
-            logger.info('Rejecting auth request from mediaMTX because user lacks access to this robot')
+            logger.info('Rejecting stream auth: user lacks access to this robot')
             raise HTTPException(status_code=403, detail="Forbidden 1")
         return True
 

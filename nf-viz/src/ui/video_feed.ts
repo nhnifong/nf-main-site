@@ -273,7 +273,7 @@ export class VideoFeed {
     }
 
     // --- WebRTC ---
-    public async connectWebRTC(streamPath: string, token?: string) {
+    public async connectWebRTC(streamPath: string, ticket?: string) {
         // Ensure image mode is off
         this.img.classList.add('hidden');
         this.img.src = '';
@@ -285,10 +285,11 @@ export class VideoFeed {
             whepUrl = `http://localhost:8889/${streamPath}/whep`;
         }
 
-        // Append credentials to URL in query param as "token"
-        if (token) {
+        // Append the stream ticket as a query param.
+        // A ticket avoids embedding a long-lived Firebase token in the URL.
+        if (ticket) {
             const separator = whepUrl.includes('?') ? '&' : '?';
-            whepUrl += `${separator}token=${encodeURIComponent(token)}`;
+            whepUrl += `${separator}ticket=${encodeURIComponent(ticket)}`;
         }
 
         try {

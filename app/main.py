@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .telemetry_manager import telemetry_manager
 from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
+from .tickets import create_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
 from .database import init_db, get_db, RobotOwnership, RobotSharedAccess
@@ -101,6 +102,27 @@ class ShareRequest(BaseModel):
 
 # --- HTTP Endpoints ---
 
+@app.post("/ticket/{robot_id}")
+async def create_stream_ticket(
+    robot_id: str,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+):
+    """
+    Issues a short-lived stream ticket for the authenticated user.
+    The ticket can be passed as ?ticket= to the WHEP endpoint instead of a Firebase token.
+    It stays valid only while the user has an active /control connection and retains access.
+    """
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+    user_email = user_token.get("email", "")
+
+    if not await check_robot_access(user_id, user_email, robot_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    ticket = await create_ticket(telemetry_manager.decoding_redis, user_id, user_email, robot_id)
+    return {"ticket": ticket}
+
+
 @app.post("/internal/auth")
 async def media_server_auth(req: StreamAuthRequest):
     """
@@ -112,7 +134,7 @@ async def media_server_auth(req: StreamAuthRequest):
     - If action == 'read', a User is trying to watch via WebRTC.
       We verify the user has permission to view this robot.
     """            
-    is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis)
+    is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis, telemetry_manager)
     if not is_valid:
         logger.info(f"is_valid = {is_valid}")
         raise HTTPException(status_code=403, detail="Forbidden 2")
@@ -122,7 +144,8 @@ async def media_server_auth(req: StreamAuthRequest):
 async def robot_websocket_endpoint(
     websocket: WebSocket,
     robot_id: str,
-    token: Optional[str] = None
+    token: Optional[str] = None,
+    ticket: Optional[str] = None,
 ):
     """
     Endpoint where observer.py connects to send telemetry and receive control messages.
@@ -154,7 +177,8 @@ async def robot_websocket_endpoint(
 async def ui_websocket_endpoint(
     websocket: WebSocket,
     robot_id: str,
-    token: Optional[str] = None
+    token: Optional[str] = None,
+    ticket: Optional[str] = None,
 ):
     """
     Endpoint where web based robot ui connects to send controls and receive telemetry messages.
@@ -163,23 +187,31 @@ async def ui_websocket_endpoint(
     """
     await websocket.accept()
 
-    # Prefer Authorization header; fall back to query param for backwards compatibility.
+    # Prefer Authorization header over query param token.
     auth_header = websocket.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
 
+    user_id: Optional[str] = None
     try:
-        if not token:
-            await websocket.close(code=1008)  # Policy Violation
+        if token:
+            # Standard Firebase token auth.
+            user_token = await verify_google_token(token)
+            user_id = user_token["uid"]
+            user_email = user_token.get("email")
+        elif ticket:
+            # Ticket auth: look up pre-issued ticket to get identity.
+            ticket_data = await get_ticket(telemetry_manager.decoding_redis, ticket)
+            if not ticket_data or ticket_data.get("robot_id") != robot_id:
+                logger.warning(f"Invalid or mismatched ticket for {robot_id}")
+                await websocket.close(code=1008)
+                return
+            user_id = ticket_data["user_id"]
+            user_email = ticket_data.get("user_email")
+        else:
+            await websocket.close(code=1008)  # Policy Violation — no credentials
             return
 
-        # Verify Identity
-        user_token = await verify_google_token(token)
-        user_id = user_token["uid"]
-        user_email = user_token.get("email")
-        
-        # Check Authorization
-        # does the logged in user have permission to control the robot?
         if not await check_robot_access(user_id, user_email, robot_id):
             logger.warning(f"Unauthorized access attempt to {robot_id}")
             await websocket.close(code=1008)
@@ -190,13 +222,16 @@ async def ui_websocket_endpoint(
 
     except WebSocketDisconnect:
         logger.info(f"Client disconnected from {robot_id}")
-        # Cleanup is handled within telemetry_manager, but specific disconnect logic goes here
         await telemetry_manager.disconnect(robot_id, "user")
-        
+
     except Exception as e:
         logger.error(f"WebSocket Error: {e}")
         await websocket.close(code=1011)
-        raise e # raise so trace can be seen in logs
+        raise e  # raise so trace can be seen in logs
+
+    finally:
+        if user_id:
+            await delete_user_robot_tickets(telemetry_manager.decoding_redis, user_id, robot_id)
 
 
 @app.websocket("/simulated/{model}")
