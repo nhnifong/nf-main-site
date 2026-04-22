@@ -144,7 +144,6 @@ async def media_server_auth(req: StreamAuthRequest):
 async def robot_websocket_endpoint(
     websocket: WebSocket,
     robot_id: str,
-    token: Optional[str] = None,
     ticket: Optional[str] = None,
 ):
     """
@@ -155,7 +154,8 @@ async def robot_websocket_endpoint(
     """
     await websocket.accept()
 
-    # Prefer Authorization header; fall back to query param for backwards compatibility.
+    # Token must be in the Authorization header; query-param tokens are no longer accepted.
+    token: Optional[str] = None
     auth_header = websocket.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
@@ -177,7 +177,6 @@ async def robot_websocket_endpoint(
 async def ui_websocket_endpoint(
     websocket: WebSocket,
     robot_id: str,
-    token: Optional[str] = None,
     ticket: Optional[str] = None,
 ):
     """
@@ -187,7 +186,8 @@ async def ui_websocket_endpoint(
     """
     await websocket.accept()
 
-    # Prefer Authorization header over query param token.
+    # Token must be in the Authorization header; query-param tokens are no longer accepted.
+    token: Optional[str] = None
     auth_header = websocket.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
@@ -195,7 +195,7 @@ async def ui_websocket_endpoint(
     user_id: Optional[str] = None
     try:
         if token:
-            # Standard Firebase token auth.
+            # Non-browser clients (e.g. server-to-server) send a Firebase token via Bearer header.
             user_token = await verify_google_token(token)
             user_id = user_token["uid"]
             user_email = user_token.get("email")

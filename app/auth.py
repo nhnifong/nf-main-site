@@ -2,9 +2,7 @@ import logging
 from typing import Optional
 import firebase_admin
 from firebase_admin import auth as firebase_auth
-from firebase_admin import credentials
-from fastapi import HTTPException, status, Security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from .database import async_session, RobotOwnership, RobotSharedAccess
 from .tickets import get_ticket
@@ -18,9 +16,6 @@ try:
     firebase_admin.get_app()
 except ValueError:
     firebase_admin.initialize_app()
-
-# Helper for HTTP Bearer tokens
-security = HTTPBearer()
 
 async def verify_google_token(token: str) -> dict:
     """
@@ -119,52 +114,36 @@ async def validate_stream_auth(req, redis_conn, telemetry_manager) -> bool:
     elif req.action == 'read':
         query_params = parse_qs(req.query)
 
-        # --- Ticket auth (preferred) ---
-        if 'ticket' in query_params:
-            ticket_id = query_params['ticket'][0]
-            ticket = await get_ticket(redis_conn, ticket_id)
+        if 'ticket' not in query_params:
+            logger.info(f'Rejecting stream auth for {robot_id}: no ticket')
+            return False
 
-            if not ticket or ticket.get('robot_id') != robot_id:
-                logger.info(f'Rejecting stream auth: invalid ticket or robot_id mismatch for {robot_id}')
-                return False
+        ticket_id = query_params['ticket'][0]
+        ticket = await get_ticket(redis_conn, ticket_id)
 
-            user_email = ticket.get('user_email', '').lower()
-            user_id = ticket['user_id']
+        if not ticket or ticket.get('robot_id') != robot_id:
+            logger.info(f'Rejecting stream auth: invalid ticket or robot_id mismatch for {robot_id}')
+            return False
 
-            # Ticket is only valid while the user has an active /control connection.
-            connections = telemetry_manager.active_user_connections.get(robot_id, [])
-            user_is_connected = any(
-                telemetry_manager.user_email.get(ws, '').lower() == user_email
-                for ws in connections
-            )
-            if not user_is_connected:
-                logger.info(f'Rejecting stream auth: user {user_email} has no active connection to {robot_id}')
-                return False
+        user_email = ticket.get('user_email', '').lower()
+        user_id = ticket['user_id']
 
-            # Re-check access in case it was revoked since the ticket was issued.
-            if not await check_robot_access(user_id, user_email, robot_id):
-                logger.info(f'Rejecting stream auth: user {user_email} no longer has access to {robot_id}')
-                return False
+        # Ticket is only valid while the user has an active /control connection.
+        connections = telemetry_manager.active_user_connections.get(robot_id, [])
+        user_is_connected = any(
+            telemetry_manager.user_email.get(ws, '').lower() == user_email
+            for ws in connections
+        )
+        if not user_is_connected:
+            logger.info(f'Rejecting stream auth: user {user_email} has no active connection to {robot_id}')
+            return False
 
-            logger.info(f'Stream auth approved via ticket for user {user_email} on {robot_id}')
-            return True
+        # Re-check access in case it was revoked since the ticket was issued.
+        if not await check_robot_access(user_id, user_email, robot_id):
+            logger.info(f'Rejecting stream auth: user {user_email} no longer has access to {robot_id}')
+            return False
 
-        # --- Token auth (backwards compatibility) ---
-        # Prefer token from password field (HTTP Basic Auth / URL credentials).
-        token = req.password if req.password else None
-
-        if not token:
-            if 'token' not in query_params:
-                logger.info('Rejecting stream auth: no ticket, no token in password or query params')
-                return False
-            token = query_params['token'][0]
-
-        user_token = await verify_google_token(token)
-        user_email = user_token.get("email")
-
-        if not await check_robot_access(user_token['uid'], user_email, robot_id):
-            logger.info('Rejecting stream auth: user lacks access to this robot')
-            raise HTTPException(status_code=403, detail="Forbidden 1")
+        logger.info(f'Stream auth approved via ticket for user {user_email} on {robot_id}')
         return True
 
     logger.info(f'Rejecting auth request. nothing matched {req}')

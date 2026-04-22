@@ -327,9 +327,10 @@ async function startCloudFlow(robotId: string) {
   AuthManager.initAuth();
   try {
     const token = await AuthManager.getAuthToken();
+    const ticket = await AuthManager.apiGetStreamTicket(robotId, token);
     document.getElementById('landing-layer')?.classList.add('hidden');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    connect(`${protocol}//${window.location.host}/control/${robotId}?token=${encodeURIComponent(token)}`);
+    connect(`${protocol}//${window.location.host}/control/${robotId}?ticket=${encodeURIComponent(ticket)}`);
   } catch (error) { console.error("Cloud connection failed:", error); }
 }
 
