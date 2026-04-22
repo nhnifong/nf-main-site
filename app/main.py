@@ -89,7 +89,7 @@ class StreamAuthRequest(BaseModel):
     """Payload sent by MediaMTX to validate a stream publisher or reader."""
     ip: str
     user: str
-    password: str  # MediaMTX can pass a token here
+    password: str
     path: str
     protocol: str
     id: str
@@ -120,19 +120,24 @@ async def media_server_auth(req: StreamAuthRequest):
 
 @app.websocket("/telemetry/{robot_id}")
 async def robot_websocket_endpoint(
-    websocket: WebSocket, 
+    websocket: WebSocket,
     robot_id: str,
     token: Optional[str] = None
 ):
     """
     Endpoint where observer.py connects to send telemetry and receive control messages.
-    
+
    - Register as the 'source of truth' for this robot_id.
    - Subscribe to 'commands:{robot_id}' Redis channel to forward to hardware.
     """
     await websocket.accept()
-    
-    try:        
+
+    # Prefer Authorization header; fall back to query param for backwards compatibility.
+    auth_header = websocket.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+
+    try:
         logger.info(f"Robot {robot_id} connected via WebSocket")
         await telemetry_manager.handle_robot_connection(websocket, robot_id)
 
@@ -147,7 +152,7 @@ async def robot_websocket_endpoint(
 
 @app.websocket("/control/{robot_id}")
 async def ui_websocket_endpoint(
-    websocket: WebSocket, 
+    websocket: WebSocket,
     robot_id: str,
     token: Optional[str] = None
 ):
@@ -157,11 +162,15 @@ async def ui_websocket_endpoint(
        - If Playroom: Check Queue Manager. If Driver, allow writes to 'commands:{robot_id}'.
     """
     await websocket.accept()
-    
+
+    # Prefer Authorization header; fall back to query param for backwards compatibility.
+    auth_header = websocket.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+
     try:
         if not token:
-            await websocket.close(code=1008) # code for Policy Violation
-            # no token provided
+            await websocket.close(code=1008)  # Policy Violation
             return
 
         # Verify Identity

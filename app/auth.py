@@ -103,8 +103,6 @@ async def validate_stream_auth(req, redis_conn) -> bool:
         return False
     robot_id = parts[1]
 
-    query_params = parse_qs(req.query)
-
     if req.action == 'publish':
         online = False
         up_status = await redis_conn.hgetall(f"robot:{robot_id}:uplink_state")
@@ -118,11 +116,17 @@ async def validate_stream_auth(req, redis_conn) -> bool:
         return False
 
     elif req.action == 'read':
-        if not 'token' in query_params:
-            logger.info('Rejecting auth request from mediaMTX because there was no token in the query params')
-            return False
-            
-        token = query_params['token'][0]
+        # Prefer token from password field (HTTP Basic Auth / URL credentials);
+        # fall back to query param for backwards compatibility.
+        token = req.password if req.password else None
+
+        if not token:
+            query_params = parse_qs(req.query)
+            if 'token' not in query_params:
+                logger.info('Rejecting auth request from mediaMTX: no token in password or query params')
+                return False
+            token = query_params['token'][0]
+
         user_token = await verify_google_token(token)
         
         # Extracted email from the Firebase JWT
