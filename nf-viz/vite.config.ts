@@ -42,6 +42,10 @@ export default defineConfig({
       '/list_authorized': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
+      },
+      '/ticket': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
       }
     }
   },
