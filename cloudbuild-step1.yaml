@@ -160,8 +160,11 @@ steps:
   - 'redis-connector'
   - '--set-env-vars'
   - 'REDIS_URL=redis://10.83.184.211:6379'
+  - 'HF_CLIENT_ID=391a0b16-657f-40f5-bc1c-79586cce1711'
+  - 'HF_REDIRECT_URI=https://nf-site-monolith-staging-690802609278.us-east1.run.app/hf-redirect'
   - '--set-secrets'
   - 'DATABASE_URL=STAGING_DATABASE_URL:latest'
+  - 'HF_CLIENT_SECRET=HF_CLIENT_SECRET_STAGING:latest'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com'
   waitFor: ['push-image']

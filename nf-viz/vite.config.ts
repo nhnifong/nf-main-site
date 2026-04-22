@@ -46,6 +46,14 @@ export default defineConfig({
       '/ticket': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
+      },
+      '/huggingface/status': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
+      },
+      '/huggingface/exchange_code': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
       }
     }
   },

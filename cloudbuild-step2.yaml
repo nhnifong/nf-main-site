@@ -66,8 +66,11 @@ steps:
   - 'redis-connector'
   - '--set-env-vars'
   - 'REDIS_URL=redis://10.83.184.211:6379'
+  - 'HF_CLIENT_ID=e7e80901-0718-4ace-a107-46a43fa2ff37'
+  - 'HF_REDIRECT_URI=https://neufangled.com/hf-redirect'
   - '--set-secrets'
   - 'DATABASE_URL=PROD_DATABASE_URL:latest'
+  - 'HF_CLIENT_SECRET=HF_CLIENT_SECRET_PROD:latest'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com' # Use your actual project number
   waitFor: ['determine-buckets']

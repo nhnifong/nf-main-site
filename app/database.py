@@ -50,6 +50,16 @@ class RobotSharedAccess(Base):
         UniqueConstraint('robot_id', 'guest_email', name='_robot_guest_uc'),
     )
 
+class UserExternalTokens(Base):
+    __tablename__ = "user_external_tokens"
+    
+    # The Firebase UID
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    
+    # Hugging Face Data
+    hf_access_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    hf_username: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -11,13 +11,14 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+import httpx
 
 from .telemetry_manager import telemetry_manager
 from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
 from .tickets import create_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
-from .database import init_db, get_db, RobotOwnership, RobotSharedAccess
+from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens
 from .product_loader import load_product, load_all_products
 
 # Configure logging
@@ -27,6 +28,12 @@ logger = logging.getLogger(__name__)
 # Asset bucket URL — baked in at Docker build time (same value Vite uses).
 # Falls back to "" in local dev, making image paths relative (e.g. /assets/foo.jpg).
 ASSET_BUCKET_URL = os.environ.get("VITE_ASSET_BUCKET_URL", "")
+
+# Hugging Face OAuth Credentials (Loaded from environment / GCP Secret Manager)
+HF_CLIENT_ID = os.environ.get("HF_CLIENT_ID", "")
+HF_CLIENT_SECRET = os.environ.get("HF_CLIENT_SECRET", "")
+# This must exactly match the redirect URI registered in Hugging Face developer settings
+HF_REDIRECT_URI = os.environ.get("HF_REDIRECT_URI", "https://neufangled.com/hf-redirect")
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -99,6 +106,9 @@ class StreamAuthRequest(BaseModel):
 
 class ShareRequest(BaseModel):
     guest_email: EmailStr
+
+class HuggingFaceExchangeRequest(BaseModel):
+    code: str
 
 # --- HTTP Endpoints ---
 
@@ -444,6 +454,90 @@ async def list_robots(
 
     return {'bots': bots_with_status}
 
+# --- OAuth & Hugging Face Integrations ---
+
+@app.post("/huggingface/exchange_code")
+async def huggingface_exchange_code(
+    req: HuggingFaceExchangeRequest,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Called by frontend after it receives a code from Hugging Face's redirect.
+    Exchanges the code for a permanent token, fetches the user's HF username, 
+    and saves it all to the database.
+    """
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    # Exchange the code for an Access Token
+    async with httpx.AsyncClient() as client:
+        token_res = await client.post("https://huggingface.co/oauth/token", data={
+            "grant_type": "authorization_code",
+            "client_id": HF_CLIENT_ID,
+            "client_secret": HF_CLIENT_SECRET,
+            "code": req.code,
+            "redirect_uri": HF_REDIRECT_URI
+        })
+        
+        if token_res.status_code != 200:
+            logger.error(f"HF Token Exchange Failed: {token_res.text}")
+            raise HTTPException(status_code=400, detail="Invalid or expired authorization code.")
+            
+        token_data = token_res.json()
+        hf_access_token = token_data.get("access_token")
+
+        # Fetch the user's Hugging Face username using their new token
+        whoami_res = await client.get(
+            "https://huggingface.co/api/whoami-v2", 
+            headers={"Authorization": f"Bearer {hf_access_token}"}
+        )
+        
+        if whoami_res.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch Hugging Face profile data.")
+            
+        hf_username = whoami_res.json().get("name")
+
+    # Store the token and username in the database
+    # Check if a record exists for this Firebase user
+    result = await db.execute(
+        select(UserExternalTokens).where(UserExternalTokens.user_id == user_id)
+    )
+    existing_record = result.scalar_one_or_none()
+
+    if existing_record:
+        existing_record.hf_access_token = hf_access_token
+        existing_record.hf_username = hf_username
+    else:
+        new_record = UserExternalTokens(
+            user_id=user_id,
+            hf_access_token=hf_access_token,
+            hf_username=hf_username
+        )
+        db.add(new_record)
+        
+    await db.commit()
+
+    return {"status": "success", "hf_username": hf_username}
+
+@app.get("/huggingface/status")
+async def get_huggingface_status(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Allows the frontend to check if the current user has connected their Hugging Face account."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    result = await db.execute(
+        select(UserExternalTokens).where(UserExternalTokens.user_id == user_id)
+    )
+    record = result.scalar_one_or_none()
+
+    if record and record.hf_access_token:
+        return {"connected": True, "hf_username": record.hf_username}
+    
+    return {"connected": False}
 
 # by putting this at the end, it is matched with a lower priority.
 @app.get("/{page_name}")
@@ -455,6 +549,7 @@ async def read_page(request: Request, page_name: str):
         "company": "company.html",
         "future": "future.html",
         "payment_options": "payment_options.html",
+        "hf-redirect": "hf-redirect.html",
     }
 
     if page_name in page_map:
