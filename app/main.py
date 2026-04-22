@@ -144,7 +144,6 @@ async def media_server_auth(req: StreamAuthRequest):
 async def robot_websocket_endpoint(
     websocket: WebSocket,
     robot_id: str,
-    ticket: Optional[str] = None,
 ):
     """
     Endpoint where observer.py connects to send telemetry and receive control messages.
@@ -153,12 +152,6 @@ async def robot_websocket_endpoint(
    - Subscribe to 'commands:{robot_id}' Redis channel to forward to hardware.
     """
     await websocket.accept()
-
-    # Token must be in the Authorization header; query-param tokens are no longer accepted.
-    token: Optional[str] = None
-    auth_header = websocket.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header[7:]
 
     try:
         logger.info(f"Robot {robot_id} connected via WebSocket")
