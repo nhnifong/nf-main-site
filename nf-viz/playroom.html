@@ -364,19 +364,43 @@
           </div>
 
           <div id="lerobot-inactive-content">
-            <p class="panel-desc">
-              Start a LeRobot session for recording or eval on the machine where Stringman's motion controller is running.
-            </p>
-            <a href="https://huggingface.co/oauth/authorize?client_id=872d9c11-fa21-48b7-898b-7518227c7d05&redirect_uri=http://localhost:5173/hf-redirect&response_type=code&scope=contribute-repos%20openid%20profile&prompt=consent&state=1234567890">Link huggingface account</a>
-
+            <!-- Recording Mode -->
             <div class="session-section">
-              <div class="session-input-group">
-                <div class="input-label">Dataset Repo ID</div>
-                <input type="text" id="lerobot-input-dataset" class="input-text" value="username/my-dataset">
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Recording Mode</div>
+
+              <!-- Cloud: not linked to HuggingFace -->
+              <div id="lerobot-rec-unlinked" class="hidden">
+                <a id="lerobot-hf-oauth-link"
+                   href="https://huggingface.co/oauth/authorize?client_id=872d9c11-fa21-48b7-898b-7518227c7d05&redirect_uri=http://localhost:5173/hf-redirect&response_type=code&scope=contribute-repos%20openid%20profile&prompt=consent&state=1234567890"
+                   class="run-button btn-green btn-full" style="text-decoration:none; justify-content:center;">
+                  Link HuggingFace Account
+                </a>
               </div>
-              <button id="btn-lerobot-start-rec" class="run-button btn-green btn-full">Start recording session</button>
+
+              <!-- Cloud: linked to HuggingFace -->
+              <div id="lerobot-rec-linked" class="hidden">
+                <div class="session-input-group">
+                  <div class="input-label">Dataset Name</div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <strong id="lerobot-hf-username" style="color:var(--text-bright); white-space:nowrap;"></strong>
+                    <span style="color:var(--text-dim);">/</span>
+                    <input type="text" id="lerobot-input-dataset-name" class="input-text" placeholder="my-dataset" style="margin:0; flex:1;">
+                  </div>
+                </div>
+                <button id="btn-lerobot-start-rec-linked" class="run-button btn-green btn-full">Start recording session</button>
+              </div>
+
+              <!-- LAN mode: specify full repo ID -->
+              <div id="lerobot-rec-lan" class="hidden">
+                <div class="session-input-group">
+                  <div class="input-label">Dataset Repo ID</div>
+                  <input type="text" id="lerobot-input-dataset" class="input-text" value="username/my-dataset">
+                </div>
+                <button id="btn-lerobot-start-rec-lan" class="run-button btn-green btn-full">Start recording session</button>
+              </div>
             </div>
 
+            <!-- Policy Eval -->
             <div class="session-section">
               <div class="session-input-group">
                 <div class="input-label">Policy Repo ID</div>

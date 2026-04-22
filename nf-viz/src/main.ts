@@ -303,6 +303,8 @@ function startSimFlow() {
   isSimMode = true;
   setUrlParam('sim');
   document.getElementById('landing-layer')?.classList.add('hidden');
+  document.getElementById('btn-header-lerobot')?.classList.add('hidden');
+  document.getElementById('lerobot-overlay')?.classList.add('hidden');
   updateRobotIdUI("Simulated Pilot");
   
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -1593,9 +1595,9 @@ function updateLeRobotUI() {
   const panelActive = document.getElementById('lerobot-panel-active');
   const inactiveContent = document.getElementById('lerobot-inactive-content');
   const pendingOverlay = document.getElementById('lerobot-pending-overlay');
-  const pendingText = document.getElementById('lerobot-pending-text');
 
-  const startRecBtn = document.getElementById('btn-lerobot-start-rec') as HTMLButtonElement;
+  const startRecBtnLinked = document.getElementById('btn-lerobot-start-rec-linked') as HTMLButtonElement;
+  const startRecBtnLan = document.getElementById('btn-lerobot-start-rec-lan') as HTMLButtonElement;
   const startEvalBtn = document.getElementById('btn-lerobot-start-eval') as HTMLButtonElement;
 
   const sessionEpsEl = document.getElementById('lerobot-session-eps');
@@ -1609,19 +1611,24 @@ function updateLeRobotUI() {
   const hfBtn = document.getElementById('hf-vis-btn') as HTMLAnchorElement;
 
   if (headerBtn) {
-    if (isLeRobotSessionActive) {
-      let icon = '';
-      const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
-      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
-        icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
-        icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING) {
-        icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
-      }
-      headerBtn.innerHTML = `${icon} Session Connected`;
+    if (isSimMode) {
+      headerBtn.classList.add('hidden');
     } else {
-      headerBtn.textContent = "Start LeRobot";
+      headerBtn.classList.remove('hidden');
+      if (isLeRobotSessionActive) {
+        let icon = '';
+        const iconStyle = 'display: inline-block; margin-right: 6px; vertical-align: middle; color: #f44336;';
+        if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
+          icon = `<span style="${iconStyle} font-size: 1.2em;">○</span>`;
+        } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE) {
+          icon = `<span style="${iconStyle} font-size: 1.2em;">●</span>`;
+        } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING) {
+          icon = `<span style="${iconStyle} font-weight: bold; letter-spacing: 1px;">⸭</span>`;
+        }
+        headerBtn.innerHTML = `${icon} Session Connected`;
+      } else {
+        headerBtn.textContent = "Record";
+      }
     }
   }
 
@@ -1721,13 +1728,14 @@ function updateLeRobotUI() {
       if (isLeRobotStarting) {
         inactiveContent?.classList.add('hidden');
         pendingOverlay?.classList.remove('hidden');
-        if (pendingText) pendingText.textContent = "STARTING SESSION...";
-        if (startRecBtn) startRecBtn.disabled = true;
+        if (startRecBtnLinked) startRecBtnLinked.disabled = true;
+        if (startRecBtnLan) startRecBtnLan.disabled = true;
         if (startEvalBtn) startEvalBtn.disabled = true;
       } else {
         inactiveContent?.classList.remove('hidden');
         pendingOverlay?.classList.add('hidden');
-        if (startRecBtn) startRecBtn.disabled = false;
+        if (startRecBtnLinked) startRecBtnLinked.disabled = false;
+        if (startRecBtnLan) startRecBtnLan.disabled = false;
         if (startEvalBtn) startEvalBtn.disabled = false;
       }
     }
@@ -1762,23 +1770,56 @@ function handleLeRobotFinalize() {
   }
 }
 
+async function refreshHfStatus() {
+  const unlinked = document.getElementById('lerobot-rec-unlinked');
+  const linked = document.getElementById('lerobot-rec-linked');
+  const lanSection = document.getElementById('lerobot-rec-lan');
+
+  unlinked?.classList.add('hidden');
+  linked?.classList.add('hidden');
+  lanSection?.classList.add('hidden');
+
+  if (isLanMode) {
+    lanSection?.classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const token = await AuthManager.getAuthToken();
+    const res = await fetch('/huggingface/status', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.connected) {
+      const usernameEl = document.getElementById('lerobot-hf-username');
+      if (usernameEl) usernameEl.textContent = data.hf_username;
+      linked?.classList.remove('hidden');
+    } else {
+      unlinked?.classList.remove('hidden');
+    }
+  } catch (e) {
+    console.warn('Could not fetch HF status:', e);
+    unlinked?.classList.remove('hidden');
+  }
+}
+
 function initLeRobotPanel() {
   const headerBtn = document.getElementById('btn-header-lerobot');
   const overlay = document.getElementById('lerobot-overlay');
   const closeBtn = document.getElementById('close-lerobot-panel');
   const catcher = document.getElementById('lerobot-bg-catcher');
-  const startRecBtn = document.getElementById('btn-lerobot-start-rec');
   const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
   const finalizeBtn = document.getElementById('btn-lerobot-finalize');
 
   headerBtn?.addEventListener('click', () => {
+    if (isSimMode) return;
     overlay?.classList.remove('hidden');
     updateLeRobotUI();
+    if (!isLeRobotSessionActive) refreshHfStatus();
   });
 
   const closePanel = () => {
     overlay?.classList.add('hidden');
-    // if closing a panel after completing a dataset, reset status
     if (!isLeRobotSessionActive && leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
       leRobotState = nf.common.LerobotStatus.LEROBOTSTATUS_NA;
     }
@@ -1786,7 +1827,13 @@ function initLeRobotPanel() {
   closeBtn?.addEventListener('click', closePanel);
   catcher?.addEventListener('click', closePanel);
 
-  startRecBtn?.addEventListener('click', () => {
+  document.getElementById('btn-lerobot-start-rec-linked')?.addEventListener('click', () => {
+    const usernameEl = document.getElementById('lerobot-hf-username');
+    const nameInput = document.getElementById('lerobot-input-dataset-name') as HTMLInputElement;
+    handleLeRobotStart('recording', `${usernameEl?.textContent ?? ''}/${nameInput?.value ?? ''}`);
+  });
+
+  document.getElementById('btn-lerobot-start-rec-lan')?.addEventListener('click', () => {
     const input = document.getElementById('lerobot-input-dataset') as HTMLInputElement;
     handleLeRobotStart('recording', input.value);
   });
