@@ -1802,6 +1802,10 @@ async function refreshHfStatus() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
+    if (data.oauth_url) {
+      const oauthLink = document.getElementById('lerobot-hf-oauth-link') as HTMLAnchorElement;
+      if (oauthLink) oauthLink.href = data.oauth_url;
+    }
     if (data.connected) {
       const usernameEl = document.getElementById('lerobot-hf-username');
       if (usernameEl) usernameEl.textContent = data.hf_username;

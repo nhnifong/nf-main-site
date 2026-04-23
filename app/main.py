@@ -534,10 +534,20 @@ async def get_huggingface_status(
     )
     record = result.scalar_one_or_none()
 
+    oauth_url = (
+        f"https://huggingface.co/oauth/authorize"
+        f"?client_id={HF_CLIENT_ID}"
+        f"&redirect_uri={HF_REDIRECT_URI}"
+        f"&response_type=code"
+        f"&scope=contribute-repos%20openid%20profile"
+        f"&prompt=consent"
+        f"&state=1234567890"
+    )
+
     if record and record.hf_access_token:
-        return {"connected": True, "hf_username": record.hf_username}
-    
-    return {"connected": False}
+        return {"connected": True, "hf_username": record.hf_username, "oauth_url": oauth_url}
+
+    return {"connected": False, "oauth_url": oauth_url}
 
 # by putting this at the end, it is matched with a lower priority.
 @app.get("/{page_name}")

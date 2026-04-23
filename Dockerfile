@@ -3,7 +3,7 @@ ARG ASSET_BUCKET_URL
 # ==========================================
 # Stage 1: Build Frontend
 # ==========================================
-# We use a Python base image so we can easily install 'nf_robot' 
+# We use a Python base image so we can easily install 'nf_robot'
 # and give 'sync_protos.py' access to the installed protos.
 # We then install Node.js to handle the frontend build.
 FROM python:3.12 AS build-stage
