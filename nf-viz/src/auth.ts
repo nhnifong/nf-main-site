@@ -1,13 +1,7 @@
-import { initializeApp } from 'firebase/app';
-import type { Auth, User } from 'firebase/auth';
-import {
-  getAuth,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  TwitterAuthProvider,
-  signInWithRedirect,
-} from 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import * as firebaseui from 'firebaseui';
+import 'firebaseui/dist/firebaseui.css';
 
 export interface RobotInfo {
   nickname: string;
@@ -25,66 +19,82 @@ const firebaseConfig = {
   appId: "1:690802609278:web:8165450202df8179029c2f"
 };
 
-let auth: Auth | null = null;
+let auth: firebase.auth.Auth | null = null;
+let ui: firebaseui.auth.AuthUI | null = null;
 
 /**
  * Initializes Firebase Auth and sets up a listener for user state changes.
  */
-export function initAuth(onUserChange?: (user: User | null) => void) {
+export function initAuth(onUserChange?: (user: firebase.User | null) => void) {
   if (auth) return;
-  const app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  ui = new firebaseui.auth.AuthUI(auth);
 
   if (onUserChange) {
-    onAuthStateChanged(auth, onUserChange);
+    auth.onAuthStateChanged(onUserChange);
   }
 }
 
 /**
- * Hides the sign-in panel.
+ * Hides the FirebaseUI sign-in panel and restores the landing options panel.
  * Call this from a "back" button in the sign-in panel.
  */
 export function hideSignInUI() {
+  ui?.reset();
   document.getElementById('signin-overlay')?.classList.add('hidden');
 }
 
-function showSignInUI() {
+function showSignInUI(onSignedIn: (token: string) => void, onError: (e: unknown) => void) {
+  ui!.reset();
   document.getElementById('signin-overlay')?.classList.remove('hidden');
 
-  // Replace each button element to clear any previous click listeners
-  const wire = (id: string, handler: () => void) => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    const fresh = btn.cloneNode(true) as HTMLElement;
-    btn.replaceWith(fresh);
-    fresh.addEventListener('click', handler);
-  };
+  // Resolve once Firebase reports a signed-in user
+  const unsubscribe = auth!.onAuthStateChanged(async (user) => {
+    if (user) {
+      unsubscribe();
+      hideSignInUI();
+      try {
+        onSignedIn(await user.getIdToken());
+      } catch (e) {
+        onError(e);
+      }
+    }
+  });
 
-  wire('signin-google', () => signInWithRedirect(auth!, new GoogleAuthProvider()));
-  wire('signin-github', () => signInWithRedirect(auth!, new GithubAuthProvider()));
-  wire('signin-twitter', () => signInWithRedirect(auth!, new TwitterAuthProvider()));
+  ui!.start('#firebaseui-auth-container', {
+    signInFlow: 'popup',
+    signInOptions: [
+      firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+      firebase.auth.GithubAuthProvider.PROVIDER_ID,
+      firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+      firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    ],
+    callbacks: {
+      signInSuccessWithAuthResult: () => false, // prevent redirect, we handle state ourselves
+    },
+  });
 }
 
 /**
  * Retrieves a valid ID token for the current user.
- * Shows the sign-in panel if the user is not currently authenticated.
- * Shows the sign-in panel if not authenticated. Sign-in uses redirect, so
- * the page reloads after OAuth completes and the caller must retry.
+ * Shows the FirebaseUI sign-in panel if the user is not currently authenticated.
  */
 export async function getAuthToken(): Promise<string> {
   if (!auth) throw new Error("Auth not initialized");
 
   // Wait for Firebase to restore auth state before checking (may be null briefly on page load)
-  const user = await new Promise<User | null>((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth!, (u) => { unsubscribe(); resolve(u); });
+  const user = await new Promise<firebase.User | null>((resolve) => {
+    const unsubscribe = auth!.onAuthStateChanged((u) => { unsubscribe(); resolve(u); });
   });
 
   if (user) {
     return user.getIdToken(true);
   }
 
-  showSignInUI();
-  return new Promise(() => {}); // page will reload after OAuth redirect
+  return new Promise((resolve, reject) => {
+    showSignInUI(resolve, reject);
+  });
 }
 
 /**
