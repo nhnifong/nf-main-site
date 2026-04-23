@@ -852,6 +852,30 @@ h2 {
 .confirm-buttons { display: flex; justify-content: center; gap: 10px; }
 
 /* ============================================================
+   SIGN-IN PANEL
+   ============================================================ */
+#signin-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 260px;
+}
+
+.signin-provider-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.signin-provider-btn:hover { background: var(--accent-hover); }
+
+
+/* ============================================================
    PANEL OVERLAYS (component details, controls, lerobot, share)
    Dark-themed boxes containing robot controls and status.
    ============================================================ */
