@@ -1,0 +1,12 @@
+.git/
+local_db_data/
+node_modules/
+venv/
+nf-viz/venv/
+nf-viz/.vite/
+nf-viz/dist
+nf-viz/node_modules
+blend/
+guides/__pycache__/
+app/__pycache__/
+guides/venv/
