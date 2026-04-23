@@ -883,6 +883,13 @@ h2 {
 .info-grid { color: var(--text-light); font-size: 0.95rem; margin-bottom: 20px; }
 .info-row  { display: flex; justify-content: space-between; margin-bottom: 8px; }
 
+.cd-ip-copyable { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.cd-ip-copyable:hover { color: var(--text-bright); }
+.comp-details .cd-ip-copyable:hover { color: #111; }
+.copy-icon { width: 13px; height: 13px; opacity: 0.5; flex-shrink: 0; transition: opacity 0.15s; }
+.cd-ip-copyable:hover .copy-icon { opacity: 1; }
+.copy-icon.copied { opacity: 1; color: var(--green); }
+
 /* Vertical column of action buttons inside a panel. */
 .panel-actions { display: flex; flex-direction: column; gap: 10px; }
 

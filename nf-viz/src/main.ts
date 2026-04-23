@@ -1040,10 +1040,22 @@ function updateComponentStatusUI() {
           <span class="${statusClass}">${statusText}</span>
         </div>
         <div class="comp-details">
-          <span>${ip}</span>
-          <span></span> 
+          <span class="cd-ip-copyable" title="Copy IP address"><span class="comp-ip-text">${ip}</span><svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z"/><path d="M2 5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1H8v1H2V6h1V5H2z"/></svg></span>
+          <span></span>
         </div>
       `;
+      const ipEl = row.querySelector<HTMLElement>('.cd-ip-copyable');
+      ipEl?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const text = ipEl.querySelector('.comp-ip-text')?.textContent ?? '';
+        if (!text || text === 'Unknown IP') return;
+        navigator.clipboard.writeText(text).then(() => {
+          const icon = ipEl.querySelector<SVGElement>('.copy-icon');
+          if (!icon) return;
+          icon.classList.add('copied');
+          setTimeout(() => icon.classList.remove('copied'), 1500);
+        });
+      });
       menu.appendChild(row);
     });
   }
@@ -2095,6 +2107,16 @@ function initComponentDetailsPanel() {
   document.getElementById('close-component-panel')?.addEventListener('click', () => {
     document.getElementById('component-details-overlay')?.classList.add('hidden');
     activeComponentData = null;
+  });
+  document.getElementById('cd-ip-row')?.addEventListener('click', () => {
+    const ip = document.getElementById('cd-ip')?.textContent ?? '';
+    if (!ip || ip === 'Unknown') return;
+    navigator.clipboard.writeText(ip).then(() => {
+      const icon = document.querySelector<SVGElement>('#cd-ip-row .copy-icon');
+      if (!icon) return;
+      icon.classList.add('copied');
+      setTimeout(() => icon.classList.remove('copied'), 1500);
+    });
   });
 
     // Helper to bind buttons and respect the 'disabled' class
