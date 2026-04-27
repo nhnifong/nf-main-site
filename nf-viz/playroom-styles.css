@@ -942,6 +942,27 @@ h2 {
 
 .session-input-group { margin-bottom: 10px; }
 
+.seg-control {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg-btn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text-dim);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+.seg-btn.seg-active { background: var(--surface-light); color: var(--text-bright); }
+
 /* Small uppercase label above an input (Dataset Repo ID, Policy Repo ID, etc.). */
 .input-label {
   font-size: 0.75rem;

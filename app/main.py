@@ -119,6 +119,9 @@ class ShareRequest(BaseModel):
 class HuggingFaceExchangeRequest(BaseModel):
     code: str
 
+class StartRecordingRequest(BaseModel):
+    repo_id: str
+
 # --- HTTP Endpoints ---
 
 @app.post("/ticket/{robot_id}")
@@ -649,6 +652,20 @@ async def start_recording_job(
         job_id=job_name,
         job=job
     )
+
+    if "localhost" in WS_SERVER_URL:
+        logger.info(
+            "Local environment detected — skipping GCP Batch job submission. "
+            "CreateJobRequest args: parent=%s, job_id=%s, runnables=%s",
+            parent, job_name, [r.container.commands for r in task_spec.runnables]
+        )
+        return {
+            "status": "success",
+            "job_name": job_name,
+            "job_uid": "local-dry-run",
+            "state": "DRY_RUN",
+            "message": "Local environment: GCP Batch job was not submitted."
+        }
 
     try:
         created_job = await client.create_job(request=create_request)

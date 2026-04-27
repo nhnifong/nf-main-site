@@ -52,6 +52,8 @@ let lerobotError: string | null = null;
 let episodeStartTime: number | null = null;
 let sentFinalizeCommand = false;
 let episodesUntilCheckpoint: number | null = null;
+let isCloudRecordingSession = false; // true when the recording job is running in GCP Batch
+let cloudRecordingMode: 'robot' | 'cloud' = 'robot'; // selected mode in the inactive panel
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -646,6 +648,13 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
       Say(`Recording Ended, Processing video`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
       Say(`Complete`);
+      if (isCloudRecordingSession) {
+        isCloudRecordingSession = false;
+        AuthManager.getAuthToken().then(token =>
+          fetch('/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+            .catch(e => console.warn('Could not call /record/stop:', e))
+        );
+      }
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
       Say(`Abandoned Episode`);
     }
@@ -1703,7 +1712,8 @@ function updateLeRobotUI() {
       completionLink?.classList.add('hidden');
 
       const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
-      if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "LeRobot Session";
+      const cloudTag = isCloudRecordingSession ? ' <span style="font-size:0.65rem;background:#1a6bb5;color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle;font-weight:600;">CLOUD</span>' : '';
+      if (titleEl) titleEl.innerHTML = (isEval ? "AI Control Session" : "LeRobot Session") + cloudTag;
       if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
       if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
 
@@ -1808,12 +1818,35 @@ function updateLeRobotUI() {
   }
 }
 
-function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
-  console.log(`Stub: Starting LeRobot ${type} session with Repo ID: ${repoId}`);
+async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   isLeRobotStarting = true;
   sentFinalizeCommand = false;
   episodesUntilCheckpoint = null;
-  if (type === 'recording') {
+  isCloudRecordingSession = false;
+
+  if (type === 'recording' && cloudRecordingMode === 'cloud' && detectedRobotId) {
+    updateLeRobotUI();
+    try {
+      const token = await AuthManager.getAuthToken();
+      const res = await fetch(`/record/start/${detectedRobotId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_id: repoId })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail ?? 'Failed to start cloud recording job.');
+      }
+      const result = await res.json();
+      isCloudRecordingSession = true;
+      console.log(`Cloud recording job started: ${result.job_name} (${result.state})`);
+    } catch (e: unknown) {
+      isLeRobotStarting = false;
+      lerobotError = e instanceof Error ? e.message : 'Failed to start cloud recording job.';
+      isLeRobotSessionActive = false;
+      updateLeRobotUI();
+    }
+  } else if (type === 'recording') {
     sendControl([nf.control.ControlItem.create({
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
     })]);
@@ -1897,6 +1930,19 @@ function initLeRobotPanel() {
   }
   closeBtn?.addEventListener('click', closePanel);
   catcher?.addEventListener('click', closePanel);
+
+  const btnModeRobot = document.getElementById('btn-mode-robot');
+  const btnModeCloud = document.getElementById('btn-mode-cloud');
+  btnModeRobot?.addEventListener('click', () => {
+    cloudRecordingMode = 'robot';
+    btnModeRobot.classList.add('seg-active');
+    btnModeCloud?.classList.remove('seg-active');
+  });
+  btnModeCloud?.addEventListener('click', () => {
+    cloudRecordingMode = 'cloud';
+    btnModeCloud.classList.add('seg-active');
+    btnModeRobot?.classList.remove('seg-active');
+  });
 
   document.getElementById('btn-lerobot-start-rec-linked')?.addEventListener('click', () => {
     const usernameEl = document.getElementById('lerobot-hf-username');

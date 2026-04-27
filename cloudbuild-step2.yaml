@@ -65,7 +65,13 @@ steps:
   - '--vpc-connector'
   - 'redis-connector'
   - '--set-env-vars'
-  - 'REDIS_URL=redis://10.83.184.211:6379,HF_CLIENT_ID=e7e80901-0718-4ace-a107-46a43fa2ff37,HF_REDIRECT_URI=https://neufangled.com/hf-redirect'
+  - "REDIS_URL=redis://10.83.184.211:6379,\
+    HF_CLIENT_ID=e7e80901-0718-4ace-a107-46a43fa2ff37,\
+    HF_REDIRECT_URI=https://neufangled.com/hf-redirect,\
+    GCP_PROJECT_ID=nf-web-480214,\
+    GCP_REGION=us-east1,\
+    BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest,\
+    WS_SERVER_URL=wss://neufangled.com"
   - '--set-secrets'
   - 'DATABASE_URL=PROD_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_PROD:latest'
   - '--service-account'

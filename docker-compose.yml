@@ -16,6 +16,10 @@ services:
       - HF_CLIENT_ID=872d9c11-fa21-48b7-898b-7518227c7d05
       - HF_CLIENT_SECRET=oauth_app_secret_PjAohdGLZEDeTSleKaMJjEnbxoXhthexJz
       - HF_REDIRECT_URI=http://localhost:5173/hf-redirect
+      - GCP_PROJECT_ID=nf-web-480214
+      - GCP_REGION=us-east1
+      - BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest
+      - WS_SERVER_URL=ws://localhost:8080
     volumes:
       - ${HOME}/.config/gcloud/application_default_credentials.json:/app/service-account.json
       - ./app/templates:/app/app/templates
