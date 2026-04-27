@@ -52,7 +52,6 @@ let lerobotError: string | null = null;
 let episodeStartTime: number | null = null;
 let sentFinalizeCommand = false;
 let episodesUntilCheckpoint: number | null = null;
-let sessionInitiatedLocally = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -637,20 +636,18 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
     if (status.policyRepoId) policyRepoId = status.policyRepoId;
     episodesUntilCheckpoint = status.episodesUntilCheckpoint ?? null;
 
-    if (sessionInitiatedLocally) {
-      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
-        Say(`Starting episode ${numEpisodesRecorded}`);
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
-        Say(`Ready`);
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_CHECKPOINT) {
-        Say(`Checkpoint uploading, please wait`);
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING && sentFinalizeCommand) {
-        Say(`Recording Ended, Processing video`);
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
-        Say(`Complete`);
-      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
-        Say(`Abandoned Episode`);
-      }
+    if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
+      Say(`Starting episode ${numEpisodesRecorded}`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
+      Say(`Ready`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_CHECKPOINT) {
+      Say(`Checkpoint uploading, please wait`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING && sentFinalizeCommand) {
+      Say(`Recording Ended, Processing video`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
+      Say(`Complete`);
+    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
+      Say(`Abandoned Episode`);
     }
 
     // Handle timer reset/start logic
@@ -1816,7 +1813,6 @@ function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   isLeRobotStarting = true;
   sentFinalizeCommand = false;
   episodesUntilCheckpoint = null;
-  sessionInitiatedLocally = true;
   if (type === 'recording') {
     sendControl([nf.control.ControlItem.create({
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
