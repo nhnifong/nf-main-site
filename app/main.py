@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import Optional, Annotated
+import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,6 +13,8 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
+from google.cloud import batch_v1
+from google.protobuf import duration_pb2
 
 from .telemetry_manager import telemetry_manager
 from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
@@ -34,6 +37,12 @@ HF_CLIENT_ID = os.environ.get("HF_CLIENT_ID", "")
 HF_CLIENT_SECRET = os.environ.get("HF_CLIENT_SECRET", "")
 # This must exactly match the redirect URI registered in Hugging Face developer settings
 HF_REDIRECT_URI = os.environ.get("HF_REDIRECT_URI", "https://neufangled.com/hf-redirect")
+
+# GCP Batch Configuration
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "nf-web-480214")
+GCP_REGION = os.environ.get("GCP_REGION", "us-east1")
+BATCH_IMAGE_URI = os.environ.get("BATCH_IMAGE_URI", f"{GCP_REGION}-docker.pkg.dev/{GCP_PROJECT_ID}/record-session-containers/stringman-lerobot:latest")
+WS_SERVER_URL = os.environ.get("WS_SERVER_URL", "wss://neufangled.com")
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -548,6 +557,157 @@ async def get_huggingface_status(
         return {"connected": True, "hf_username": record.hf_username, "oauth_url": oauth_url}
 
     return {"connected": False, "oauth_url": oauth_url}
+
+
+@app.post("/record/start/{robot_id}")
+async def start_recording_job(
+    robot_id: str,
+    req: StartRecordingRequest,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Starts a GCP Batch Spot instance to record a dataset."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+    user_email = user_token.get("email", "")
+
+    # Verify access to the robot
+    if not await check_robot_access(user_id, user_email, robot_id):
+        raise HTTPException(status_code=403, detail="Access denied for this robot.")
+
+    # Check if the user already has an active job
+    existing_job_result = await db.execute(
+        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
+    )
+    if existing_job_result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="You already have an active recording session. Limit is 1 active job per user.")
+
+    # Retrieve Hugging Face token
+    hf_result = await db.execute(
+        select(UserExternalTokens).where(UserExternalTokens.user_id == user_id)
+    )
+    hf_record = hf_result.scalar_one_or_none()
+    if not hf_record or not hf_record.hf_access_token:
+        raise HTTPException(status_code=400, detail="Hugging Face account not connected.")
+    hf_token = hf_record.hf_access_token
+
+    # Generate a temporary stream ticket
+    ticket = await create_ticket(telemetry_manager.decoding_redis, user_id, user_email, robot_id)
+
+    # Build and submit the GCP Batch Job (using Async client so we don't block FastAPI)
+    client = batch_v1.BatchServiceAsyncClient()
+
+    runnable = batch_v1.Runnable()
+    runnable.container = batch_v1.Runnable.Container(
+        image_uri=BATCH_IMAGE_URI,
+        commands=[
+            "record",
+            f"--robot_id={robot_id}",
+            f"--server_address={WS_SERVER_URL}",
+            f"--repo_id={req.repo_id}",
+            f"--remote_stream_token={ticket}"
+        ]
+    )
+    # Inject Hugging Face token securely into the environment
+    runnable.environment = batch_v1.Environment(variables={"HF_TOKEN": hf_token})
+
+    task_spec = batch_v1.TaskSpec()
+    task_spec.runnables = [runnable]
+    task_spec.compute_resource = batch_v1.ComputeResource(
+        cpu_milli=16000,
+        memory_mib=32768
+    )
+    
+    # Enforce maximum execution duration of 1 Hour (3600 seconds)
+    task_spec.max_run_duration = duration_pb2.Duration(seconds=3600)
+
+    task_group = batch_v1.TaskGroup()
+    task_group.task_count = 1
+    task_group.task_spec = task_spec
+
+    allocation_policy = batch_v1.AllocationPolicy()
+    instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
+        machine_type="e2-standard-16",
+        provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
+    )
+    allocation_policy.instances = [
+        batch_v1.AllocationPolicy.InstancePolicyOrTemplate(policy=instance_policy)
+    ]
+
+    job = batch_v1.Job()
+    job.task_groups = [task_group]
+    job.allocation_policy = allocation_policy
+    job.logs_policy = batch_v1.LogsPolicy(
+        destination=batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
+    )
+
+    job_name = f"lerobot-{user_id.lower()[:8]}-{int(time.time())}"
+    parent = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}"
+
+    create_request = batch_v1.CreateJobRequest(
+        parent=parent,
+        job_id=job_name,
+        job=job
+    )
+
+    try:
+        created_job = await client.create_job(request=create_request)
+    except Exception as e:
+        logger.error(f"GCP Batch Job Creation Failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to start the Cloud Batch recording job.")
+
+    # Save job info to the database
+    new_job = ActiveRecordingJob(
+        user_id=user_id,
+        job_name=job_name,
+        robot_id=robot_id,
+        gcp_uid=created_job.uid
+    )
+    db.add(new_job)
+    await db.commit()
+
+    return {
+        "status": "success",
+        "job_name": job_name,
+        "job_uid": created_job.uid,
+        "state": created_job.state.name if created_job.state else "UNKNOWN",
+        "message": "Recording session started in Google Cloud Batch."
+    }
+
+@app.delete("/record/stop")
+async def stop_recording_job(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Stops the active GCP Batch job and clears the database record."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    # Find the active job
+    existing_job_result = await db.execute(
+        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
+    )
+    active_job = existing_job_result.scalar_one_or_none()
+    
+    if not active_job:
+        raise HTTPException(status_code=404, detail="No active recording session found.")
+
+    # Delete from GCP Batch
+    client = batch_v1.BatchServiceAsyncClient()
+    job_name_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{active_job.job_name}"
+    
+    try:
+        await client.delete_job(name=job_name_path)
+    except Exception as e:
+        # If it's already gone from GCP, we still want to clear the DB so the user isn't locked out
+        logger.warning(f"Could not delete GCP Batch job {active_job.job_name}: {e}")
+
+    # Clear from Database
+    await db.delete(active_job)
+    await db.commit()
+
+    return {"status": "success", "message": "Recording session stopped and cleared."}
+
 
 # by putting this at the end, it is matched with a lower priority.
 @app.get("/{page_name}")

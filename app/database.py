@@ -60,6 +60,21 @@ class UserExternalTokens(Base):
     hf_access_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     hf_username: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
+class ActiveRecordingJob(Base):
+    __tablename__ = "active_recording_jobs"
+    
+    # user_id is the Firebase UID, setting it as Primary Key strictly enforces 1 job per user
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    
+    # The unique GCP batch job name
+    job_name: Mapped[str] = mapped_column(String, unique=True)
+    
+    # The robot being recorded
+    robot_id: Mapped[str] = mapped_column(String)
+    
+    # The GCP Job UID for tracking status
+    gcp_uid: Mapped[str] = mapped_column(String)
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
