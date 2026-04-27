@@ -51,6 +51,8 @@ let policyRepoId = "username/my-policy";
 let lerobotError: string | null = null;
 let episodeStartTime: number | null = null;
 let sentFinalizeCommand = false;
+let episodesUntilCheckpoint: number | null = null;
+let sessionInitiatedLocally = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -633,17 +635,22 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
     if (status.datasetEpCount) datasetEpCount = status.datasetEpCount;
     if (status.datasetRepoId) hfRepoId = status.datasetRepoId;
     if (status.policyRepoId) policyRepoId = status.policyRepoId;
+    episodesUntilCheckpoint = status.episodesUntilCheckpoint ?? null;
 
-    if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
-      Say(`Starting episode ${numEpisodesRecorded}`);
-    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
-      Say(`Ready`);
-    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING && sentFinalizeCommand) {
-      Say(`Recording Ended, Processing video`);
-    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
-      Say(`Complete`);
-    } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
-      Say(`Abandoned Episode`);
+    if (sessionInitiatedLocally) {
+      if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_RECORDING) {
+        Say(`Starting episode ${numEpisodesRecorded}`);
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY) {
+        Say(`Ready`);
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_CHECKPOINT) {
+        Say(`Checkpoint uploading, please wait`);
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_PROCESSING && sentFinalizeCommand) {
+        Say(`Recording Ended, Processing video`);
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
+        Say(`Complete`);
+      } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
+        Say(`Abandoned Episode`);
+      }
     }
 
     // Handle timer reset/start logic
@@ -1672,6 +1679,22 @@ function updateLeRobotUI() {
       if (sessionEpsEl) sessionEpsEl.textContent = numEpisodesRecorded.toString();
       if (totalEpsEl) totalEpsEl.textContent = (datasetEpCount + numEpisodesRecorded).toString();
 
+      const checkpointLine = document.getElementById('lerobot-checkpoint-line');
+      const checkpointEl = document.getElementById('lerobot-eps-checkpoint');
+      if (!isEval && checkpointLine && checkpointEl) {
+        if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_CHECKPOINT) {
+          checkpointLine.classList.remove('hidden');
+          checkpointEl.textContent = 'Uploading...';
+        } else if (episodesUntilCheckpoint !== null) {
+          checkpointLine.classList.remove('hidden');
+          checkpointEl.textContent = episodesUntilCheckpoint.toString();
+        } else {
+          checkpointLine.classList.add('hidden');
+        }
+      } else if (checkpointLine) {
+        checkpointLine.classList.add('hidden');
+      }
+
       if (lerobotError && errorBox) {
         errorBox.textContent = lerobotError;
         errorBox.classList.remove('hidden');
@@ -1758,6 +1781,8 @@ function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   console.log(`Stub: Starting LeRobot ${type} session with Repo ID: ${repoId}`);
   isLeRobotStarting = true;
   sentFinalizeCommand = false;
+  episodesUntilCheckpoint = null;
+  sessionInitiatedLocally = true;
   if (type === 'recording') {
     sendControl([nf.control.ControlItem.create({
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
