@@ -54,6 +54,10 @@ export default defineConfig({
       '/huggingface/exchange_code': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
+      },
+      '/lerobot/*': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
       }
     }
   },

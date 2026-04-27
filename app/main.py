@@ -21,7 +21,7 @@ from .auth import verify_google_token, validate_stream_auth, check_robot_ownersh
 from .tickets import create_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
-from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens
+from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens, ActiveRecordingJob
 from .product_loader import load_product, load_all_products
 
 # Configure logging
