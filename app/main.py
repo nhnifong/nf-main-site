@@ -119,7 +119,7 @@ class ShareRequest(BaseModel):
 class HuggingFaceExchangeRequest(BaseModel):
     code: str
 
-class StartRecordingRequest(BaseModel):
+class StartLerobotSessionRequest(BaseModel):
     repo_id: str
 
 # --- HTTP Endpoints ---
@@ -562,14 +562,18 @@ async def get_huggingface_status(
     return {"connected": False, "oauth_url": oauth_url}
 
 
-@app.post("/record/start/{robot_id}")
-async def start_recording_job(
+@app.post("/lerobot/{action}/start/{robot_id}")
+async def start_lerobot_job(
+    action: str,
     robot_id: str,
-    req: StartRecordingRequest,
+    req: StartLerobotSessionRequest,
     creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
     db: AsyncSession = Depends(get_db)
 ):
-    """Starts a GCP Batch Spot instance to record a dataset."""
+    """Starts a GCP Batch Spot instance to run a LeRobot record or eval session."""
+    if action not in ("record", "eval"):
+        raise HTTPException(status_code=400, detail="action must be 'record' or 'eval'.")
+
     user_token = await verify_google_token(creds.credentials)
     user_id = user_token["uid"]
     user_email = user_token.get("email", "")
@@ -583,7 +587,7 @@ async def start_recording_job(
         select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
     )
     if existing_job_result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="You already have an active recording session. Limit is 1 active job per user.")
+        raise HTTPException(status_code=400, detail="You already have an active session. Limit is 1 active job per user.")
 
     # Retrieve Hugging Face token
     hf_result = await db.execute(
@@ -604,7 +608,7 @@ async def start_recording_job(
     runnable.container = batch_v1.Runnable.Container(
         image_uri=BATCH_IMAGE_URI,
         commands=[
-            "record",
+            action,
             f"--robot_id={robot_id}",
             f"--server_address={WS_SERVER_URL}",
             f"--repo_id={req.repo_id}",
@@ -616,23 +620,36 @@ async def start_recording_job(
 
     task_spec = batch_v1.TaskSpec()
     task_spec.runnables = [runnable]
-    task_spec.compute_resource = batch_v1.ComputeResource(
-        cpu_milli=16000,
-        memory_mib=32768
-    )
-    
+
     # Enforce maximum execution duration of 1 Hour (3600 seconds)
     task_spec.max_run_duration = duration_pb2.Duration(seconds=3600)
+
+    if action == "eval":
+        # Eval needs a GPU; provision half the CPUs/RAM of record on an n1 with a T4
+        task_spec.compute_resource = batch_v1.ComputeResource(
+            cpu_milli=8000,
+            memory_mib=16384
+        )
+        instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
+            machine_type="n1-standard-8",
+            accelerators=[batch_v1.AllocationPolicy.Accelerator(type_="nvidia-tesla-t4", count=1)],
+            provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
+        )
+    else:
+        task_spec.compute_resource = batch_v1.ComputeResource(
+            cpu_milli=16000,
+            memory_mib=32768
+        )
+        instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
+            machine_type="e2-standard-16",
+            provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
+        )
 
     task_group = batch_v1.TaskGroup()
     task_group.task_count = 1
     task_group.task_spec = task_spec
 
     allocation_policy = batch_v1.AllocationPolicy()
-    instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
-        machine_type="e2-standard-16",
-        provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
-    )
     allocation_policy.instances = [
         batch_v1.AllocationPolicy.InstancePolicyOrTemplate(policy=instance_policy)
     ]
@@ -671,7 +688,7 @@ async def start_recording_job(
         created_job = await client.create_job(request=create_request)
     except Exception as e:
         logger.error(f"GCP Batch Job Creation Failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to start the Cloud Batch recording job.")
+        raise HTTPException(status_code=500, detail="Failed to start the Cloud Batch job.")
 
     # Save job info to the database
     new_job = ActiveRecordingJob(
@@ -688,11 +705,12 @@ async def start_recording_job(
         "job_name": job_name,
         "job_uid": created_job.uid,
         "state": created_job.state.name if created_job.state else "UNKNOWN",
-        "message": "Recording session started in Google Cloud Batch."
+        "message": f"LeRobot {action} session started in Google Cloud Batch."
     }
 
-@app.delete("/record/stop")
-async def stop_recording_job(
+@app.delete("/lerobot/{action}/stop")
+async def stop_lerobot_job(
+    action: str,
     creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
     db: AsyncSession = Depends(get_db)
 ):
@@ -705,14 +723,14 @@ async def stop_recording_job(
         select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
     )
     active_job = existing_job_result.scalar_one_or_none()
-    
+
     if not active_job:
-        raise HTTPException(status_code=404, detail="No active recording session found.")
+        raise HTTPException(status_code=404, detail="No active session found.")
 
     # Delete from GCP Batch
     client = batch_v1.BatchServiceAsyncClient()
     job_name_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{active_job.job_name}"
-    
+
     try:
         await client.delete_job(name=job_name_path)
     except Exception as e:
@@ -723,7 +741,7 @@ async def stop_recording_job(
     await db.delete(active_job)
     await db.commit()
 
-    return {"status": "success", "message": "Recording session stopped and cleared."}
+    return {"status": "success", "message": f"LeRobot {action} session stopped and cleared."}
 
 
 # by putting this at the end, it is matched with a lower priority.

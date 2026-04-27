@@ -651,7 +651,7 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
       if (isCloudRecordingSession) {
         isCloudRecordingSession = false;
         AuthManager.getAuthToken().then(token =>
-          fetch('/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+          fetch('/lerobot/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
             .catch(e => console.warn('Could not call /record/stop:', e))
         );
       }
@@ -1828,7 +1828,7 @@ async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
     updateLeRobotUI();
     try {
       const token = await AuthManager.getAuthToken();
-      const res = await fetch(`/record/start/${detectedRobotId}`, {
+      const res = await fetch(`/lerobot/record/start/${detectedRobotId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ repo_id: repoId })
