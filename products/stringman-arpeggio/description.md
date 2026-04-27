@@ -88,8 +88,9 @@ This listing is for a fully assembled Stringman consisting of several components
 
 ### **System Requirements**
 
-- **Host PC:** A dedicated machine (Ubuntu Linux recommended) with 6+ cores. If no GPU or NPU is present the robot can still be driven manually, but no AI based control will be possible.
+- **Host PC:** A machine (Ubuntu Linux recommended) with 6+ cores. If no GPU or NPU is present the robot can still be driven manually, but no AI based control will be possible.
 - **Environment:** Consistent and strong indoor lighting in the work area is needed to maintain high precision.
+- **Game Controller:** Analog stick inputs from a game controller are highly reccomended for fine control of Stringman when recording a dataset. Keyboard control is supported.
 
 ---
 

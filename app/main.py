@@ -217,7 +217,11 @@ async def ui_websocket_endpoint(
         elif ticket:
             # Ticket auth: look up pre-issued ticket to get identity.
             ticket_data = await get_ticket(telemetry_manager.decoding_redis, ticket)
-            if not ticket_data or ticket_data.get("robot_id") != robot_id:
+            if not ticket_data:
+                logger.warning(f"Unknown ticket for {robot_id}")
+                await websocket.close(code=1008)
+                return
+            if ticket_data.get("robot_id") != robot_id:
                 logger.warning(f"Invalid ticket for {robot_id}")
                 await websocket.close(code=1008)
                 return
@@ -670,19 +674,19 @@ async def start_lerobot_job(
         job=job
     )
 
-    if "localhost" in WS_SERVER_URL:
-        logger.info(
-            "Local environment detected — skipping GCP Batch job submission. "
-            "CreateJobRequest args: parent=%s, job_id=%s, runnables=%s",
-            parent, job_name, [r.container.commands for r in task_spec.runnables]
-        )
-        return {
-            "status": "success",
-            "job_name": job_name,
-            "job_uid": "local-dry-run",
-            "state": "DRY_RUN",
-            "message": "Local environment: GCP Batch job was not submitted."
-        }
+    # if "localhost" in WS_SERVER_URL:
+    #     logger.info(
+    #         "Local environment detected — skipping GCP Batch job submission. "
+    #         "CreateJobRequest args: parent=%s, job_id=%s, runnables=%s",
+    #         parent, job_name, [r.container.commands for r in task_spec.runnables]
+    #     )
+    #     return {
+    #         "status": "success",
+    #         "job_name": job_name,
+    #         "job_uid": "local-dry-run",
+    #         "state": "DRY_RUN",
+    #         "message": "Local environment: GCP Batch job was not submitted."
+    #     }
 
     try:
         created_job = await client.create_job(request=create_request)
@@ -704,7 +708,7 @@ async def start_lerobot_job(
         "status": "success",
         "job_name": job_name,
         "job_uid": created_job.uid,
-        "state": created_job.state.name if created_job.state else "UNKNOWN",
+        "state": created_job.status,
         "message": f"LeRobot {action} session started in Google Cloud Batch."
     }
 
