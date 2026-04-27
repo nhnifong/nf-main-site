@@ -206,7 +206,7 @@ async def ui_websocket_endpoint(
             # Ticket auth: look up pre-issued ticket to get identity.
             ticket_data = await get_ticket(telemetry_manager.decoding_redis, ticket)
             if not ticket_data or ticket_data.get("robot_id") != robot_id:
-                logger.warning(f"Invalid or mismatched ticket for {robot_id}")
+                logger.warning(f"Invalid ticket for {robot_id}")
                 await websocket.close(code=1008)
                 return
             user_id = ticket_data["user_id"]
