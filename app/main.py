@@ -14,11 +14,12 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from google.cloud import batch_v1
+from google.api_core import exceptions as gcp_exceptions
 from google.protobuf import duration_pb2
 
 from .telemetry_manager import telemetry_manager
 from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
-from .tickets import create_ticket, get_ticket, delete_user_robot_tickets
+from .tickets import create_ticket, create_batch_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
 from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens, ActiveRecordingJob
@@ -582,12 +583,34 @@ async def start_lerobot_job(
     if not await check_robot_access(user_id, user_email, robot_id):
         raise HTTPException(status_code=403, detail="Access denied for this robot.")
 
-    # Check if the user already has an active job
+    # Check if the user already has an active job; auto-clear it if the GCP job is no longer running
     existing_job_result = await db.execute(
         select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
     )
-    if existing_job_result.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="You already have an active session. Limit is 1 active job per user.")
+    existing_job = existing_job_result.scalar_one_or_none()
+    if existing_job:
+        stale = False
+        gcp_job_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{existing_job.job_name}"
+        try:
+            check_client = batch_v1.BatchServiceAsyncClient()
+            gcp_job = await check_client.get_job(name=gcp_job_path)
+            terminal_states = {
+                batch_v1.Job.State.FAILED,
+                batch_v1.Job.State.SUCCEEDED,
+                batch_v1.Job.State.DELETION_IN_PROGRESS,
+            }
+            stale = gcp_job.state in terminal_states
+        except gcp_exceptions.NotFound:
+            stale = True  # Job is gone from GCP; safe to clear the DB entry
+        except Exception as e:
+            logger.warning(f"Could not check GCP job status for {existing_job.job_name}: {e}")
+
+        if stale:
+            logger.info(f"Clearing stale session record for user {user_id} (job: {existing_job.job_name})")
+            await db.delete(existing_job)
+            await db.flush()
+        else:
+            raise HTTPException(status_code=400, detail="You already have an active session. Limit is 1 active job per user.")
 
     # Retrieve Hugging Face token
     hf_result = await db.execute(
@@ -598,8 +621,9 @@ async def start_lerobot_job(
         raise HTTPException(status_code=400, detail="Hugging Face account not connected.")
     hf_token = hf_record.hf_access_token
 
-    # Generate a temporary stream ticket
-    ticket = await create_ticket(telemetry_manager.decoding_redis, user_id, user_email, robot_id)
+    # Generate a batch ticket — unlike a regular stream ticket this is NOT tied to the user's
+    # WebSocket session and will not be deleted if the user disconnects while the job is starting.
+    ticket = await create_batch_ticket(telemetry_manager.decoding_redis, user_id, user_email, robot_id)
 
     # Build and submit the GCP Batch Job (using Async client so we don't block FastAPI)
     client = batch_v1.BatchServiceAsyncClient()

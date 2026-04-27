@@ -30,6 +30,24 @@ async def get_ticket(redis_conn, ticket_id: str) -> dict | None:
     return json.loads(data)
 
 
+async def create_batch_ticket(redis_conn, user_id: str, user_email: str, robot_id: str, ttl_seconds: int = 7200) -> str:
+    """Creates a ticket for a cloud batch job.
+
+    Unlike create_ticket, this ticket is NOT added to the user_robot_tickets set,
+    so it is never deleted when the user's WebSocket session disconnects.
+    It expires automatically via Redis TTL.
+    """
+    ticket_id = secrets.token_urlsafe(32)
+    ticket_data = json.dumps({
+        "user_id": user_id,
+        "user_email": user_email or "",
+        "robot_id": robot_id,
+    })
+    await redis_conn.set(f"{_TICKET_PREFIX}{ticket_id}", ticket_data, ex=ttl_seconds)
+    logger.info(f"Created batch ticket for user {user_id} on robot {robot_id} (TTL={ttl_seconds}s)")
+    return ticket_id
+
+
 async def delete_user_robot_tickets(redis_conn, user_id: str, robot_id: str):
     ticket_set_key = f"{_USER_ROBOT_TICKETS_PREFIX}{user_id}:{robot_id}"
     ticket_ids = await redis_conn.smembers(ticket_set_key)
