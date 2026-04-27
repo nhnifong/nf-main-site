@@ -1467,6 +1467,11 @@ function initRunMenu() {
   bindCommand('action-disable-torque', Command.COMMAND_DISABLE_TORQUE);
   bindCommand('action-enable-torque', Command.COMMAND_ENABLE_TORQUE);
 
+  document.getElementById('action-get-ticket')?.addEventListener('click', () => {
+    maintMenu?.classList.remove('show');
+    handleGetTicket();
+  });
+
   // Bind bind action (connecting your robot to your account so you can use cloud relay)
   const bindAction = document.getElementById('action-bind');
   if (bindAction) {
@@ -1535,6 +1540,35 @@ function initControlsPanel() {
 }
 initControlsPanel();
 
+async function handleGetTicket() {
+  if (!detectedRobotId) {
+    showPopup({ message: "No robot ID detected. Connect to a robot first." });
+    return;
+  }
+  try {
+    const token = await AuthManager.getAuthToken();
+    const ticket = await AuthManager.apiGetStreamTicket(detectedRobotId, token);
+
+    const overlay = document.getElementById('popup-overlay');
+    const msgEl = document.getElementById('popup-message');
+    if (!overlay || !msgEl) return;
+
+    msgEl.style.whiteSpace = 'pre-wrap';
+    msgEl.style.wordBreak = 'break-all';
+    msgEl.style.fontFamily = 'monospace';
+    msgEl.style.fontSize = '0.8rem';
+
+    try {
+      await navigator.clipboard.writeText(ticket);
+      msgEl.textContent = `Stream ticket (copied to clipboard):\n\n${ticket}`;
+    } catch {
+      msgEl.textContent = `Stream ticket:\n\n${ticket}`;
+    }
+    overlay.classList.remove('hidden');
+  } catch (e) {
+    showPopup({ message: "Failed to get ticket. Are you logged in?" });
+  }
+}
 
 
 // --- Share Access Dialog ---
