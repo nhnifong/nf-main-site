@@ -599,11 +599,11 @@ async def start_lerobot_job(
             check_client = batch_v1.BatchServiceAsyncClient()
             gcp_job = await check_client.get_job(name=gcp_job_path)
             terminal_states = {
-                batch_v1.Job.State.FAILED,
-                batch_v1.Job.State.SUCCEEDED,
-                batch_v1.Job.State.DELETION_IN_PROGRESS,
+                batch_v1.types.JobStatus.State.FAILED,
+                batch_v1.types.JobStatus.State.SUCCEEDED,
+                batch_v1.types.JobStatus.State.DELETION_IN_PROGRESS,
             }
-            stale = gcp_job.state in terminal_states
+            stale = gcp_job.status.state in terminal_states
         except gcp_exceptions.NotFound:
             stale = True  # Job is gone from GCP; safe to clear the DB entry
         except Exception as e:
@@ -732,7 +732,7 @@ async def start_lerobot_job(
         "status": "success",
         "job_name": job_name,
         "job_uid": created_job.uid,
-        "state": created_job.status,
+        "state": str(created_job.status.state),
         "message": f"LeRobot {action} session started in Google Cloud Batch."
     }
 
