@@ -618,6 +618,57 @@ async def get_lerobot_job_status(
     return {"has_job": True, "job_name": job.job_name, "state": state_name}
 
 
+async def _check_hf_repo_permission(hf_token: str, repo_id: str, action: str) -> None:
+    """
+    Pre-flight HuggingFace permission check before provisioning a cloud instance.
+      record: caller must own the repo namespace (to write/create the dataset repo).
+      eval:   caller must be able to read the model repo.
+    Raises HTTPException on any failure so the GCP job is never started unnecessarily.
+    """
+    if "/" not in repo_id:
+        raise HTTPException(status_code=400, detail=f"Invalid repo_id '{repo_id}': expected 'owner/name' format.")
+
+    namespace = repo_id.split("/")[0]
+    hf_api = "https://huggingface.co/api"
+    headers = {"Authorization": f"Bearer {hf_token}"}
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        whoami_res = await client.get(f"{hf_api}/whoami", headers=headers)
+        if whoami_res.status_code != 200:
+            raise HTTPException(status_code=400, detail="Hugging Face token is invalid or expired.")
+
+        whoami = whoami_res.json()
+        hf_username: str = whoami.get("name", "")
+        hf_orgs: set[str] = {org["name"] for org in whoami.get("orgs", [])}
+
+        if action == "record":
+            if namespace != hf_username and namespace not in hf_orgs:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Your Hugging Face account '{hf_username}' does not have write access to namespace '{namespace}'."
+                )
+            # Confirm the repo exists OR that it doesn't yet (both are fine for recording);
+            # anything other than 200/404 means the token can't reach it at all.
+            repo_res = await client.get(f"{hf_api}/datasets/{repo_id}", headers=headers)
+            if repo_res.status_code not in (200, 404):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Cannot access dataset repo '{repo_id}' on Hugging Face (HTTP {repo_res.status_code})."
+                )
+
+        elif action == "eval":
+            model_res = await client.get(f"{hf_api}/models/{repo_id}", headers=headers)
+            if model_res.status_code == 200:
+                return
+            elif model_res.status_code == 404:
+                raise HTTPException(status_code=404, detail=f"Policy repo '{repo_id}' was not found on Hugging Face.")
+            else:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Your Hugging Face token cannot read policy repo '{repo_id}' (HTTP {model_res.status_code})."
+                )
+
+
 @app.post("/lerobot/{action}/start/{robot_id}")
 async def start_lerobot_job(
     action: str,
@@ -675,6 +726,8 @@ async def start_lerobot_job(
     if not hf_record or not hf_record.hf_access_token:
         raise HTTPException(status_code=400, detail="Hugging Face account not connected.")
     hf_token = hf_record.hf_access_token
+
+    await _check_hf_repo_permission(hf_token, req.repo_id, action)
 
     # Generate a batch ticket — unlike a regular stream ticket this is NOT tied to the user's
     # WebSocket session and will not be deleted if the user disconnects while the job is starting.

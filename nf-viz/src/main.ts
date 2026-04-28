@@ -1813,6 +1813,16 @@ function updateLeRobotUI() {
         if (startRecBtnLinked) startRecBtnLinked.disabled = false;
         if (startRecBtnLan) startRecBtnLan.disabled = false;
         if (startEvalBtn) startEvalBtn.disabled = false;
+
+        const startErrorEl = document.getElementById('lerobot-start-error');
+        if (startErrorEl) {
+          if (lerobotError) {
+            startErrorEl.textContent = lerobotError;
+            startErrorEl.classList.remove('hidden');
+          } else {
+            startErrorEl.classList.add('hidden');
+          }
+        }
       }
     }
   }
@@ -1820,6 +1830,7 @@ function updateLeRobotUI() {
 
 async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   isLeRobotStarting = true;
+  lerobotError = null;
   sentFinalizeCommand = false;
   episodesUntilCheckpoint = null;
   isCloudRecordingSession = false;
