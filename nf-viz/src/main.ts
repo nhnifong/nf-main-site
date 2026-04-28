@@ -1851,6 +1851,7 @@ async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
       const result = await res.json();
       isCloudRecordingSession = true;
       console.log(`Cloud recording job started: ${result.job_name} (${result.state})`);
+      setTimeout(() => refreshCloudStatus(), 2000);
     } catch (e: unknown) {
       isLeRobotStarting = false;
       lerobotError = e instanceof Error ? e.message : 'Failed to start cloud recording job.';
