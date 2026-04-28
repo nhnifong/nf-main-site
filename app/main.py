@@ -160,7 +160,8 @@ async def media_server_auth(req: StreamAuthRequest):
       We verify the user has permission to view this robot.
 
     If the request query string contains staging=1, the request is forwarded to the
-    staging control plane instead (keeping the staging Cloud Run scaled to 0 at idle).
+    staging control plane instead. This is only to save money because staging and prod
+    are sharing a MediaMTX server. If staging ever gets it's own mediamtx server just remove this.
     """
     if "staging=1" in req.query and STAGING_CONTROL_PLANE_URL:
         try:
