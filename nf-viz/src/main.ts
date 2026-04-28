@@ -1907,6 +1907,46 @@ async function refreshHfStatus() {
   }
 }
 
+async function refreshCloudStatus() {
+  const statusEl = document.getElementById('lerobot-cloud-status');
+  const badgeEl = document.getElementById('lerobot-cloud-state-badge');
+  if (!statusEl || !badgeEl) return;
+  if (isLanMode || isSimMode) {
+    statusEl.classList.add('hidden');
+    return;
+  }
+  try {
+    const token = await AuthManager.getAuthToken();
+    const res = await fetch('/lerobot/status', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.state) {
+      const stateColors: Record<string, string> = {
+        'QUEUED': '#8a6800',
+        'SCHEDULED': '#9b5e00',
+        'RUNNING': '#1e7a40',
+        'SUCCEEDED': '#1a6bb5',
+        'FAILED': '#b03020',
+        'DELETION_IN_PROGRESS': '#8a5000',
+        'NOT_FOUND': '#555',
+        'STATE_UNSPECIFIED': '#555',
+        'UNKNOWN': '#555',
+      };
+      const color = stateColors[data.state] ?? '#555';
+      badgeEl.style.background = color;
+      badgeEl.style.color = '#fff';
+      badgeEl.textContent = data.state.replace(/_/g, ' ');
+      statusEl.classList.remove('hidden');
+    } else {
+      statusEl.classList.add('hidden');
+    }
+  } catch (e) {
+    console.warn('Could not fetch cloud job status:', e);
+    statusEl.classList.add('hidden');
+  }
+}
+
 function initLeRobotPanel() {
   const headerBtn = document.getElementById('btn-header-lerobot');
   const overlay = document.getElementById('lerobot-overlay');
@@ -1919,7 +1959,10 @@ function initLeRobotPanel() {
     if (isSimMode) return;
     overlay?.classList.remove('hidden');
     updateLeRobotUI();
-    if (!isLeRobotSessionActive) refreshHfStatus();
+    if (!isLeRobotSessionActive) {
+      refreshHfStatus();
+      refreshCloudStatus();
+    }
   });
 
   const closePanel = () => {

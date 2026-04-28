@@ -587,6 +587,37 @@ async def get_huggingface_status(
     return {"connected": False, "oauth_url": oauth_url}
 
 
+@app.get("/lerobot/status")
+async def get_lerobot_job_status(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns the current GCP Batch job state for the authenticated user."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    result = await db.execute(
+        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
+    )
+    job = result.scalar_one_or_none()
+
+    if not job:
+        return {"has_job": False, "job_name": None, "state": None}
+
+    gcp_job_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{job.job_name}"
+    try:
+        client = batch_v1.BatchServiceAsyncClient()
+        gcp_job = await client.get_job(name=gcp_job_path)
+        state_name = batch_v1.types.JobStatus.State(gcp_job.status.state).name
+    except gcp_exceptions.NotFound:
+        return {"has_job": False, "job_name": job.job_name, "state": "NOT_FOUND"}
+    except Exception as e:
+        logger.warning(f"Could not fetch GCP job status for {job.job_name}: {e}")
+        return {"has_job": True, "job_name": job.job_name, "state": "UNKNOWN"}
+
+    return {"has_job": True, "job_name": job.job_name, "state": state_name}
+
+
 @app.post("/lerobot/{action}/start/{robot_id}")
 async def start_lerobot_job(
     action: str,
