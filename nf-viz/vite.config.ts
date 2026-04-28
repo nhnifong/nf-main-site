@@ -70,6 +70,14 @@ export default defineConfig({
       '/lerobot/eval/stop': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
+      },
+      '/lerobot/status': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
+      },
+      '/huggingface/unlink': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
       }
     }
   },

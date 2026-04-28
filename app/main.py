@@ -557,6 +557,28 @@ async def huggingface_exchange_code(
 
     return {"status": "success", "hf_username": hf_username}
 
+@app.delete("/huggingface/unlink")
+async def huggingface_unlink(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+    db: AsyncSession = Depends(get_db)
+):
+    """Clears the stored Hugging Face token and username for the authenticated user."""
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    result = await db.execute(
+        select(UserExternalTokens).where(UserExternalTokens.user_id == user_id)
+    )
+    record = result.scalar_one_or_none()
+
+    if record:
+        record.hf_access_token = None
+        record.hf_username = None
+        await db.commit()
+
+    return {"status": "success"}
+
+
 @app.get("/huggingface/status")
 async def get_huggingface_status(
     creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
@@ -633,7 +655,7 @@ async def _check_hf_repo_permission(hf_token: str, repo_id: str, action: str) ->
     headers = {"Authorization": f"Bearer {hf_token}"}
 
     async with httpx.AsyncClient(timeout=10.0) as client:
-        whoami_res = await client.get(f"{hf_api}/whoami", headers=headers)
+        whoami_res = await client.get(f"{hf_api}/whoami-v2", headers=headers)
         if whoami_res.status_code != 200:
             raise HTTPException(status_code=400, detail="Hugging Face token is invalid or expired.")
 
@@ -760,7 +782,7 @@ async def start_lerobot_job(
         # Eval needs a GPU; provision half the CPUs/RAM of record on an n1 with a T4
         task_spec.compute_resource = batch_v1.ComputeResource(
             cpu_milli=8000,
-            memory_mib=16384
+            memory_mib=32768
         )
         instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
             machine_type="n1-standard-8",
@@ -769,8 +791,8 @@ async def start_lerobot_job(
         )
     else:
         task_spec.compute_resource = batch_v1.ComputeResource(
-            cpu_milli=16000,
-            memory_mib=32768
+            cpu_milli=8000,
+            memory_mib=8192
         )
         instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
             machine_type="e2-standard-16",

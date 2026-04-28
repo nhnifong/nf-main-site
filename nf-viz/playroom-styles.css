@@ -24,6 +24,7 @@
   --text-light:  #ccc;
   --text-muted:  #aaa;
   --text-dim:    #888;
+  --text-green:  #32b626;
 
   /* Border shades */
   --border-dark: #444;
@@ -961,7 +962,7 @@ h2 {
   transition: background 0.15s, color 0.15s;
 }
 .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
-.seg-btn.seg-active { background: var(--surface-light); color: var(--text-bright); }
+.seg-btn.seg-active { background: var(--surface-light); color: var(--text-green); }
 
 /* Small uppercase label above an input (Dataset Repo ID, Policy Repo ID, etc.). */
 .input-label {
