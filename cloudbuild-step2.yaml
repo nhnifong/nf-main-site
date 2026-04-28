@@ -71,7 +71,8 @@ steps:
     GCP_PROJECT_ID=nf-web-480214,\
     GCP_REGION=us-east1,\
     BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest,\
-    WS_SERVER_URL=wss://neufangled.com"
+    WS_SERVER_URL=wss://neufangled.com,\
+    STAGING_CONTROL_PLANE_URL=https://nf-site-monolith-staging-690802609278.us-east1.run.app"
   - '--set-secrets'
   - 'DATABASE_URL=PROD_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_PROD:latest'
   - '--service-account'

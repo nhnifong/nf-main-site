@@ -44,6 +44,8 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "nf-web-480214")
 GCP_REGION = os.environ.get("GCP_REGION", "us-east1")
 BATCH_IMAGE_URI = os.environ.get("BATCH_IMAGE_URI", f"{GCP_REGION}-docker.pkg.dev/{GCP_PROJECT_ID}/record-session-containers/stringman-lerobot:latest")
 WS_SERVER_URL = os.environ.get("WS_SERVER_URL", "wss://neufangled.com")
+# When set (prod only), auth requests containing staging=1 are forwarded here instead of being handled locally.
+STAGING_CONTROL_PLANE_URL = os.environ.get("STAGING_CONTROL_PLANE_URL", "")
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -151,12 +153,29 @@ async def media_server_auth(req: StreamAuthRequest):
     """
     Webhook called by MediaMTX.
     Returns 200 OK to allow, 401/403 to deny.
-    
+
     - If action == 'publish', the Robot is trying to stream video.
       We verify the robot has permission to publish
     - If action == 'read', a User is trying to watch via WebRTC.
       We verify the user has permission to view this robot.
-    """            
+
+    If the request query string contains staging=1, the request is forwarded to the
+    staging control plane instead (keeping the staging Cloud Run scaled to 0 at idle).
+    """
+    if "staging=1" in req.query and STAGING_CONTROL_PLANE_URL:
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{STAGING_CONTROL_PLANE_URL}/internal/auth",
+                    json=req.model_dump(),
+                    timeout=10.0
+                )
+            if resp.status_code == 200:
+                return {"status": "OK"}
+        except Exception as e:
+            logger.error(f"Failed to proxy staging auth request: {e}")
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     is_valid = await validate_stream_auth(req, telemetry_manager.decoding_redis, telemetry_manager)
     if not is_valid:
         logger.info(f"is_valid = {is_valid}")

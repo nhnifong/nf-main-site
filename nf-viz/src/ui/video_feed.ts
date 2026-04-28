@@ -281,6 +281,7 @@ export class VideoFeed {
 
         // MediaMTX WHEP endpoint
         let whepUrl = `https://media.neufangled.com:8889/${streamPath}/whep`;
+        const isStaging = window.location.host.includes("nf-site-monolith-staging");
         if (window.location.host.includes("localhost")) {
             whepUrl = `http://localhost:8889/${streamPath}/whep`;
         }
@@ -290,6 +291,11 @@ export class VideoFeed {
         if (ticket) {
             const separator = whepUrl.includes('?') ? '&' : '?';
             whepUrl += `${separator}ticket=${encodeURIComponent(ticket)}`;
+        }
+
+        // Staging: tell Prod MediaMTX to forward the auth check to the staging control plane.
+        if (isStaging) {
+            whepUrl += `${whepUrl.includes('?') ? '&' : '?'}staging=1`;
         }
 
         try {
