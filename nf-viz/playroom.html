@@ -359,6 +359,12 @@
         <h3 id="lerobot-title" class="overlay-title">LeRobot Session</h3>
 
         <div id="lerobot-panel-inactive">
+          <!-- Cloud instance status — lives outside inactive-content so it stays visible during the pending/spinner state too -->
+          <div id="lerobot-cloud-status" class="hidden" style="margin-bottom:14px; padding:8px 10px; background:var(--bg-card, #2a2a2a); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:0.75rem;">
+            <span style="text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light);">Cloud Instance</span>
+            <span id="lerobot-cloud-state-badge" style="padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.7rem; letter-spacing:0.05em;"></span>
+          </div>
+
           <div id="lerobot-pending-overlay" class="pending-container hidden">
             <div class="spinner"></div>
             <div class="starting-text">Starting session...</div>
@@ -367,12 +373,6 @@
           <div id="lerobot-inactive-content">
             <!-- Start error (shown after a failed cloud job submission) -->
             <div id="lerobot-start-error" class="hidden" style="margin-bottom:12px; padding:8px 10px; background:#3a1a1a; border:1px solid #7a2a2a; border-radius:6px; color:#e07070; font-size:0.8rem; line-height:1.4;"></div>
-
-            <!-- Cloud instance status -->
-            <div id="lerobot-cloud-status" class="hidden" style="margin-bottom:14px; padding:8px 10px; background:var(--bg-card, #2a2a2a); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:0.75rem;">
-              <span style="text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light);">Cloud Instance</span>
-              <span id="lerobot-cloud-state-badge" style="padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.7rem; letter-spacing:0.05em;"></span>
-            </div>
 
             <!-- Recording Mode -->
             <div class="session-section">
