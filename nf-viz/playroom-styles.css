@@ -411,6 +411,10 @@ h2 {
   padding: 0;
   overflow-y: auto;
 }
+#panel-right.panel-right-expanded {
+  grid-column: 2 / 4;
+  grid-row: 2;
+}
 
 .video-feed {
   background: #000;
@@ -442,6 +446,32 @@ h2 {
 
 .feed-16-9 { width: 100%; aspect-ratio: 16 / 9; }
 .feed-1-1  { width: 66%; aspect-ratio: 1 / 1; align-self: flex-end; }
+
+/* Expand / collapse corner buttons */
+.feed-expand-btn,
+.feed-collapse-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  color: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: background 0.15s;
+  pointer-events: auto;
+}
+.feed-expand-btn:hover,
+.feed-collapse-btn:hover { background: rgba(0, 0, 0, 0.85); }
+
 
 .feed-label {
   position: absolute;
@@ -576,22 +606,29 @@ h2 {
   gap: 8px;
   box-sizing: border-box;
 }
-.run-button.disabled            { color: var(--text-muted); background-color: #222; cursor: default; }
-.run-button:hover:not(.disabled)  { background-color: var(--green-hover); }
-.run-button:active:not(.disabled) { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+.run-button.disabled,
+.run-button:disabled            { color: var(--text-muted); cursor: default; }
+.run-button:hover:not(.disabled):not(:disabled)  { background-color: var(--green-hover); }
+.run-button:active:not(.disabled):not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
 
 /* Full-width variant used inside overlay panels. */
 .run-button.btn-full { width: 100%; justify-content: center; }
 
 /* Color modifiers */
 .run-button.btn-gray  { background-color: var(--surface-light); }
-.run-button.btn-gray:hover:not(.disabled)  { background-color: #666; }
+.run-button.btn-gray:hover:not(.disabled):not(:disabled)  { background-color: #666; }
 .run-button.btn-blue  { background-color: var(--blue); }
-.run-button.btn-blue:hover:not(.disabled)  { background-color: var(--blue-hover); }
+.run-button.btn-blue:hover:not(.disabled):not(:disabled)  { background-color: var(--blue-hover); }
 .run-button.btn-red   { background-color: var(--red); }
-.run-button.btn-red:hover:not(.disabled)   { background-color: var(--red-hover); }
+.run-button.btn-red:hover:not(.disabled):not(:disabled)   { background-color: var(--red-hover); }
 .run-button.btn-green { background-color: var(--green); }
-.run-button.btn-green:hover:not(.disabled) { background-color: var(--green-hover); }
+.run-button.btn-green:hover:not(.disabled):not(:disabled) { background-color: var(--green-hover); }
+
+/* Disabled overrides all color modifiers */
+.run-button.btn-gray.disabled,  .run-button.btn-gray:disabled,
+.run-button.btn-blue.disabled,  .run-button.btn-blue:disabled,
+.run-button.btn-red.disabled,   .run-button.btn-red:disabled,
+.run-button.btn-green.disabled, .run-button.btn-green:disabled { background-color: var(--surface-mid); }
 
 /* The small chevron icon inside the RUN button. */
 #run-btn span:last-child { font-size: 0.8em; }
@@ -946,6 +983,23 @@ h2 {
 
 /* Controls overlay: slightly wider to fit the gamepad diagram. */
 #controls-overlay .component-details-box { max-width: 500px; }
+
+/* Full calibration overlay */
+#fullcal-overlay .component-details-box { max-width: 720px; }
+.fullcal-section-heading {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+.fullcal-body {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
 
 .controls-list div    { margin-bottom: 5px; color: var(--text-light); font-size: 0.95rem; }
 .controls-list strong { display: inline-block; width: 70px; color: white; }

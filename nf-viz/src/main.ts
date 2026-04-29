@@ -54,6 +54,7 @@ let sentFinalizeCommand = false;
 let episodesUntilCheckpoint: number | null = null;
 let isCloudRecordingSession = false; // true when the recording job is running in GCP Batch
 let cloudRecordingMode: 'robot' | 'cloud' = 'robot'; // selected mode in the inactive panel
+let isHfLinked = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -842,6 +843,17 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
   gtaoPass.setSize(window.innerWidth, window.innerHeight);
   outlinePass.setSize(window.innerWidth, window.innerHeight);
+  if (expandedFeedId) {
+    const panelRight = document.getElementById('panel-right');
+    const feed = document.getElementById(expandedFeedId);
+    if (panelRight && feed) {
+      const rect = panelRight.getBoundingClientRect();
+      feed.style.left = `${rect.left}px`;
+      feed.style.top = `${rect.top}px`;
+      feed.style.width = `${rect.width}px`;
+      feed.style.height = `${rect.height}px`;
+    }
+  }
 });
 
 //  ===== telemetry update handlers =====
@@ -1004,6 +1016,20 @@ interface ComponentState {
   motorTorque?: nf.telemetry.MotorTorque;
 }
 const componentStates = new Map<string, ComponentState>();
+
+function isFullyConnected(): boolean {
+  const expectedAnchors = anchorType === nf.common.AnchorType.ANCHORTYPE_ARPEGGIO ? 2 : 4;
+  let anchorConnected = 0;
+  let gripperConnected = 0;
+
+  componentStates.forEach(comp => {
+    const connected = comp.status === nf.telemetry.ConnStatus.CONNSTATUS_CONNECTED;
+    if (comp.type === 'Anchor' && connected) anchorConnected++;
+    if (comp.type === 'Gripper' && connected) gripperConnected++;
+  });
+
+  return anchorConnected >= expectedAnchors && gripperConnected >= 1;
+}
 
 function updateComponentStatusUI() {
   let anchorCount = anchorType === nf.common.AnchorType.ANCHORTYPE_ARPEGGIO ? 2 : 4;
@@ -1423,9 +1449,6 @@ function initRunMenu() {
         sendControl([nf.control.ControlItem.create({
           debug: {action: val}
         })]);
-                // Close menus after send? Optional. User said 'selected' triggers it.
-                // Keeping open might be better for debug tweaks, but standard behavior is close.
-                // Let's close it to be safe unless requested otherwise.
         maintMenu?.classList.remove('show');
       }
     });
@@ -1461,7 +1484,12 @@ function initRunMenu() {
 
   bindCommand('action-pick-drop',       Command.COMMAND_PICK_AND_DROP);
   // bindCommand('action-tension',        Command.COMMAND_TIGHTEN_LINES);
-  bindCommand('action-full-cal',       Command.COMMAND_FULL_CAL);
+  document.getElementById('action-full-cal')?.addEventListener('click', () => {
+    if (document.getElementById('action-full-cal')?.classList.contains('disabled')) return;
+    runMenu?.classList.remove('show');
+    maintMenu?.classList.remove('show');
+    openFullCalOverlay();
+  });
   bindCommand('action-half-cal',       Command.COMMAND_HALF_CAL);
   bindCommand('action-grasp',          Command.COMMAND_GRASP);
   bindCommand('action-dataset',        Command.COMMAND_SUBMIT_TARGETS_TO_DATASET);
@@ -1808,19 +1836,25 @@ function updateLeRobotUI() {
         if (startRecBtnLan) startRecBtnLan.disabled = true;
         if (startEvalBtn) startEvalBtn.disabled = true;
       } else {
-        inactiveContent?.classList.remove('hidden');
         pendingOverlay?.classList.add('hidden');
-        if (startRecBtnLinked) startRecBtnLinked.disabled = false;
-        if (startRecBtnLan) startRecBtnLan.disabled = false;
-        if (startEvalBtn) startEvalBtn.disabled = false;
+        const unavailableEl = document.getElementById('lerobot-unavailable');
+        if (!isFullyConnected()) {
+          inactiveContent?.classList.add('hidden');
+          unavailableEl?.classList.remove('hidden');
+        } else {
+          unavailableEl?.classList.add('hidden');
+          inactiveContent?.classList.remove('hidden');
+          if (startRecBtnLan) startRecBtnLan.disabled = false;
+          updateSessionLocationUI();
 
-        const startErrorEl = document.getElementById('lerobot-start-error');
-        if (startErrorEl) {
-          if (lerobotError) {
-            startErrorEl.textContent = lerobotError;
-            startErrorEl.classList.remove('hidden');
-          } else {
-            startErrorEl.classList.add('hidden');
+          const startErrorEl = document.getElementById('lerobot-start-error');
+          if (startErrorEl) {
+            if (lerobotError) {
+              startErrorEl.textContent = lerobotError;
+              startErrorEl.classList.remove('hidden');
+            } else {
+              startErrorEl.classList.add('hidden');
+            }
           }
         }
       }
@@ -1883,11 +1917,9 @@ function handleLeRobotFinalize() {
 }
 
 async function refreshHfStatus() {
-  const unlinked = document.getElementById('lerobot-rec-unlinked');
   const linked = document.getElementById('lerobot-rec-linked');
   const lanSection = document.getElementById('lerobot-rec-lan');
 
-  unlinked?.classList.add('hidden');
   linked?.classList.add('hidden');
   lanSection?.classList.add('hidden');
 
@@ -1906,25 +1938,47 @@ async function refreshHfStatus() {
       const oauthLink = document.getElementById('lerobot-hf-oauth-link') as HTMLAnchorElement;
       if (oauthLink) oauthLink.href = data.oauth_url;
     }
-    if (data.connected) {
-      const usernameEl = document.getElementById('lerobot-hf-username');
-      if (usernameEl) usernameEl.textContent = data.hf_username;
-      linked?.classList.remove('hidden');
-    } else {
-      unlinked?.classList.remove('hidden');
-    }
+    isHfLinked = !!data.connected;
+    const usernameEl = document.getElementById('lerobot-hf-username');
+    if (usernameEl && data.hf_username) usernameEl.textContent = data.hf_username;
+    linked?.classList.remove('hidden');
   } catch (e) {
     console.warn('Could not fetch HF status:', e);
-    unlinked?.classList.remove('hidden');
+    isHfLinked = false;
+    linked?.classList.remove('hidden');
   }
+  updateSessionLocationUI();
 }
+
+function updateSessionLocationUI() {
+  const usernameEl = document.getElementById('lerobot-hf-username');
+  const slashEl = document.getElementById('lerobot-dataset-slash');
+  const linkPrompt = document.getElementById('lerobot-hf-link-prompt');
+  const startRecBtn = document.getElementById('btn-lerobot-start-rec-linked') as HTMLButtonElement | null;
+  const startEvalBtn = document.getElementById('btn-lerobot-start-eval') as HTMLButtonElement | null;
+  const nameInput = document.getElementById('lerobot-input-dataset-name') as HTMLInputElement | null;
+
+  const isCloud = cloudRecordingMode === 'cloud';
+  const cloudBlocked = isCloud && !isHfLinked;
+
+  if (usernameEl) usernameEl.style.display = isCloud ? '' : 'none';
+  if (slashEl) slashEl.style.display = isCloud ? '' : 'none';
+  if (linkPrompt) linkPrompt.classList.toggle('hidden', !cloudBlocked);
+  if (startRecBtn) startRecBtn.disabled = cloudBlocked;
+  if (startEvalBtn) startEvalBtn.disabled = cloudBlocked;
+  if (nameInput) nameInput.placeholder = isCloud ? 'my-dataset' : 'username/my-dataset';
+}
+
+const STOPPABLE_CLOUD_STATES = new Set(['QUEUED', 'SCHEDULED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'NOT_FOUND', 'UNKNOWN']);
 
 async function refreshCloudStatus() {
   const statusEl = document.getElementById('lerobot-cloud-status');
   const badgeEl = document.getElementById('lerobot-cloud-state-badge');
+  const stopContainer = document.getElementById('lerobot-cloud-stop-container');
   if (!statusEl || !badgeEl) return;
   if (isLanMode || isSimMode) {
     statusEl.classList.add('hidden');
+    stopContainer?.classList.add('hidden');
     return;
   }
   try {
@@ -1953,9 +2007,26 @@ async function refreshCloudStatus() {
     } else {
       statusEl.classList.add('hidden');
     }
+    const showStop = !!(data.job_name && STOPPABLE_CLOUD_STATES.has(data.state));
+    stopContainer?.classList.toggle('hidden', !showStop);
   } catch (e) {
     console.warn('Could not fetch cloud job status:', e);
     statusEl.classList.add('hidden');
+    stopContainer?.classList.add('hidden');
+  }
+}
+
+async function stopCloudSession() {
+  const btn = document.getElementById('btn-stop-cloud-session') as HTMLButtonElement | null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Stopping...'; }
+  try {
+    const token = await AuthManager.getAuthToken();
+    await fetch('/lerobot/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+  } catch (e) {
+    console.warn('Could not stop cloud session:', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Stop Cloud Session'; }
+    setTimeout(() => refreshCloudStatus(), 2000);
   }
 }
 
@@ -1966,6 +2037,8 @@ function initLeRobotPanel() {
   const catcher = document.getElementById('lerobot-bg-catcher');
   const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
   const finalizeBtn = document.getElementById('btn-lerobot-finalize');
+
+  document.getElementById('btn-stop-cloud-session')?.addEventListener('click', stopCloudSession);
 
   headerBtn?.addEventListener('click', () => {
     if (isSimMode) return;
@@ -1992,17 +2065,22 @@ function initLeRobotPanel() {
     cloudRecordingMode = 'robot';
     btnModeRobot.classList.add('seg-active');
     btnModeCloud?.classList.remove('seg-active');
+    updateSessionLocationUI();
   });
   btnModeCloud?.addEventListener('click', () => {
     cloudRecordingMode = 'cloud';
     btnModeCloud.classList.add('seg-active');
     btnModeRobot?.classList.remove('seg-active');
+    updateSessionLocationUI();
   });
 
   document.getElementById('btn-lerobot-start-rec-linked')?.addEventListener('click', () => {
     const usernameEl = document.getElementById('lerobot-hf-username');
     const nameInput = document.getElementById('lerobot-input-dataset-name') as HTMLInputElement;
-    handleLeRobotStart('recording', `${usernameEl?.textContent ?? ''}/${nameInput?.value ?? ''}`);
+    const repoId = cloudRecordingMode === 'cloud'
+      ? `${usernameEl?.textContent ?? 'username'}/${nameInput?.value ?? ''}`
+      : nameInput?.value ?? '';
+    handleLeRobotStart('recording', repoId);
   });
 
   document.getElementById('btn-lerobot-start-rec-lan')?.addEventListener('click', () => {
@@ -2022,6 +2100,53 @@ function initLeRobotPanel() {
   updateLeRobotUI();
 }
 initLeRobotPanel();
+
+function openFullCalOverlay() {
+  const overlay = document.getElementById('fullcal-overlay');
+  const content = document.getElementById('fullcal-content');
+  const unavailable = document.getElementById('fullcal-unavailable');
+  if (!overlay) return;
+  if (!isFullyConnected()) {
+    content?.classList.add('hidden');
+    unavailable?.classList.remove('hidden');
+  } else {
+    unavailable?.classList.add('hidden');
+    content?.classList.remove('hidden');
+  }
+  overlay.classList.remove('hidden');
+}
+
+function initFullCalPanel() {
+  const close = () => document.getElementById('fullcal-overlay')?.classList.add('hidden');
+  document.getElementById('close-fullcal-panel')?.addEventListener('click', close);
+  document.getElementById('fullcal-bg-catcher')?.addEventListener('click', close);
+
+  document.getElementById('btn-fullcal-start')?.addEventListener('click', () => {
+    const angle0 = parseFloat((document.getElementById('fullcal-angle-0') as HTMLInputElement)?.value ?? '22.0');
+    const angle1 = parseFloat((document.getElementById('fullcal-angle-1') as HTMLInputElement)?.value ?? '22.0');
+
+    sendControl([
+      nf.control.ControlItem.create({
+        singleComponentAction: {
+          isGripper: false, anchorNum: 0,
+          action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
+          camAngle: isNaN(angle0) ? 22.0 : angle0,
+        }
+      }),
+      nf.control.ControlItem.create({
+        singleComponentAction: {
+          isGripper: false, anchorNum: 1,
+          action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
+          camAngle: isNaN(angle1) ? 22.0 : angle1,
+        }
+      }),
+    ]);
+
+    simpleCommand(nf.control.Command.COMMAND_FULL_CAL);
+    close();
+  });
+}
+initFullCalPanel();
 
 function initSharePanel() {
     document.getElementById('close-share-panel')?.addEventListener('click', () => document.getElementById('share-overlay')?.classList.add('hidden'));
@@ -2044,6 +2169,84 @@ function initSharePanel() {
     });
 }
 initSharePanel();
+
+// --- Video Feed Expand ---
+let expandedFeedId: string | null = null;
+const ALL_FEED_IDS = ['firstOverhead', 'secondOverhead', 'gripper'];
+
+function expandFeed(feedId: string, perspective: number) {
+  if (expandedFeedId) collapseFeed();
+  const panelRight = document.getElementById('panel-right');
+  const feed = document.getElementById(feedId);
+  if (!panelRight || !feed) return;
+
+  for (const id of ALL_FEED_IDS) {
+    if (id !== feedId) document.getElementById(id)?.classList.add('hidden');
+  }
+
+  panelRight.classList.add('panel-right-expanded');
+  const rect = panelRight.getBoundingClientRect(); // measured after grid reflow
+  feed.style.position = 'fixed';
+  feed.style.left = `${rect.left}px`;
+  feed.style.top = `${rect.top}px`;
+  feed.style.width = `${rect.width}px`;
+  feed.style.height = `${rect.height}px`;
+  feed.style.zIndex = '50';
+  feed.style.aspectRatio = 'unset';
+  feed.style.borderRadius = '12px';
+
+  panelRight.style.overflowY = 'hidden';
+  feed.querySelector<HTMLElement>('.feed-expand-btn')?.classList.add('hidden');
+  feed.querySelector<HTMLElement>('.feed-collapse-btn')?.classList.remove('hidden');
+
+  expandedFeedId = feedId;
+  setPerspective(perspective);
+}
+
+function collapseFeed() {
+  if (!expandedFeedId) return;
+  const feed = document.getElementById(expandedFeedId);
+  const panelRight = document.getElementById('panel-right');
+
+  for (const id of ALL_FEED_IDS) {
+    document.getElementById(id)?.classList.remove('hidden');
+  }
+
+  if (feed) {
+    feed.style.position = '';
+    feed.style.left = '';
+    feed.style.top = '';
+    feed.style.width = '';
+    feed.style.height = '';
+    feed.style.zIndex = '';
+    feed.style.aspectRatio = '';
+    feed.style.borderRadius = '';
+    feed.querySelector<HTMLElement>('.feed-expand-btn')?.classList.remove('hidden');
+    feed.querySelector<HTMLElement>('.feed-collapse-btn')?.classList.add('hidden');
+  }
+  if (panelRight) {
+    panelRight.style.overflowY = '';
+    panelRight.classList.remove('panel-right-expanded');
+  }
+  expandedFeedId = null;
+}
+
+function initFeedExpand() {
+  const feeds: Array<{ id: string; perspective: number }> = [
+    { id: 'firstOverhead',  perspective: perspTop },
+    { id: 'secondOverhead', perspective: perspBottom },
+    { id: 'gripper',        perspective: perspGripper },
+  ];
+  for (const { id, perspective } of feeds) {
+    const feed = document.getElementById(id);
+    feed?.querySelector('.feed-expand-btn')?.addEventListener('click', () => expandFeed(id, perspective));
+    feed?.querySelector('.feed-collapse-btn')?.addEventListener('click', collapseFeed);
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && expandedFeedId) collapseFeed();
+  });
+}
+initFeedExpand();
 
 // --- Component Status Menu ---
 function initComponentMenu() {
