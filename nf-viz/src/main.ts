@@ -2078,6 +2078,16 @@ function initSwingControl() {
   const btn = document.getElementById('btn-swing-cancel');
   btn?.addEventListener('click', toggleSwingCancellation);
   gamepad.toggleSwingC = toggleSwingCancellation;
+
+  const slider = document.getElementById('swing-latency-slider') as HTMLInputElement | null;
+  const valueDisplay = document.getElementById('swing-latency-value');
+  slider?.addEventListener('input', () => {
+    const val = parseFloat(slider.value).toFixed(2);
+    if (valueDisplay) valueDisplay.textContent = val + 's';
+    sendControl([nf.control.ControlItem.create({
+      debug: { action: `swinglatency ${val}` }
+    })]);
+  });
 }
 initSwingControl();
 

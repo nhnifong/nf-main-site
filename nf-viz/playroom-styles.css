@@ -520,6 +520,40 @@ h2 {
 
 .swing-label { font-size: 0.9rem; color: #333; }
 
+.swing-section { gap: 6px; }
+
+.swing-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swing-latency-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swing-latency-label {
+  font-size: 0.75rem;
+  color: #666;
+  min-width: 38px;
+}
+
+.swing-latency-slider {
+  width: 90px;
+  height: 4px;
+  cursor: pointer;
+  accent-color: #555;
+}
+
+.swing-latency-value {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #333;
+  min-width: 36px;
+}
+
 /* ============================================================
    RUN MENU
    Primary action button with an animated pop-up menu above it.

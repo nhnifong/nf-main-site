@@ -226,10 +226,17 @@
         <div class="footer-divider"></div>
 
         <!-- Swing Cancellation Toggle -->
-        <div class="footer-stats-group footer-toggle-section">
-          <span class="swing-label">swing cancellation</span>
-          <div id="btn-swing-cancel" class="toggle-track">
-            <div id="swing-cancel-indicator" class="toggle-knob status-offline"></div>
+        <div class="footer-stats-group swing-section">
+          <div class="swing-toggle-row">
+            <span class="swing-label">swing cancellation</span>
+            <div id="btn-swing-cancel" class="toggle-track">
+              <div id="swing-cancel-indicator" class="toggle-knob status-offline"></div>
+            </div>
+          </div>
+          <div class="swing-latency-row">
+            <span class="swing-latency-label">latency</span>
+            <input type="range" id="swing-latency-slider" class="swing-latency-slider" min="-0.5" max="1.5" step="0.05" value="0.2">
+            <span id="swing-latency-value" class="swing-latency-value">0.20s</span>
           </div>
         </div>
 
