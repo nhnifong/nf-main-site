@@ -399,6 +399,8 @@
             <div class="session-section">
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Session Location</div>
 
+              <div id="lerobot-location-lan" class="hidden" style="font-size:0.85rem; color:var(--text-light);">local — subprocess of stringman-headless</div>
+
               <div id="lerobot-rec-linked" class="hidden">
                 <div class="session-input-group">
                   <div class="input-label">Run On</div>
@@ -422,15 +424,17 @@
             <!-- Recording Mode -->
             <div class="session-section">
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Recording Mode</div>
-              <div class="session-input-group">
-                <div class="input-label">Dataset Name</div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <strong id="lerobot-hf-username" style="color:var(--text-bright); white-space:nowrap;">username</strong>
-                  <span id="lerobot-dataset-slash" style="color:var(--text-dim);">/</span>
-                  <input type="text" id="lerobot-input-dataset-name" class="input-text" placeholder="my-dataset" style="margin:0; flex:1;" title="Hugginface repo id. When running locally, supply the whole repo-id. Your username must match the logged in huggingface session in the enviroment where stringman-headless is running. When running in google cloud, supply only the name of the dataset.">
+              <div id="lerobot-rec-linked-inputs">
+                <div class="session-input-group">
+                  <div class="input-label">Dataset Name</div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <strong id="lerobot-hf-username" style="color:var(--text-bright); white-space:nowrap;">username</strong>
+                    <span id="lerobot-dataset-slash" style="color:var(--text-dim);">/</span>
+                    <input type="text" id="lerobot-input-dataset-name" class="input-text" placeholder="my-dataset" style="margin:0; flex:1;" title="Hugginface repo id. When running locally, supply the whole repo-id. Your username must match the logged in huggingface session in the enviroment where stringman-headless is running. When running in google cloud, supply only the name of the dataset.">
+                  </div>
                 </div>
+                <button id="btn-lerobot-start-rec-linked" class="run-button btn-green btn-full" title="Begin a LeRobot recording session. Each time you press Start Episode and Stop Episode, one episode is saved to the dataset.">Start recording session</button>
               </div>
-              <button id="btn-lerobot-start-rec-linked" class="run-button btn-green btn-full" title="Begin a LeRobot recording session. Each time you press Start Episode and Stop Episode, one episode is saved to the dataset.">Start recording session</button>
 
               <!-- LAN mode: specify full repo ID -->
               <div id="lerobot-rec-lan" class="hidden">
@@ -444,7 +448,7 @@
 
             <!-- Policy Eval Mode -->
             <div class="session-section">
-              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Recording Mode</div>
+              <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Evaluation Mode</div>
               <div class="session-input-group">
                 <div class="input-label">Policy Repo ID</div>
                 <input type="text" id="lerobot-input-policy" class="input-text" value="naavox/pi_laundry_grasp" title="Huggingface Repo ID of a trained policy for stringman. you may run other users policies so long as you have read access. Note that Pi0.5 policies require as much as 32GB of system memory during startup, you might have to close other applications.">

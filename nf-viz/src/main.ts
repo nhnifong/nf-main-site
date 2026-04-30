@@ -1920,14 +1920,20 @@ function handleLeRobotFinalize() {
 async function refreshHfStatus() {
   const linked = document.getElementById('lerobot-rec-linked');
   const lanSection = document.getElementById('lerobot-rec-lan');
+  const linkedInputs = document.getElementById('lerobot-rec-linked-inputs');
+  const locationLan = document.getElementById('lerobot-location-lan');
 
   linked?.classList.add('hidden');
   lanSection?.classList.add('hidden');
+  linkedInputs?.classList.add('hidden');
+  locationLan?.classList.add('hidden');
 
   if (isLanMode) {
     lanSection?.classList.remove('hidden');
+    locationLan?.classList.remove('hidden');
     return;
   }
+  linkedInputs?.classList.remove('hidden');
 
   try {
     const token = await AuthManager.getAuthToken();
