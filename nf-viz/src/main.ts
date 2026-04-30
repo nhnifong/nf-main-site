@@ -1869,26 +1869,27 @@ async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   episodesUntilCheckpoint = null;
   isCloudRecordingSession = false;
 
-  if (type === 'recording' && cloudRecordingMode === 'cloud' && detectedRobotId) {
+  if (cloudRecordingMode === 'cloud' && detectedRobotId) {
     updateLeRobotUI();
     try {
       const token = await AuthManager.getAuthToken();
-      const res = await fetch(`/lerobot/record/start/${detectedRobotId}`, {
+      const endpoint = `/lerobot/${type}/start/${detectedRobotId}`;
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ repo_id: repoId })
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail ?? 'Failed to start cloud recording job.');
+        throw new Error(err.detail ?? `Failed to start cloud ${type} job.`);
       }
       const result = await res.json();
       isCloudRecordingSession = true;
-      console.log(`Cloud recording job started: ${result.job_name} (${result.state})`);
+      console.log(`Cloud ${type} job started: ${result.job_name} (${result.state})`);
       setTimeout(() => refreshCloudStatus(), 2000);
     } catch (e: unknown) {
       isLeRobotStarting = false;
-      lerobotError = e instanceof Error ? e.message : 'Failed to start cloud recording job.';
+      lerobotError = e instanceof Error ? e.message : `Failed to start cloud ${type} job.`;
       isLeRobotSessionActive = false;
       updateLeRobotUI();
     }
