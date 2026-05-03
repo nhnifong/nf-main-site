@@ -24,6 +24,9 @@ export class VideoFeed {
     private targetListManager: TargetListManager | null = null;
     private gripperPredictions: nf.telemetry.IGripCamPredictions | null = null;
     
+    // Gantry position (3D, THREE world space)
+    private lastGantryPos: THREE.Vector3 | null = null;
+
     // New Item State
     private newItemImageCoords: THREE.Vector2 | null = null;
     private newItemIsHovered: boolean = false;
@@ -344,6 +347,11 @@ export class VideoFeed {
         this.virtualCamera = vCam;
     }
 
+    public setGantryPosition(pos: nf.common.IVec3) {
+        this.lastGantryPos = new THREE.Vector3(pos.x ?? 0, pos.z ?? 0, -(pos.y ?? 0));
+        this.draw();
+    }
+
     // Called by main.ts on telemetry update to provide latest list of targets
     public updateList(targets: nf.telemetry.ITargetList) {
         if (targets.targets) {
@@ -431,16 +439,22 @@ export class VideoFeed {
                     // apply fill color according to mouse hover/select status
                     if (isSelected || isDraggingThis) {
                         this.ctx.fillStyle = 'rgba(255, 165, 0, 0.7)';
-                        this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                        this.ctx.beginPath();
+                        this.ctx.arc(renderPos.x, renderPos.y, HALF_SIZE, 0, Math.PI * 2);
+                        this.ctx.fill();
                     } else if (isHovered) {
                         this.ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-                        this.ctx.fillRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                        this.ctx.beginPath();
+                        this.ctx.arc(renderPos.x, renderPos.y, HALF_SIZE, 0, Math.PI * 2);
+                        this.ctx.fill();
                     }
 
                     // Stroke
                     this.ctx.strokeStyle = strokeColor;
                     this.ctx.lineWidth = lineWidth;
-                    this.ctx.strokeRect(renderPos.x - HALF_SIZE, renderPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+                    this.ctx.beginPath();
+                    this.ctx.arc(renderPos.x, renderPos.y, HALF_SIZE, 0, Math.PI * 2);
+                    this.ctx.stroke();
 
                     // Label
                     if (target.id) {
@@ -587,6 +601,15 @@ export class VideoFeed {
             // Label
             this.ctx.fillStyle = '#FFF';
             this.ctx.fillText("GRASP", barX - 5, holdY + barH/2);
+        }
+
+        if (this.virtualCamera && this.lastGantryPos) {
+            const [screenPos] = projectFloorToPixels([this.lastGantryPos], this.virtualCamera, this.canvasSize);
+            if (screenPos) {
+                this.ctx.strokeStyle = 'yellow';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(screenPos.x - HALF_SIZE, screenPos.y - HALF_SIZE, TARGET_SIZE, TARGET_SIZE);
+            }
         }
     }
 }
