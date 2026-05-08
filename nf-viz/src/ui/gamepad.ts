@@ -32,6 +32,7 @@ export class GamepadController {
     private lclickWasHeld = false;
     private aWasHeld = false
     private bWasHeld = false;
+    private yWasHeld = false;
 
     // time of a and b presses for speed ramp up
     private aPressTimestamp = 0;
@@ -45,8 +46,10 @@ export class GamepadController {
     private lastAction = new Float32Array(7); 
 
     public targetListManager: TargetListManager | null = null;
+    public gripperModel: nf.telemetry.GripperModel = nf.telemetry.GripperModel.GRIPPERMODEL_PILOT;
 
     public toggleSwingC: () => void = () => {};
+    public onSetPrompt: () => void = () => {};
 
     constructor() {
         // Listen for connection events to know which index to poll
@@ -363,12 +366,14 @@ export class GamepadController {
         this.aWasHeld = input.buttons.a;
         this.bWasHeld = input.buttons.b;
         
-        // Winch Control (X/Y)
+        // Winch Control (X/Y) — pilot gripper only
         let lineSpeed = 0;
-        if (input.buttons.y) {
-            lineSpeed = -this.GAMEPAD_WINCH_METER_PER_SEC;
-        } else if (input.buttons.x) {
-            lineSpeed = this.GAMEPAD_WINCH_METER_PER_SEC;
+        if (this.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_PILOT) {
+            if (input.buttons.y) {
+                lineSpeed = -this.GAMEPAD_WINCH_METER_PER_SEC;
+            } else if (input.buttons.x) {
+                lineSpeed = this.GAMEPAD_WINCH_METER_PER_SEC;
+            }
         }
 
         // Wrist Control (Right stick X)
@@ -390,6 +395,12 @@ export class GamepadController {
             }
         }
         this.startWasHeld = input.buttons.start;
+
+        // Y Button -> Set Prompt
+        if (input.buttons.y && !this.yWasHeld) {
+            this.onSetPrompt();
+        }
+        this.yWasHeld = input.buttons.y;
 
         // D-Pad Up -> Tighten Lines
         if (input.buttons.dpadUp && !this.dpadUpWasHeld) {

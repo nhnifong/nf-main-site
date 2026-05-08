@@ -246,3 +246,25 @@ export function Say(text: string): void {
   // 3. Tell the browser to speak
   window.speechSynthesis.speak(utterance);
 }
+
+export function Listen(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      reject('Speech recognition not supported in this browser');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      resolve(event.results[0][0].transcript as string);
+    };
+    recognition.onerror = (event: any) => {
+      reject(event.error as string);
+    };
+    recognition.start();
+  });
+}

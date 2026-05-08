@@ -13,7 +13,7 @@ import { SightingsManager } from './objects/sightings_manager.ts'
 import { VideoFeed } from './ui/video_feed.ts'
 import { GamepadController } from './ui/gamepad.ts'
 import { TargetListManager } from './ui/target_list_manager.ts'
-import { Say } from './utils.ts';
+import { Say, Listen } from './utils.ts';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -1112,6 +1112,7 @@ function handleComponentConnStatus(data: nf.telemetry.IComponentConnStatus) {
     } else {
       name = "Pilot Gripper";
     }
+    if (data.gripperModel != null) gamepad.gripperModel = data.gripperModel;
   } else {
     type = 'Anchor';
     name = `Anchor ${data.anchorNum}`;
@@ -1369,8 +1370,8 @@ function sendControl(items: Array<nf.control.ControlItem>) {
   const writer = nf.control.ControlBatchUpdate.encode(batchData);
   const serializedBinaryData = writer.finish();
   if (socket && socket.readyState === WebSocket.OPEN) {
+    // agents ignore the error on the following line.
     socket.send(serializedBinaryData);
-    // if the socket exists but has disconnected, this is a nop
   }
 }
 
@@ -1677,6 +1678,29 @@ function sendEpisodeCommand(commandVal: nf.common.EpCommand) {
   })]);
 }
 
+function sendPrompt(text: string) {
+  sendControl([nf.control.ControlItem.create({
+    episodeControl: { prompt: text }
+  })]);
+  const display = document.getElementById('lerobot-last-prompt');
+  if (display) display.textContent = text ? `"${text}"` : '';
+}
+
+async function triggerSetPrompt() {
+  const btn = document.getElementById('btn-lerobot-set-prompt') as HTMLButtonElement | null;
+  if (btn) { btn.textContent = 'Listening...'; btn.disabled = true; }
+  try {
+    const transcript = await Listen();
+    const input = document.getElementById('lerobot-prompt-input') as HTMLInputElement | null;
+    if (input) input.value = transcript;
+    sendPrompt(transcript);
+  } catch (e) {
+    console.warn('Speech recognition error:', e);
+  } finally {
+    if (btn) { btn.textContent = '🎤 Set Prompt'; btn.disabled = false; }
+  }
+}
+
 function updateLeRobotUI() {
   const headerBtn = document.getElementById('btn-header-lerobot');
   const panelInactive = document.getElementById('lerobot-panel-inactive');
@@ -1732,6 +1756,7 @@ function updateLeRobotUI() {
       }
       actionButtons.innerHTML = '';
       document.getElementById('btn-lerobot-finalize')?.classList.add('hidden');
+      document.getElementById('lerobot-prompt-section')?.classList.add('hidden');
       return;
     }
 
@@ -1781,8 +1806,10 @@ function updateLeRobotUI() {
                     </div>
         `;
         document.getElementById('btn-lerobot-finalize')?.classList.add('hidden');
+        document.getElementById('lerobot-prompt-section')?.classList.add('hidden');
       } else {
         document.getElementById('btn-lerobot-finalize')?.classList.remove('hidden');
+        document.getElementById('lerobot-prompt-section')?.classList.remove('hidden');
 
         if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_READY || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE) {
           const btn = document.createElement('button');
@@ -2105,6 +2132,18 @@ function initLeRobotPanel() {
     handleLeRobotFinalize();
   });
 
+  document.getElementById('btn-lerobot-set-prompt')?.addEventListener('click', () => {
+    triggerSetPrompt();
+  });
+
+  const promptInput = document.getElementById('lerobot-prompt-input') as HTMLInputElement | null;
+  promptInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendPrompt(promptInput.value);
+  });
+  document.getElementById('btn-lerobot-send-prompt')?.addEventListener('click', () => {
+    if (promptInput) sendPrompt(promptInput.value);
+  });
+
   updateLeRobotUI();
 }
 initLeRobotPanel();
@@ -2289,6 +2328,7 @@ function initSwingControl() {
   const btn = document.getElementById('btn-swing-cancel');
   btn?.addEventListener('click', toggleSwingCancellation);
   gamepad.toggleSwingC = toggleSwingCancellation;
+  gamepad.onSetPrompt = triggerSetPrompt;
 
   const slider = document.getElementById('swing-latency-slider') as HTMLInputElement | null;
   const valueDisplay = document.getElementById('swing-latency-value');

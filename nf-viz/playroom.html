@@ -480,6 +480,17 @@
             <!-- Contextual buttons injected here via main.ts -->
           </div>
 
+          <div id="lerobot-prompt-section" class="hidden" style="margin-top:10px; margin-bottom:10px;">
+            <div style="display:flex; gap:6px; margin-bottom:10px;">
+              <input type="text" id="lerobot-prompt-input" class="input-text" placeholder="describe the task..." style="flex:1; margin:0;">
+              <button id="btn-lerobot-send-prompt" class="run-button btn-green" style="white-space:nowrap;">Send</button>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:10px;">
+              <button id="btn-lerobot-set-prompt" class="run-button btn-full" style="flex:1; justify-content:center; font-size:0.8rem;">🎤 Set Prompt</button>
+            </div>
+            <div id="lerobot-last-prompt" style="font-size:0.75rem; color:var(--text-dim); min-height:1em;"></div>
+          </div>
+
           <button id="btn-lerobot-finalize" class="run-button btn-blue btn-full" title="Stop the recording session and finalize the dataset. If using Google Cloud, this will also shut down the cloud instance.">End Session</button>
         </div>
       </div>
