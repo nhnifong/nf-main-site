@@ -74,8 +74,8 @@ export class SightingsManager {
         data.sightings.forEach(vec => {
             this.addSingleItem(
                 vec.x ?? 0, 
-                -(vec.z ?? 0),
-                vec.y ?? 0, 
+                vec.z ?? 0,
+                -(vec.y ?? 0), 
             );
         });
     }
