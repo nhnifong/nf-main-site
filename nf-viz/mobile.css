@@ -49,13 +49,21 @@ body.mobile #ui-layer {
 /* Hide desktop chrome on mobile — replaced by mobile topbar / tabbar. */
 body.mobile #panel-header { display: none; }
 
+/* While the landing screen is up (robot selection), the mobile chrome
+   doesn't apply — hide topbar and tabbar so the user only sees the
+   landing UI. */
+body.mobile:has(#landing-layer:not(.hidden)) #mobile-topbar,
+body.mobile:has(#landing-layer:not(.hidden)) #mobile-tabbar {
+  display: none;
+}
+
 /* Floating 3D labels only make sense on the 3D tab. */
 body.mobile:not(.tab-3d) #floating-labels-container { display: none; }
 
 /* ============================================================
    TOP BAR — persistent across all tabs
    ============================================================ */
-#mobile-topbar {
+body.mobile #mobile-topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 30;
@@ -121,7 +129,7 @@ body.mobile:not(.tab-3d) #floating-labels-container { display: none; }
 /* ============================================================
    BOTTOM TAB BAR
    ============================================================ */
-#mobile-tabbar {
+body.mobile #mobile-tabbar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 30;

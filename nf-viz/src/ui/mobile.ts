@@ -231,8 +231,12 @@ export class MobileShell {
     // wiring already). Falls back to clicking by ID if not yet bound.
     document.getElementById('mobile-stop-btn')?.addEventListener('click', (e) => {
       e.preventDefault();
-      const desktopStop = document.getElementById('stop-btn');
-      desktopStop?.click();
+      document.getElementById('stop-btn')?.click();
+    });
+    // Mobile Change Robot button delegates to the desktop header button.
+    document.getElementById('mobile-change-robot-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('btn-header-back')?.click();
     });
   }
 
