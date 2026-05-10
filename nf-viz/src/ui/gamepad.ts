@@ -51,6 +51,10 @@ export class GamepadController {
     public toggleSwingC: () => void = () => {};
     public onSetPrompt: () => void = () => {};
 
+    // Optional provider for touch-derived input state (mobile shell).
+    // Returns null when not on mobile or no input is being given.
+    public touchProvider: (() => any | null) | null = null;
+
     constructor() {
         // Listen for connection events to know which index to poll
         window.addEventListener("gamepadconnected", (e) => {
@@ -83,7 +87,7 @@ export class GamepadController {
 
 
         const container = document.getElementById('how-to');
-        if (container) {
+        if (container && !document.body.classList.contains('mobile')) {
             container.textContent = "Use WASDQE to move or connect a gamepad. Space-LShift to grasp. ZX for wrist/winch.";
         }
     }
@@ -243,6 +247,39 @@ export class GamepadController {
         // first use keyboard input
         let input = this.getKeyboardState();
         const gpInput = this.getGamepadState();
+        const touchInput = this.touchProvider ? this.touchProvider() : null;
+
+        if (touchInput) {
+            // Merge touch input the same way we merge gamepad input below.
+            input = {
+                leftStick: {
+                    x: input.leftStick.x + (touchInput.leftStick?.x ?? 0),
+                    y: input.leftStick.y + (touchInput.leftStick?.y ?? 0),
+                },
+                rightStick: {
+                    x: input.rightStick.x + (touchInput.rightStick?.x ?? 0),
+                    y: input.rightStick.y + (touchInput.rightStick?.y ?? 0),
+                },
+                buttons: {
+                    a: input.buttons.a || (touchInput.buttons?.a ?? false),
+                    b: input.buttons.b || (touchInput.buttons?.b ?? false),
+                    x: input.buttons.x || (touchInput.buttons?.x ?? false),
+                    y: input.buttons.y || (touchInput.buttons?.y ?? false),
+                    lb: input.buttons.lb || (touchInput.buttons?.lb ?? false),
+                    rb: input.buttons.rb || (touchInput.buttons?.rb ?? false),
+                    lt: Math.max(input.buttons.lt, touchInput.buttons?.lt ?? 0),
+                    rt: Math.max(input.buttons.rt, touchInput.buttons?.rt ?? 0),
+                    start: input.buttons.start || (touchInput.buttons?.start ?? false),
+                    select: input.buttons.select || (touchInput.buttons?.select ?? false),
+                    lclick: input.buttons.lclick || (touchInput.buttons?.lclick ?? false),
+                    rclick: input.buttons.rclick || (touchInput.buttons?.rclick ?? false),
+                    dpadUp: input.buttons.dpadUp || (touchInput.buttons?.dpadUp ?? false),
+                    dpadDown: input.buttons.dpadDown || (touchInput.buttons?.dpadDown ?? false),
+                    dpadLeft: input.buttons.dpadLeft || (touchInput.buttons?.dpadLeft ?? false),
+                    dpadRight: input.buttons.dpadRight || (touchInput.buttons?.dpadRight ?? false),
+                },
+            };
+        }
 
         if (gpInput) {
             // gamepad unlock check  - trigger buttons may return invalid values until pressed.

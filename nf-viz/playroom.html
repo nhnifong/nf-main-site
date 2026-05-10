@@ -2,13 +2,76 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="%VITE_ASSET_BUCKET_URL%/assets/favicon.png" />
     <title>nf-viz</title>
     <link rel="stylesheet" href="./playroom-styles.css" />
+    <link rel="stylesheet" href="./mobile.css" />
   </head>
   <body>
     <!-- The 3D Canvas will be appended here by main.ts (z-index auto/0) -->
+
+    <!-- Mobile Top Bar (visible only when body.mobile) -->
+    <div id="mobile-topbar" class="mobile-only">
+      <div id="mobile-status">
+        <span id="mobile-status-dot" class="status-dot status-offline"></span>
+        <span id="mobile-status-text">Offline</span>
+      </div>
+      <div id="mobile-op-progress" class="hidden">
+        <div class="op-info">
+          <span id="mobile-op-name">Operation</span>
+          <span id="mobile-op-action"></span>
+        </div>
+        <div class="op-bar-bg">
+          <div id="mobile-op-bar-fill"></div>
+        </div>
+      </div>
+      <button id="mobile-stop-btn" class="stop-button">STOP</button>
+    </div>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <nav id="mobile-tabbar" class="mobile-only">
+      <button class="tabbar-btn" data-tab="3d">3D</button>
+      <button class="tabbar-btn" data-tab="cams">Cams</button>
+      <button class="tabbar-btn" data-tab="targets">Targets</button>
+      <button class="tabbar-btn tabbar-btn-drive" data-tab="drive" disabled>Drive</button>
+      <button class="tabbar-btn" data-tab="system">System</button>
+    </nav>
+
+    <!-- Mobile Drive Panel (Drive tab content) -->
+    <aside id="panel-drive" class="panel mobile-only">
+      <div id="drive-feed-host">
+        <!-- Selected video feed is moved into here when entering Drive mode -->
+      </div>
+      <div id="drive-controls">
+        <div class="drive-row">
+          <div id="drive-stick" class="touch-stick">
+            <div class="touch-stick-knob"></div>
+          </div>
+          <div class="drive-vertical">
+            <button class="drive-btn" id="drive-btn-up" data-press="up">▲ up</button>
+            <button class="drive-btn" id="drive-btn-down" data-press="down">▼ down</button>
+          </div>
+          <div id="drive-fingers" class="touch-strip touch-strip-vertical">
+            <div class="touch-strip-knob"></div>
+            <span class="drive-strip-label drive-strip-label-top">open</span>
+            <span class="drive-strip-label drive-strip-label-bottom">close</span>
+          </div>
+        </div>
+        <div class="drive-row">
+          <div id="drive-wrist" class="touch-strip">
+            <div class="touch-strip-knob"></div>
+            <span class="drive-strip-label">wrist</span>
+          </div>
+        </div>
+        <div class="drive-row drive-secondary">
+          <button class="drive-btn drive-btn-secondary" id="drive-btn-winch-in" data-press="winch-in">winch ↑</button>
+          <button class="drive-btn drive-btn-secondary" id="drive-btn-winch-out" data-press="winch-out">winch ↓</button>
+          <button class="drive-btn drive-btn-secondary drive-btn-stop-all" id="drive-btn-stop-all">stop all</button>
+        </div>
+      </div>
+    </aside>
+
 
     <!-- Landing Layer (Login / LAN selection) -->
     <div id="landing-layer" class="hidden">
@@ -128,6 +191,7 @@
           <div class="feed-label">ANCHOR 0</div>
           <button class="feed-expand-btn" title="Expand feed"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M0 0h4v1.5H1.5V4H0V0zm8 0h4v4h-1.5V1.5H8V0zM0 8h1.5v2.5H4V12H0V8zm10.5 2.5V8H12v4H8v-1.5h2.5z"/></svg></button>
           <button class="feed-collapse-btn hidden" title="Exit expanded view">✕</button>
+          <button class="feed-drive-btn mobile-only" title="Drive from this view">Drive</button>
         </div>
         <div class="video-feed feed-16-9" id="secondOverhead">
           <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video.png" onended="this.load()"></video>
@@ -136,6 +200,7 @@
           <div class="feed-label">ANCHOR 1</div>
           <button class="feed-expand-btn" title="Expand feed"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M0 0h4v1.5H1.5V4H0V0zm8 0h4v4h-1.5V1.5H8V0zM0 8h1.5v2.5H4V12H0V8zm10.5 2.5V8H12v4H8v-1.5h2.5z"/></svg></button>
           <button class="feed-collapse-btn hidden" title="Exit expanded view">✕</button>
+          <button class="feed-drive-btn mobile-only" title="Drive from this view">Drive</button>
         </div>
         <div class="video-feed feed-1-1" id="gripper">
           <video class="feed-video" autoplay muted playsinline poster="%VITE_ASSET_BUCKET_URL%/assets/waiting_for_video_square.png" onended="this.load()"></video>
@@ -144,6 +209,7 @@
           <div class="feed-label">GRIPPER</div>
           <button class="feed-expand-btn" title="Expand feed"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M0 0h4v1.5H1.5V4H0V0zm8 0h4v4h-1.5V1.5H8V0zM0 8h1.5v2.5H4V12H0V8zm10.5 2.5V8H12v4H8v-1.5h2.5z"/></svg></button>
           <button class="feed-collapse-btn hidden" title="Exit expanded view">✕</button>
+          <button class="feed-drive-btn mobile-only" title="Drive from this view">Drive</button>
         </div>
       </aside>
 
