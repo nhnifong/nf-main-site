@@ -7,8 +7,8 @@
 # Webrtc must be served over https in production build
 # however, these keys would not be found on the local build and that is a fatal error.
 webrtcEncryption: ${WEBRTC_USE_HTTPS}
-webrtcServerKey: /https/privkey.pem
-webrtcServerCert: /https/fullchain.pem
+webrtcServerKey: /etc/letsencrypt/live/media.neufangled.com/privkey.pem
+webrtcServerCert: /etc/letsencrypt/live/media.neufangled.com/fullchain.pem
 
 # inform mediamtx of it's public hostname
 webrtcAdditionalHosts: ${WEBRTC_ADDITIONAL_HOSTS}

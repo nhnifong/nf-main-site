@@ -26,8 +26,7 @@ services:
       WEBRTC_USE_HTTPS: "yes"
       WEBRTC_ADDITIONAL_HOSTS: "[media.neufangled.com]"
     volumes:
-      - /etc/letsencrypt/live/media.neufangled.com/fullchain.pem:/https/fullchain.pem:ro
-      - /etc/letsencrypt/live/media.neufangled.com/privkey.pem:/https/privkey.pem:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
 
   # Production Database
   # postgresql+asyncpg://prod_user:<password>@10.142.0.2:5432/neufangled_prod
@@ -57,4 +56,8 @@ services:
     ports:
       - "10.142.0.2:5433:5432" # Exposed on 5433 to avoid conflict with prod
     volumes:
+<<<<<<< Updated upstream
       - /opt/data/staging:/var/lib/postgresql/data
+=======
+      - /opt/data/staging:/var/lib/postgresql/data
+>>>>>>> Stashed changes
