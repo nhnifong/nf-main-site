@@ -5,6 +5,7 @@
 # 1. A mediaMTX server
 # 2. Prod postgres server
 # 3. Staging postgres server
+# 4. A redis server limited to half of the container ram
 
 
 services:
@@ -57,3 +58,11 @@ services:
       - "10.142.0.2:5433:5432" # Exposed on 5433 to avoid conflict with prod
     volumes:
       - /opt/data/staging:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    command: ["redis-server", "--maxmemory", "768mb", "--maxmemory-policy", "allkeys-lru"]
+    deploy:
+      resources:
+        limits:
+          memory: 1024mb
