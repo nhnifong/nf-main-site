@@ -159,7 +159,7 @@ steps:
   - '--vpc-connector'
   - 'redis-connector'
   - '--set-env-vars'
-  - "REDIS_URL=redis://10.83.184.211:6379,\
+  - "REDIS_URL=redis://10.142.0.2:6379,\
     HF_CLIENT_ID=391a0b16-657f-40f5-bc1c-79586cce1711,\
     HF_REDIRECT_URI=https://nf-site-monolith-staging-690802609278.us-east1.run.app/hf-redirect,\
     GCP_PROJECT_ID=nf-web-480214,\
