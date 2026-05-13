@@ -47,7 +47,7 @@ services:
   # postgresql+asyncpg://staging_user:<password>@10.142.0.2:5433/neufangled_staging
   postgres-staging:
     image: postgres:16-alpine
-    container_name: postgres-staging
+    container_name: postgres-stagingS
     restart: always
     environment:
       POSTGRES_DB: neufangled_staging
@@ -57,3 +57,11 @@ services:
       - "10.142.0.2:5433:5432" # Exposed on 5433 to avoid conflict with prod
     volumes:
       - /opt/data/staging:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    command: ["redis-server", "--maxmemory", "768mb", "--maxmemory-policy", "allkeys-lru"]
+    deploy:
+      resources:
+        limits:
+          memory: 1024mb
