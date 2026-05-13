@@ -66,3 +66,5 @@ services:
       resources:
         limits:
           memory: 1024mb
+    ports:
+      - "10.142.0.2:6379:6379"
