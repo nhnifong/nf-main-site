@@ -48,7 +48,7 @@ services:
   # postgresql+asyncpg://staging_user:<password>@10.142.0.2:5433/neufangled_staging
   postgres-staging:
     image: postgres:16-alpine
-    container_name: postgres-staging
+    container_name: postgres-stagingS
     restart: always
     environment:
       POSTGRES_DB: neufangled_staging

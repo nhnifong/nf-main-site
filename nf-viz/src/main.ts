@@ -12,6 +12,7 @@ import { DynamicRoom } from './objects/dynamic_room.ts'
 import { SightingsManager } from './objects/sightings_manager.ts'
 import { VideoFeed } from './ui/video_feed.ts'
 import { GamepadController } from './ui/gamepad.ts'
+import { MobileShell } from './ui/mobile.ts'
 import { TargetListManager } from './ui/target_list_manager.ts'
 import { Say, Listen } from './utils.ts';
 
@@ -72,6 +73,8 @@ const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerH
 camera.position.set(2, 2, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+// Cap device pixel ratio so high-DPI phones don't try to render at 3× cost.
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
 // Initialize Composer
 const composer = new EffectComposer(renderer);
@@ -101,6 +104,11 @@ composer.addPass(outputPass);
 composer.setSize(window.innerWidth, window.innerHeight);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+// Skip GTAO on mobile — too expensive on phone GPUs.
+if (MobileShell.shouldEnable()) {
+  gtaoPass.enabled = false;
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1.5, 0);
@@ -1339,6 +1347,18 @@ function initPerspectiveControls() {
 }
 
 initPerspectiveControls();
+
+// --- Mobile Shell ---
+// Detects mobile (or `?mobile=1`), sets up the tab UI, locks the 3D camera,
+// and hosts the simulated joystick. Safe no-op on desktop.
+const mobileShell = new MobileShell({
+  controls,
+  camera,
+  renderer,
+  setPerspective,
+  perspectives: { top: perspTop, bottom: perspBottom, gripper: perspGripper },
+});
+gamepad.touchProvider = () => mobileShell.getTouchInputState();
 
 // One-time setup to bind the button in the popup window
 function initPopup() {
