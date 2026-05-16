@@ -18,7 +18,7 @@ images:
   - arp-gripper-nocover.jpg
   - arp-gripper-panda-copper.jpg
   - arp-gripper-copper.jpg
-show_in_store: true
+show_in_store: false
 store_order: 3
 ---
 

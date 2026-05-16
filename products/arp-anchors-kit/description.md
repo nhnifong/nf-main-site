@@ -17,7 +17,7 @@ images:
   - arp_anchor_kit_top_down.jpg
   - arp-anchor-face.jpg
   - arp-anchor-bottom.jpg
-show_in_store: true
+show_in_store: false
 store_order: 4
 ---
 
