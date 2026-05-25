@@ -2,7 +2,7 @@
 title: Stringman Hardware Kit
 intro: >
   The complete set of hardware you need to build a full Stringman system —
-  both the Arpeggio anchors and the Arpeggio gripper. A
+  both the Arpeggio anchors and the Arpeggio gripper.
 price: "$730"
 shipping: Ships in 5-8 days to the United States or Canada
 badge: In Stock
@@ -89,9 +89,14 @@ In order to avoid shipping a much larger box, the gripper's ABS tube is supplied
 
 ## How To Build
 
-Assembly takes roughly 2–4 hours total. Please refer to the online build guides for the [anchors](/docs/arpeggio_anchor_build_guide/) and the [gripper](/docs/arpeggio_gripper_build_guide/) for detailed information on the required tools and steps.
+**[Anchors Build Guide](/docs/arpeggio_anchor_build_guide/)**
+**[Gripper Build Guide](/docs/arpeggio_gripper_build_guide/)**
+
+Assembly takes roughly 2–4 hours total. Please refer to the online build guides for detailed information on the required tools and steps.
 
 Soldering is necessary only to solder 2.54-pitch headers onto the Pi and rangefinder for the gripper. The anchors do not require soldering, but you do need to use a heat gun to splice wires with solder seal connectors.
+
+Hands on support for the whole build process is available in our [discord channel](https://discord.gg/T5HEvxVgbA).
 
 ## Pricing
 

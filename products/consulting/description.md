@@ -7,7 +7,7 @@ intro: >
   business looking for help automating your unique task, I can help you.
 price: "$300"
 shipping: In person in RDU or remote via Google Meet
-badge: In Stock
+badge: 
 store_description: >
   Three one-hour sessions to solve your software, hardware, or integration
   problems.

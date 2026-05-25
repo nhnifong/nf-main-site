@@ -6,7 +6,7 @@ import time
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
@@ -76,6 +76,11 @@ async def startup_event():
 
 # Define where the static files live in the container
 FRONTEND_DIST = "nf-viz/dist"
+
+# Redirect /docs → /docs/ so both paths work (StaticFiles needs the trailing slash).
+@app.get("/docs")
+async def docs_redirect():
+    return RedirectResponse(url="/docs/", status_code=301)
 
 # Mount the docs (MkDocs output)
 # 'html=True' makes /docs/install/ serve /docs/install/index.html automatically.
