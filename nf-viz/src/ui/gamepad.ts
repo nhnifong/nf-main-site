@@ -41,6 +41,7 @@ export class GamepadController {
     // keyboard input state
     private keys = new Set<string>();
     private keyStates: { [code: string]: boolean } = {};
+    private arrowPressTimestamps: { [code: string]: number } = {};
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
     private lastAction = new Float32Array(7); 
@@ -88,7 +89,7 @@ export class GamepadController {
 
         const container = document.getElementById('how-to');
         if (container && !document.body.classList.contains('mobile')) {
-            container.textContent = "Use WASDQE to move or connect a gamepad. Space-LShift to grasp. ZX for wrist/winch.";
+            container.textContent = "Use WASDQE to move or connect a gamepad. Space-LShift to grasp. Arrows for wrist/winch. Z to set prompt.";
         }
     }
 
@@ -105,6 +106,9 @@ export class GamepadController {
         }
 
         if (isDown) {
+            if (!this.keys.has(e.code) && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)) {
+                this.arrowPressTimestamps[e.code] = Date.now() / 1000;
+            }
             this.keys.add(e.code);
             if (e.code === "Delete" && this.targetListManager) {
                 this.targetListManager.deleteSelectedItem();
@@ -186,8 +190,8 @@ export class GamepadController {
                 y: (this.keys.has('KeyS') ? -1 : 0) + (this.keys.has('KeyW') ? 1 : 0)
             },
             rightStick: {
-                x: (this.keys.has('KeyZ') ? -1 : 0) + (this.keys.has('KeyX') ? 1 : 0),
-                y: 0
+                x: -this.arrowRamp('ArrowLeft') + this.arrowRamp('ArrowRight'),
+                y: -this.arrowRamp('ArrowDown') + this.arrowRamp('ArrowUp')
             },
             buttons: {
                 // Standard mappings (0-3)
@@ -214,6 +218,15 @@ export class GamepadController {
                 dpadRight: this.keys.has('Digit3')
             }
         };
+    }
+
+    private pressRamp(heldSince: number, slowVal: number, fastVal: number, rampAfter: number): number {
+        return (Date.now() / 1000 - heldSince) >= rampAfter ? fastVal : slowVal;
+    }
+
+    private arrowRamp(code: string): number {
+        if (!this.keys.has(code)) return 0;
+        return this.pressRamp(this.arrowPressTimestamps[code] ?? 0, 0.5, 1.0, 1.0);
     }
 
     private applyDeadzone(value: number): number {
@@ -390,31 +403,26 @@ export class GamepadController {
         // When button is released, send zero speed.
         let fingerChange = 0;
         if (input.buttons.a) {
-            if (!this.aWasHeld) {
-                this.aPressTimestamp = Date.now() / 1000;
-            }
-            fingerChange = now < this.aPressTimestamp+0.5 ? this.GAMEPAD_GRIP_SLOW : this.GAMEPAD_GRIP_FAST;
+            if (!this.aWasHeld) this.aPressTimestamp = Date.now() / 1000;
+            fingerChange = this.pressRamp(this.aPressTimestamp, this.GAMEPAD_GRIP_SLOW, this.GAMEPAD_GRIP_FAST, 0.5);
         } else if (input.buttons.b) {
-            if (!this.bWasHeld) {
-                this.bPressTimestamp = Date.now() / 1000;
-            }
-            fingerChange = now < this.bPressTimestamp+0.5 ? -this.GAMEPAD_GRIP_SLOW : -this.GAMEPAD_GRIP_FAST;
+            if (!this.bWasHeld) this.bPressTimestamp = Date.now() / 1000;
+            fingerChange = -this.pressRamp(this.bPressTimestamp, this.GAMEPAD_GRIP_SLOW, this.GAMEPAD_GRIP_FAST, 0.5);
         }
         this.aWasHeld = input.buttons.a;
         this.bWasHeld = input.buttons.b;
         
-        // Winch Control (X/Y) — pilot gripper only
+        // Winch Control (right stick Y) — pilot gripper only; up = negative
         let lineSpeed = 0;
         if (this.gripperModel === nf.telemetry.GripperModel.GRIPPERMODEL_PILOT) {
-            if (input.buttons.y) {
-                lineSpeed = -this.GAMEPAD_WINCH_METER_PER_SEC;
-            } else if (input.buttons.x) {
-                lineSpeed = this.GAMEPAD_WINCH_METER_PER_SEC;
-            }
+            lineSpeed = -input.rightStick.y * this.GAMEPAD_WINCH_METER_PER_SEC;
         }
 
-        // Wrist Control (Right stick X)
-        let wristChange = input.rightStick.x * this.GAMEPAD_WRIST_DEG_PER_SEC;
+        // Wrist Control (right stick X) — arp gripper only
+        let wristChange = 0;
+        if (this.gripperModel !== nf.telemetry.GripperModel.GRIPPERMODEL_PILOT) {
+            wristChange = input.rightStick.x * this.GAMEPAD_WRIST_DEG_PER_SEC;
+        }
 
         // Rising Edge Detectors for Events
 

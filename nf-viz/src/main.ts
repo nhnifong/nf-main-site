@@ -1727,6 +1727,7 @@ function sendPrompt(text: string) {
 }
 
 async function triggerSetPrompt() {
+  if (!isLeRobotSessionActive) return;
   const btn = document.getElementById('btn-lerobot-set-prompt') as HTMLButtonElement | null;
   if (btn) { btn.textContent = 'Listening...'; btn.disabled = true; }
   try {
