@@ -900,6 +900,22 @@ function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
         wallCables.push(new Cable(scene));
         wallCables.push(new Cable(scene));
       }
+      if ((data as any).tilt) {
+        lastTiltAngles = (data as any).tilt;
+        for (let i = 0; i < 2 && i < lastTiltAngles.length; i++) {
+          const corner = corners[i];
+          if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
+            applyAnchorCamTilt(i, corner.camera, lastTiltAngles[i]);
+          }
+        }
+      }
+      if (data.swingLatency) {
+        const slider = document.getElementById('swing-latency-slider') as HTMLInputElement | null;
+        const valueDisplay = document.getElementById('swing-latency-value');
+        let val = data.swingLatency.toFixed(2);
+        slider!.value = val;
+        valueDisplay!.textContent = val + 's';
+      }
 
       updateComponentStatusUI();
     }
@@ -1202,6 +1218,10 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
     videoManager.assign(data.anchorNum); // anchor num is here
     const corner = corners[data.anchorNum];
     if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
+      const storedTilt = lastTiltAngles[data.anchorNum];
+      if (storedTilt != null) {
+        applyAnchorCamTilt(data.anchorNum, corner.camera, storedTilt);
+      }
       videoManager.setVirtualCamera(corner.camera);
 
       // When the mouse moves on this video feed and a ray intersects the floor
@@ -2180,6 +2200,12 @@ function openFullCalOverlay() {
     unavailable?.classList.add('hidden');
     content?.classList.remove('hidden');
   }
+  if (lastTiltAngles[0] != null) {
+    (document.getElementById('fullcal-angle-0') as HTMLInputElement).value = lastTiltAngles[0].toString();
+  }
+  if (lastTiltAngles[1] != null) {
+    (document.getElementById('fullcal-angle-1') as HTMLInputElement).value = lastTiltAngles[1].toString();
+  }
   overlay.classList.remove('hidden');
 }
 
@@ -2369,6 +2395,17 @@ const mouse = new THREE.Vector2();
 let currentHoverType: string | null = null;
 let currentHoverIndex: number = -1;
 let activeComponentData: { type: string, index: number, name: string } | null = null;
+let lastTiltAngles: number[] = [];
+// Tracks the tilt angle (degrees) currently applied to each anchor's camera so deltas are correct.
+const appliedCamTilt: (number | null)[] = [null, null];
+
+function applyAnchorCamTilt(anchorIndex: number, camera: THREE.PerspectiveCamera, tiltDeg: number) {
+  const MODEL_BASE_TILT = 22.0;
+  const prev = appliedCamTilt[anchorIndex] ?? MODEL_BASE_TILT;
+  const delta = THREE.MathUtils.degToRad(tiltDeg - prev);
+  camera.rotateX(delta);
+  appliedCamTilt[anchorIndex] = tiltDeg;
+}
 
 function clearHover() {
   outlinePass.selectedObjects = [];
@@ -2494,6 +2531,10 @@ function openComponentPanel(type: string, index: number) {
   if (type === 'Anchor') {
     name = `Anchor ${index}`;
     anchorActions.style.display = 'flex';
+    const camInput = document.getElementById('cd-cam-angle-input') as HTMLInputElement | null;
+    if (camInput && lastTiltAngles[index] != null) {
+      camInput.value = lastTiltAngles[index].toString();
+    }
   } else {
     name = "Gripper";
     for (const key of componentStates.keys()) {
