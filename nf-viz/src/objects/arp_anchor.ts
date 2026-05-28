@@ -123,12 +123,17 @@ export class ArpAnchor {
                 this.root.quaternion.identity();
             }
 
-            // Update the Room Corner
+            // Update the Room Corner (also calls updateMatrixWorld so world positions are fresh)
             this.updateRoomCorner();
             if (this.grommet){
                 this.grommet.getWorldPosition(this.grommet_pos);
             } else {
                 this.grommet_pos = this.root.position.clone();
+            }
+            if (this.extra_grommet) {
+                this.extra_grommet.getWorldPosition(this.extra_grommet_pos);
+            } else {
+                this.extra_grommet_pos = this.root.position.clone();
             }
         }
     }

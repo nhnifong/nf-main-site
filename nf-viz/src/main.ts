@@ -26,6 +26,8 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import * as AuthManager from './auth.ts';
 
 // --- GLOBAL VARIABLES ---
+const DEFAULT_CAM_TILT = 26.0; // degrees — matches the standard tilt adapter
+
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 // If robotid is set in URL, we force cloud login. Otherwise we start the landing UI.
 let currentRobotId: string | null = urlParams.get('robotid'); 
@@ -2216,22 +2218,22 @@ function initFullCalPanel() {
   document.getElementById('fullcal-bg-catcher')?.addEventListener('click', close);
 
   document.getElementById('btn-fullcal-start')?.addEventListener('click', () => {
-    const angle0 = parseFloat((document.getElementById('fullcal-angle-0') as HTMLInputElement)?.value ?? '22.0');
-    const angle1 = parseFloat((document.getElementById('fullcal-angle-1') as HTMLInputElement)?.value ?? '22.0');
+    const angle0 = parseFloat((document.getElementById('fullcal-angle-0') as HTMLInputElement)?.value ?? String(DEFAULT_CAM_TILT));
+    const angle1 = parseFloat((document.getElementById('fullcal-angle-1') as HTMLInputElement)?.value ?? String(DEFAULT_CAM_TILT));
 
     sendControl([
       nf.control.ControlItem.create({
         singleComponentAction: {
           isGripper: false, anchorNum: 0,
           action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
-          camAngle: isNaN(angle0) ? 22.0 : angle0,
+          camAngle: isNaN(angle0) ? DEFAULT_CAM_TILT : angle0,
         }
       }),
       nf.control.ControlItem.create({
         singleComponentAction: {
           isGripper: false, anchorNum: 1,
           action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
-          camAngle: isNaN(angle1) ? 22.0 : angle1,
+          camAngle: isNaN(angle1) ? DEFAULT_CAM_TILT : angle1,
         }
       }),
     ]);
@@ -2401,8 +2403,7 @@ let lastTiltAngles: number[] = [];
 const appliedCamTilt: (number | null)[] = [null, null];
 
 function applyAnchorCamTilt(anchorIndex: number, camera: THREE.PerspectiveCamera, tiltDeg: number) {
-  const MODEL_BASE_TILT = 22.0;
-  const prev = appliedCamTilt[anchorIndex] ?? MODEL_BASE_TILT;
+  const prev = appliedCamTilt[anchorIndex] ?? DEFAULT_CAM_TILT;
   const delta = THREE.MathUtils.degToRad(tiltDeg - prev);
   camera.rotateX(delta);
   appliedCamTilt[anchorIndex] = tiltDeg;
@@ -2640,13 +2641,13 @@ function handleAnchorRelax(index: number) {
 
 function handleSetCamAngle(index: number) {
   const input = document.getElementById('cd-cam-angle-input') as HTMLInputElement;
-  const angle = parseFloat(input?.value ?? '22.0');
+  const angle = parseFloat(input?.value ?? String(DEFAULT_CAM_TILT));
   sendControl([nf.control.ControlItem.create({
     singleComponentAction: {
       isGripper: false,
       anchorNum: index,
       action: nf.control.ComponentAction.COMPONENTACTION_SET_CAM_ANGLE,
-      camAngle: isNaN(angle) ? 22.0 : angle,
+      camAngle: isNaN(angle) ? DEFAULT_CAM_TILT : angle,
     }
   })]);
 }
