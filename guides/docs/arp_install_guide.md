@@ -84,7 +84,26 @@ It should be on the right wall when facing the corner, unless this corner of the
 ![](images/arp_install/PXL_20260527_122818135.png){ loading=lazy, width=45% }
 ![](images/arp_install/image_2.png){ loading=lazy, width=45% }
 
-When facing the eyelet, look to anchor to your right. Take the carabiner from it's left line and pull it to you, put it through the eyelet from back to front, then pull it down to a level you can reach without a ladder. 
+When facing the eyelet, look to anchor to your right. Take the carabiner from it's left line and pull it to you, put it through the eyelet from back to front, then pull it down to a level you can reach without a ladder.
+
+# Mounting the parking hook
+
+The parking hook is a place where the marker box and gripper can hang when the robot is powered off. It can be placed on any wall that is reachable in the robot's work area.
+
+ * The height of the parking hook should be high enough that you can comfortable walk under the lines while the robot is parked, and no higher.
+ * if mounted too high, it becomes very difficult to park because precision gets exponentially worse near the ceiling.
+ * the parking hook should be mounted in a stud.
+
+!!! note "Self parking is still a work in progress"
+    Self parking, or any motion near the ceiling, is extremely dependent on good calibration, and therefore is hard to get working reliably. Depening on the room, you may find it to work, or may not. For that reason, I reccomend manual parking for now. (move near the hook, grab the robot with one hand, power off the motors with the remote, and hang the robot on the hook.)
+
+After selecting a suitable location, screw the parking hook to the stud in the wall with the prong facing upwards.
+
+The other parking component (The printed apriltag on a narrow shelf) is meant to aid in parking localization and should be mounted two inches below the gripper's fingers when it's in the parked position. It is used during self parking. If you are not going to use self parking, you don't need it.
+
+## Other parking options
+
+You can also disconnect the gripper from the lines using the cabiners and run the debug command "stow" to reel in all the lines until some tension is felt. Before doing this mark which hook was the power line hook so you can re-attach everythign the same way it was during calibration.
 
 # Pre-tie-up connection test
 
