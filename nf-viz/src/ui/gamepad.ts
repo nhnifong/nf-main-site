@@ -22,6 +22,11 @@ export class GamepadController {
     private lastSendT = 0;
 
     private seenValidTriggers = false;
+
+    // Sometimes all you have are discrete trigger buttons that can output 0 or 1.
+    // in that case let the vertical input be an EMA of RT-LT
+    private useRampForTriggers = false;
+    private rampedTriggerEMA = 0;
     
     // Previous Button States (Rising Edge Detection)
     private startWasHeld = false;
@@ -304,6 +309,14 @@ export class GamepadController {
                     if (container) {
                         container.textContent = "";
                     }
+                } else if (gpInput.buttons.rt == 1 && gpInput.buttons.lt == 1) {
+                    // your triggers are not analog. Enable a timed ramp behavior for the triggers
+                    this.seenValidTriggers = true;
+                    this.useRampForTriggers = true;
+                    const container = document.getElementById('how-to');
+                    if (container) {
+                        container.textContent = "Discrete triggers detected. Using timed ramp."
+                    }
                 }
             } else {
                 // have gp input and it's unlocked. merge it with keyboard input
@@ -345,7 +358,11 @@ export class GamepadController {
         // If left unchanged, this is the axis aligned movement perspective
         // Since the gripper's camera is stabilized and reprojected in the room's frame of reference,
         // it is also a motion vector that aligns with the gripper's perspective.
-        const netTrigger = input.buttons.rt - input.buttons.lt;
+        let netTrigger = input.buttons.rt - input.buttons.lt;
+        if (this.useRampForTriggers && netTrigger !== 0) {
+            this.rampedTriggerEMA = this.rampedTriggerEMA * 0.99 + netTrigger * 0.01
+            netTrigger = this.rampedTriggerEMA
+        }
         let vx = input.leftStick.x;
         let vy = input.leftStick.y;
         let vz = netTrigger;
