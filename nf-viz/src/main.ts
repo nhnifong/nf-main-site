@@ -8,6 +8,7 @@ import { ArpAnchor } from './objects/arp_anchor.ts';
 import { Eyelet } from './objects/eyelet.ts';
 import { Gantry } from './objects/gantry.ts';
 import { Cable } from './objects/cable.ts';
+import { FloorProjection } from './objects/floor_projection.ts';
 import { DynamicRoom } from './objects/dynamic_room.ts'
 import { SightingsManager } from './objects/sightings_manager.ts'
 import { VideoFeed } from './ui/video_feed.ts'
@@ -186,25 +187,6 @@ gantryHangCube.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.P
 gantryHangCube.position.set(0.2, 1.5, 0);
 scene.add(gantryHangCube);
 
-// // --- MJPEG Floor Stream ---
-// const floorStreamImg = new Image();
-// floorStreamImg.crossOrigin = "anonymous";
-// floorStreamImg.src = "http://localhost:8747/stream.mjpeg";
-// const floorStreamTexture = new THREE.Texture(floorStreamImg);
-// // Linear filtering and no mipmaps are required for non-power-of-two video streams
-// floorStreamTexture.minFilter = THREE.LinearFilter;
-// floorStreamTexture.magFilter = THREE.LinearFilter;
-// floorStreamTexture.generateMipmaps = false;
-// const floorQuadGeo = new THREE.PlaneGeometry(5, 5);
-// const floorQuadMat = new THREE.MeshStandardMaterial({ 
-//     map: floorStreamTexture,
-//     transparent: false
-// });
-// const floorQuad = new THREE.Mesh(floorQuadGeo, floorQuadMat);
-// floorQuad.rotation.x = -Math.PI / 2;
-// floorQuad.position.y = 0.01; // 1cm above floor
-// scene.add(floorQuad);
-
 // gantry sightings manager
 const sightingsManager = new SightingsManager(scene);
 // laser rangefinder feedback re-uses sightings manager class
@@ -220,6 +202,7 @@ const firstOverheadVideo = new VideoFeed(document.getElementById('firstOverhead'
 const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhead')!, targetListManager);
 const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
 const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
+const floorProjection = new FloorProjection(scene, 5, 0.001);
 
 // Listen for hover changes in the manager to trigger repaints in video feeds
 targetListManager.onTargetHover = () => {
@@ -619,6 +602,7 @@ function connect(wsUrl: string) {
       firstOverheadVideo.setOffline();
       secondOverheadVideo.setOffline();
       gripperVideo.setOffline();
+      floorProjection.setOffline();
     } else {
       console.warn("Disconnected. Retrying in 2s...");
       updateOnlineStatus(false);
@@ -836,7 +820,7 @@ function animate() {
   controls.update();
   sightingsManager.update();
   laserReadings.update();
-  // floorStreamTexture.needsUpdate = true;
+  floorProjection.update();
   updateLerobotEpisodeTimer();
   composer.render();
   sendGamepad();
@@ -1196,6 +1180,25 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
 
 async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   const feedNumber = data.feedNumber!; // Note that this is not anchor num in stringman pilot.
+
+  if (feedNumber === 3) {
+    if (isLanMode && data.localUri) {
+      floorProjection.connectLocal(data.localUri);
+    } else if (data.streamPath) {
+      let ticket: string | undefined;
+      if (!isSimMode && currentRobotId) {
+        try {
+          const token = await AuthManager.getAuthToken();
+          ticket = await AuthManager.apiGetStreamTicket(currentRobotId, token);
+        } catch (e) {
+          console.warn("Could not get a stream ticket for floor projection:", e);
+        }
+      }
+      floorProjection.connectWebRTC(data.streamPath, ticket);
+    }
+    return;
+  }
+
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][feedNumber];
   
   if (isLanMode && data.localUri) {
@@ -1291,6 +1294,7 @@ function updateOnlineStatus(online: boolean) {
       firstOverheadVideo.setOffline();
       secondOverheadVideo.setOffline();
       gripperVideo.setOffline();
+      floorProjection.setOffline();
 
       componentStates.forEach(comp => {
         comp.status = nf.telemetry.ConnStatus.CONNSTATUS_NOT_DETECTED;
