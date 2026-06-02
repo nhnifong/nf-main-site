@@ -31,8 +31,10 @@ class TelemetryManager:
     async def connect(self):
         # One connection for publishing binary telemetry
         self.pub_redis = redis.from_url(self.redis_url, decode_responses=False)
-        # Separate connection for subscribing (blocking)
-        self.sub_redis = redis.from_url(self.redis_url, decode_responses=False)
+        # Separate connection for subscribing (blocking).
+        # protocol=2 forces RESP2: redis-py 8.0 defaults to RESP3 which breaks async pub/sub listen().
+        # socket_timeout=None prevents the read from timing out between messages.
+        self.sub_redis = redis.from_url(self.redis_url, decode_responses=False, protocol=2, socket_timeout=None)
         # Third connection for regular keys
         self.decoding_redis = redis.from_url(self.redis_url, decode_responses=True)
         
