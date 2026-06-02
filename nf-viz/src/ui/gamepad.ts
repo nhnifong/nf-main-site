@@ -49,7 +49,11 @@ export class GamepadController {
     private arrowPressTimestamps: { [code: string]: number } = {};
 
     // Change Detection (Store last "Action" vector: [vx, vy, vz, speed, winch, finger])
-    private lastAction = new Float32Array(7); 
+    private lastAction = new Float32Array(7);
+
+    // Spam detection
+    private sendHistory: Array<{ t: number, action: number[], reason: string }> = [];
+    private spamLoggedAt = 0;
 
     public targetListManager: TargetListManager | null = null;
     public gripperModel: nf.telemetry.GripperModel = nf.telemetry.GripperModel.GRIPPERMODEL_PILOT;
@@ -519,7 +523,7 @@ export class GamepadController {
 
         // Send a movement if: Data changed OR (we are moving AND it's been > 50ms)
         if (hasChanged || (timeSinceSend > 0.05 && isMoving)) {
-            
+
             messages.push(nf.control.ControlItem.create({
                 move: {
                     direction: { x: vx, y: vy, z: vz },
@@ -534,9 +538,45 @@ export class GamepadController {
             // Update state
             for(let i=0; i<7; i++) this.lastAction[i] = currentAction[i];
             this.lastSendT = now;
+
+            // Spam detection
+            const reason = hasChanged ? `changed` : `moving(mag=${mag.toFixed(3)})`;
+            this.sendHistory.push({ t: now, action: [...currentAction], reason });
+            if (this.sendHistory.length > 20) this.sendHistory.shift();
+            if (this.sendHistory.length >= 10) {
+                const windowStart = this.sendHistory[this.sendHistory.length - 10];
+                const rate = 10 / (now - windowStart.t);
+                if (rate > 15 && now - this.spamLoggedAt > 10) {
+                    this.spamLoggedAt = now;
+                    this.logSpamDiagnostics();
+                }
+            }
         }
 
         return messages;
+    }
+
+    private logSpamDiagnostics() {
+        console.warn('=== GamepadController: sustained high send rate (>15/s) ===');
+        console.warn('User agent:', navigator.userAgent);
+
+        const gamepads = Array.from(navigator.getGamepads()).filter(Boolean);
+        if (gamepads.length > 0) {
+            gamepads.forEach(gp => console.warn(`Gamepad [${gp!.index}]: "${gp!.id}" — ${gp!.buttons.length} buttons, ${gp!.axes.length} axes`));
+        } else {
+            console.warn('Gamepad: none connected (keyboard-only input)');
+        }
+
+        console.warn('Last 5 sent actions — (vx, vy, vz, speed, winch, finger, wrist) | reason:');
+        this.sendHistory.slice(-5).forEach((entry, i) => {
+            const [vx, vy, vz, speed, winch, finger, wrist] = entry.action;
+            console.warn(
+                `  [${i + 1}] dir=(${vx.toFixed(3)}, ${vy.toFixed(3)}, ${vz.toFixed(3)})` +
+                ` spd=${speed.toFixed(3)} winch=${winch.toFixed(3)}` +
+                ` finger=${finger.toFixed(1)} wrist=${wrist.toFixed(1)}` +
+                ` | ${entry.reason}`
+            );
+        });
     }
 
     private arraysEqual(a: number[], b: Float32Array): boolean {
