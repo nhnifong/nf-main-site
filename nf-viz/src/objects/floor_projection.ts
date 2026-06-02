@@ -94,9 +94,13 @@ export class FloorProjection {
             this.peerConnection = new RTCPeerConnection({
                 iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
             });
+            this.peerConnection.oniceconnectionstatechange = () => {
+                console.log('FloorProjection ICE state:', this.peerConnection?.iceConnectionState);
+            };
             this.peerConnection.ontrack = (event) => {
                 if (event.track.kind === 'video') {
                     this.video.srcObject = event.streams[0];
+                    this.video.play().catch(e => console.warn('FloorProjection play() failed:', e));
                     this.mesh.visible = true;
                 }
             };
