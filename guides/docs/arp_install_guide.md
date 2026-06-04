@@ -142,6 +142,11 @@ If you have connection issues at this step, your anchors and host machine might 
 
 Wifi creds can be cleared from a gripper by rapidly squeezing the finger pad five times.
 
+### Firmware update and timezone sync
+
+With all components connected to the motion controller, select "Calibration and Maintenence" > "Update Firmware On Components" from the run menu.
+Wait for confirmation of completion from all components. Updates are not pushed automatically, they are always done at your discretion.
+
 # Tie up
 
 Power off the whole system.
@@ -193,8 +198,13 @@ Hold `E` for a second or two to move up off the ground. More complex motion requ
 
     ![](images/arp_install/PXL_20260527_162722427.png){ loading=lazy, width=45% }
 
-With the gripper near the center of the room, touching the floor, select "Calibration and Maintenence" > Full Calibration" from the run menu.
+Prepare for calibration by placing the four large paper cards on the floor. The one labelled "origin" should be in the center, with the others around it anywhere. The small plastic cards are not part of calibration, they are for labelling drop points during normal operation.
+
+With the gripper near the center of the room, touching the floor, select "Calibration and Maintenence" > "Full Calibration" from the run menu.
 It is normal for some lines to be slack during calibration, this is a necessary step to determine the location of the eyelets.
+
+!!! note "If a card moves, stop calibration and start again."
+    If any card moves during calibration, the abort it by pressing STOP and start again.
 
 When calibration is complete, you will see a message in the UI. You can judge the quality by checking that the room shape in the UI matches the work area of the components you installed. Moving in straight lines with WASD should result in staight line movement of the robot. Secondly you can enable swing cancellation and confirm it cancels the swing rather than amplifying it.
 
