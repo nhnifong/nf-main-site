@@ -5,7 +5,7 @@ intro: >
   Damiao actuators and power your Raspberry Pi Zero 2W from one barrel jack.
 price: "$22"
 shipping: Free shipping US and Canada
-badge: In Stock
+badge:
 store_description: >
   Raspberry Pi Zero hat for controlling two Damiao actuators
 store_image: actuator-hat-1.png

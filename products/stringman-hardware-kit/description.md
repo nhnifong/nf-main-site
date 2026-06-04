@@ -5,7 +5,7 @@ intro: >
   both the Arpeggio anchors and the Arpeggio gripper.
 price: "$730"
 shipping: Ships in 5-8 days to the United States or Canada
-badge: In Stock
+badge:
 store_description: >
   Everything you need to build a complete Stringman: a pair of Arpeggio anchors
   with quiet Damiao hub motors and the Arpeggio gripper with wide angle camera.

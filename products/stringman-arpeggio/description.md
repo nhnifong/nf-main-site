@@ -8,7 +8,7 @@ intro: >
   Damiao hub motor based anchors in a 2+2 configuration.
 price: "$1000"
 shipping: Ships in 5-8 days to the United States or Canada
-badge: In Stock
+badge: 
 store_description: >
   The complete and latest Stringman system, fully assembled. Includes 2 anchors,
   2 eyelets, gripper, and accessories.

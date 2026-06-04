@@ -6,7 +6,7 @@ intro: >
   themselves.
 price: "$65"
 shipping: Ships in 5-8 days to the United States or Canada
-badge: In Stock
+badge:
 store_description: >
   Just the custom PCBs and specialty wire from the Stringman Arpeggio BOM.
   Source the rest of the parts yourself.
