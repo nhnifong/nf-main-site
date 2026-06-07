@@ -20,15 +20,15 @@ TODO
 
 ## Spools
 
-Assemble three fishing line spools and one powerline spool
-Spool side A is different on the powerline spool, it has a wider center hole.
+A full system needs three regular having fishing line, referred to below as "regular" spools and one power spool which has cable wound on it.
+Spool side A is different on the powerline spool, it has a wider center hole. 
 
 Glue side A to side B
 
 ![](images/anc_arp/PXL_20260407_212731244.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260407_212833336.png){ loading=lazy, width=45% } 
 
-### For regular spools
+### For regular spools (3X)
 
 Press the dry spool onto the motor until fully seated. twist until the holes align, secure with 3 M3x8 screws.
 
@@ -41,7 +41,7 @@ Put an M4x12 screw through a 4x13x5 bearing follow by 2 M4 washers, then screw i
 ![](images/anc_arp/PXL_20260406_223504485.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_223525909.png){ loading=lazy, width=45% } 
 
-### For powerline spools
+### For powerline spools (1X)
 
 Solder a JST ZH female plug housing onto the fixed end of the slip ring.
 

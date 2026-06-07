@@ -1220,19 +1220,28 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
 
   // Assign the feed's anchor num and vitual camera for target overlay math
   if (!data.isGripper && data.anchorNum != null) {
-    videoManager.assign(data.anchorNum); // anchor num is here
-    const corner = corners[data.anchorNum];
-    if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
-      const storedTilt = lastTiltAngles[data.anchorNum];
-      if (storedTilt != null) {
-        applyAnchorCamTilt(data.anchorNum, corner.camera, storedTilt);
-      }
-      videoManager.setVirtualCamera(corner.camera);
+    const anchorIndex = data.anchorNum;
+    videoManager.assign(anchorIndex); // anchor num is here
+    const corner = corners[anchorIndex];
+    if (corner instanceof Anchor || corner instanceof ArpAnchor) {
+      // The anchor's GLTF model (and thus .camera) loads asynchronously and may
+      // not be ready yet when this telemetry arrives — wait for it.
+      await corner.ready;
+      // The corner may have been swapped (e.g. Anchor <-> ArpAnchor <-> Eyelet)
+      // while we were waiting, so re-fetch it before using it.
+      const loadedCorner = corners[anchorIndex];
+      if ((loadedCorner instanceof Anchor || loadedCorner instanceof ArpAnchor) && loadedCorner.camera) {
+        const storedTilt = lastTiltAngles[anchorIndex];
+        if (storedTilt != null) {
+          applyAnchorCamTilt(anchorIndex, loadedCorner.camera, storedTilt);
+        }
+        videoManager.setVirtualCamera(loadedCorner.camera);
 
-      // When the mouse moves on this video feed and a ray intersects the floor
-      videoManager.onFloorPoint = (point) => {
-        room.setReticule(point)
-      };
+        // When the mouse moves on this video feed and a ray intersects the floor
+        videoManager.onFloorPoint = (point) => {
+          room.setReticule(point)
+        };
+      }
     }
   }
 }
