@@ -55,7 +55,7 @@ export class ArpAnchor {
             this.wallCorner = clonedScene.getObjectByName('wall_corner');
             this.grommet = clonedScene.getObjectByName('grommet0');
             this.extra_grommet = clonedScene.getObjectByName('grommet1');
-            const anchorCam = clonedScene.getObjectByName('camera');
+            const anchorCam = clonedScene.getObjectByName('camera-26deg');
 
             if (this.wallCorner) {
                 // Initialize position immediately if needed
@@ -75,6 +75,10 @@ export class ArpAnchor {
                 this.camera = anchorCam as THREE.PerspectiveCamera;
                 this.camera.aspect = 16/9;
                 this.camera.updateProjectionMatrix();
+
+                const vFov = THREE.MathUtils.degToRad(this.camera.fov);
+                const hFov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(vFov / 2) * this.camera.aspect));
+                console.log(`ArpAnchor camera loaded: vertical FOV = ${this.camera.fov.toFixed(2)}°, horizontal FOV = ${hFov.toFixed(2)}° (aspect ${this.camera.aspect.toFixed(3)})`);
             }
         } catch (error) {
             console.error('Error loading arp-anchor.glb:', error);

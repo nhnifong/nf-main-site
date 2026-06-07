@@ -29,6 +29,9 @@ import * as AuthManager from './auth.ts';
 // --- GLOBAL VARIABLES ---
 const DEFAULT_CAM_TILT = 26.0; // degrees — matches the standard tilt adapter
 
+// Debug toggle: show wireframe frustum helpers for the anchor cameras used in floor-projection raycasting
+const SHOW_ANCHOR_CAMERA_FRUSTUMS = false;
+
 const urlParams: URLSearchParams = new URLSearchParams(window.location.search);
 // If robotid is set in URL, we force cloud login. Otherwise we start the landing UI.
 let currentRobotId: string | null = urlParams.get('robotid'); 
@@ -203,6 +206,10 @@ const secondOverheadVideo = new VideoFeed(document.getElementById('secondOverhea
 const gripperVideo = new VideoFeed(document.getElementById('gripper')!);
 const overheadVideofeeds = [firstOverheadVideo, secondOverheadVideo];
 const floorProjection = new FloorProjection(scene, 5, 0.001);
+
+// Debug visualization: wireframe frustums for the anchor cameras used in floor-projection
+// raycasting, so misalignment between the virtual camera and the video feed is visible.
+const cameraHelpers: (THREE.CameraHelper | null)[] = [];
 
 // Listen for hover changes in the manager to trigger repaints in video feeds
 targetListManager.onTargetHover = () => {
@@ -821,6 +828,7 @@ function animate() {
   sightingsManager.update();
   laserReadings.update();
   floorProjection.update();
+  for (const helper of cameraHelpers) helper?.update();
   updateLerobotEpisodeTimer();
   composer.render();
   sendGamepad();
@@ -855,56 +863,54 @@ window.addEventListener('resize', () => {
 // Reposition anchors and determine anchor type
 function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
   if (data.eyelets && data.eyelets.length > 0) {
-    if (anchorType !== nf.common.AnchorType.ANCHORTYPE_ARPEGGIO) {
-      anchorType = nf.common.AnchorType.ANCHORTYPE_ARPEGGIO;
+    anchorType = nf.common.AnchorType.ANCHORTYPE_ARPEGGIO;
 
-      for (let i = 0; i < 2; i++) {
-        if (!(corners[i] instanceof ArpAnchor)) {
-          (corners[i] as any).dispose();
-          const arpAnchor = new ArpAnchor(scene, room);
-          arpAnchor.setPose(nf.common.Pose.create({
-            position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
-            rotation: { x: 0, y: 0, z: acoords[i].rotZ }
-          }));
-          corners[i] = arpAnchor;
-        }
+    for (let i = 0; i < 2; i++) {
+      if (!(corners[i] instanceof ArpAnchor)) {
+        (corners[i] as any).dispose();
+        const arpAnchor = new ArpAnchor(scene, room);
+        arpAnchor.setPose(nf.common.Pose.create({
+          position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+          rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+        }));
+        corners[i] = arpAnchor;
       }
-
-      for (let i = 2; i < 4; i++) {
-        if (!(corners[i] instanceof Eyelet)) {
-          (corners[i] as any).dispose();
-          const eyelet = new Eyelet(scene, room);
-          eyelet.setPose(nf.common.Pose.create({
-            position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
-            rotation: { x: 0, y: 0, z: acoords[i].rotZ }
-          }));
-          corners[i] = eyelet;
-        }
-      }
-
-      if (wallCables.length === 0) {
-        wallCables.push(new Cable(scene));
-        wallCables.push(new Cable(scene));
-      }
-      if ((data as any).tilt) {
-        lastTiltAngles = (data as any).tilt;
-        for (let i = 0; i < 2 && i < lastTiltAngles.length; i++) {
-          const corner = corners[i];
-          if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
-            applyAnchorCamTilt(i, corner.camera, lastTiltAngles[i]);
-          }
-        }
-      }
-      if (data.swingLatency) {
-        const slider = document.getElementById('swing-latency-slider') as HTMLInputElement | null;
-        const valueDisplay = document.getElementById('swing-latency-value');
-        let val = data.swingLatency.toFixed(2);
-        slider!.value = val;
-        valueDisplay!.textContent = val + 's';
-      }
-
-      updateComponentStatusUI();
     }
+
+    for (let i = 2; i < 4; i++) {
+      if (!(corners[i] instanceof Eyelet)) {
+        (corners[i] as any).dispose();
+        const eyelet = new Eyelet(scene, room);
+        eyelet.setPose(nf.common.Pose.create({
+          position: { x: acoords[i].x, y: acoords[i].y, z: 3 },
+          rotation: { x: 0, y: 0, z: acoords[i].rotZ }
+        }));
+        corners[i] = eyelet;
+      }
+    }
+
+    if (wallCables.length === 0) {
+      wallCables.push(new Cable(scene));
+      wallCables.push(new Cable(scene));
+    }
+    if ((data as any).tilt) {
+      lastTiltAngles = (data as any).tilt;
+      for (let i = 0; i < 2 && i < lastTiltAngles.length; i++) {
+        const corner = corners[i];
+        if ((corner instanceof Anchor || corner instanceof ArpAnchor) && corner.camera) {
+          applyAnchorCamTilt(i, corner.camera, lastTiltAngles[i]);
+        }
+      }
+    }
+    if (data.swingLatency) {
+      const slider = document.getElementById('swing-latency-slider') as HTMLInputElement | null;
+      const valueDisplay = document.getElementById('swing-latency-value');
+      let val = data.swingLatency.toFixed(2);
+      slider!.value = val;
+      valueDisplay!.textContent = val + 's';
+    }
+
+    updateComponentStatusUI();
 
     if (data.poses && data.poses.length >= 2) {
       (corners[0] as ArpAnchor).setPose(data.poses[0]);
@@ -918,11 +924,15 @@ function handleNewAnchorPoses(data: nf.telemetry.IAnchorPoses) {
       // Update wall cables (0 routes to 3, 1 routes to 2)
     Promise.all([corners[0].ready, corners[2].ready]).then(() => {
       wallCables[0].update((corners[0] as ArpAnchor).extra_grommet_pos, corners[2].grommet_pos, 0.0);
-      firstOverheadVideo.setVirtualCamera((corners[0] as ArpAnchor).camera!);
+      const cam0 = (corners[0] as ArpAnchor).camera!;
+      firstOverheadVideo.setVirtualCamera(cam0);
+      attachCameraHelper(0, cam0);
     });
     Promise.all([corners[1].ready, corners[3].ready]).then(() => {
       wallCables[1].update((corners[1] as ArpAnchor).extra_grommet_pos, corners[3].grommet_pos, 0.0);
-      secondOverheadVideo.setVirtualCamera((corners[1] as ArpAnchor).camera!);
+      const cam1 = (corners[1] as ArpAnchor).camera!;
+      secondOverheadVideo.setVirtualCamera(cam1);
+      attachCameraHelper(1, cam1);
     });
 
   } else if (data.poses && data.poses.length === 4) {
@@ -1236,6 +1246,7 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
           applyAnchorCamTilt(anchorIndex, loadedCorner.camera, storedTilt);
         }
         videoManager.setVirtualCamera(loadedCorner.camera);
+        attachCameraHelper(anchorIndex, loadedCorner.camera);
 
         // When the mouse moves on this video feed and a ray intersects the floor
         videoManager.onFloorPoint = (point) => {
@@ -2418,8 +2429,21 @@ const appliedCamTilt: (number | null)[] = [null, null];
 function applyAnchorCamTilt(anchorIndex: number, camera: THREE.PerspectiveCamera, tiltDeg: number) {
   const prev = appliedCamTilt[anchorIndex] ?? DEFAULT_CAM_TILT;
   const delta = THREE.MathUtils.degToRad(tiltDeg - prev);
-  camera.rotateX(delta);
+  camera.rotateX(-delta);
   appliedCamTilt[anchorIndex] = tiltDeg;
+}
+
+function attachCameraHelper(anchorIndex: number, camera: THREE.PerspectiveCamera) {
+  if (!SHOW_ANCHOR_CAMERA_FRUSTUMS) return;
+  const existing = cameraHelpers[anchorIndex];
+  if (existing) {
+    if (existing.camera === camera) return;
+    scene.remove(existing);
+    existing.dispose();
+  }
+  const helper = new THREE.CameraHelper(camera);
+  scene.add(helper);
+  cameraHelpers[anchorIndex] = helper;
 }
 
 function clearHover() {
