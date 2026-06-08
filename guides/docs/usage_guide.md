@@ -222,7 +222,7 @@ The target model picks out potential targets on the floor which resemble laundry
 
 #### Centering model
 
-An early solution to automatic grasping, the centering model is loaded only when stringman-headless is started with `--arp_grasp`.
+An early solution to automatic grasping, the centering model is loaded by default.
 This small model is used as part of an auto grasp routine in which a vector is predicted from the gripper camera to center the gripper over the object.
 
 ### Large Lerobot models
@@ -236,6 +236,8 @@ The lerobot script connects to the robot's local telemetry stream and consumes v
 `multitask-dit-8` is a model trained on the task of grasping household objects. The default behavior of pick and place is to try to start an episode in the connected lerobot session, assuming it is runnign a model which grasps objects. It's not yet wired up to automatically start the correct model since it's such an unfinished feature.
 
 Therefore the form of autonomous behavior that is most within reach right now is autonomous grasping using a DIT model chained together with procedural cross room moves based on apriltag positions. However, it is possible in theory to use a model for cross room traversals. I have not been successful in training one that does that well yet though.
+
+stringman headless must be started with the `--lerobot_grasp` argument for pick and place to use lerobot models for grasping, and this will suppress loading of the centering net.
 
 ### Agentic control
 
