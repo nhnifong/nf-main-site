@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Order status | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/checkout-styles.css" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+    </nav>
+
+    <header class="checkout-header">
+        <h1 id="status-title">Checking your order…</h1>
+        <p id="status-detail"></p>
+    </header>
+
+    <script>
+        (async () => {
+            const titleEl = document.getElementById('status-title');
+            const detailEl = document.getElementById('status-detail');
+
+            const sessionId = new URLSearchParams(window.location.search).get('session_id');
+            if (!sessionId) {
+                titleEl.textContent = 'Order not found';
+                detailEl.textContent = 'No session was provided.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/session-status?session_id=${encodeURIComponent(sessionId)}`);
+                if (!response.ok) throw new Error('status lookup failed');
+                const session = await response.json();
+
+                if (session.status === 'complete') {
+                    titleEl.textContent = 'Thanks for your order!';
+                    const emailNote = session.customer_email
+                        ? `A confirmation email will be sent to ${session.customer_email}. `
+                        : '';
+                    detailEl.textContent = emailNote + 'If you have any questions, email naavox@gmail.com.';
+                } else if (session.status === 'open') {
+                    titleEl.textContent = 'Checkout was not completed';
+                    detailEl.textContent = 'Your payment was not finished. Visit the store to try again.';
+                } else {
+                    titleEl.textContent = 'Order not completed';
+                    detailEl.textContent = 'If you believe this is an error, email orders@neufangled.com.';
+                }
+            } catch (err) {
+                titleEl.textContent = 'Could not check order status';
+                detailEl.textContent = 'Please email orders@neufangled.com for help.';
+            }
+        })();
+    </script>
+</body>
+</html>

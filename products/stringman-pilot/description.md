@@ -5,8 +5,7 @@ intro: >
   your ceiling and controlled by self-hosted AI or gamepad. 'Pilot' is the first
   Stringman version available to the public with Nema-17 based anchors and the
   original gripper featuring a vertical winch.
-price: "$900"
-shipping: Ships in 5-8 days to the United States or Canada
+price_id: "price_REPLACE_ME"
 badge: In Stock
 store_description: >
   The original Stringman system, fully assembled with 4 Pilot anchors and the

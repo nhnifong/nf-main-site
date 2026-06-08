@@ -20,6 +20,11 @@ services:
       - GCP_REGION=us-east1
       - BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest
       - WS_SERVER_URL=ws://localhost:8080
+      # Pulled from a .env file alongside this compose file (gitignored).
+      # Falls back to empty strings if the file or these keys are absent —
+      # the server still starts, it just can't create checkout sessions.
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
     volumes:
       - ${HOME}/.config/gcloud/application_default_credentials.json:/app/service-account.json
       - ./app/templates:/app/app/templates

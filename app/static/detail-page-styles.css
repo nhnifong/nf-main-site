@@ -156,6 +156,38 @@ body {
     color: #666;
 }
 
+.purchase-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.purchase-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.purchase-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+}
+
+.purchase-field select {
+    padding: 14px 18px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    min-width: 220px;
+}
+
 .purchase-btn {
     display: inline-block;
     background-color: #000;
@@ -174,12 +206,6 @@ body {
 .purchase-btn:hover {
     background-color: #333;
     transform: translateY(-2px);
-}
-
-.shipping-note {
-    margin-top: 15px;
-    font-size: 0.8rem;
-    color: #999;
 }
 
 .gold-note {

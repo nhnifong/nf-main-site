@@ -4,8 +4,7 @@ intro: >
   The complete set of hardware you need to build the newest Stringman anchors —
   a pair of powerful and quiet spool motor systems. "Arpeggio" refers to the
   second major hardware version.
-price: "$610"
-shipping: Ships in 5-8 days to the United States or Canada
+price_id: "price_REPLACE_ME"
 badge: In Stock
 store_description: >
   Build your own Arpeggio anchors with this complete hardware kit featuring

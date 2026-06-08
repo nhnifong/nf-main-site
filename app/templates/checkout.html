@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Checkout — {{ product.title }} | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/checkout-styles.css" />
+    <script src="https://js.stripe.com/dahlia/stripe.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/{{ product.slug }}">Back to product</a>
+    </nav>
+
+    <header class="checkout-header">
+        <h1>{{ product.title }}</h1>
+        {% set variant = product.variants[variant_index] %}
+        {% if variant.label %}
+        <p>{{ variant.label }} — shipping to {{ shipping_regions[region].label }}</p>
+        {% else %}
+        <p>Shipping to {{ shipping_regions[region].label }}</p>
+        {% endif %}
+    </header>
+
+    <div id="checkout"></div>
+    <div id="checkout-error" style="display: none;"></div>
+
+    <script>
+        const stripe = Stripe({{ stripe_publishable_key | tojson }});
+
+        async function fetchClientSecret() {
+            const response = await fetch('/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    slug: {{ product.slug | tojson }},
+                    region: {{ region | tojson }},
+                    variant: {{ variant_index }},
+                }),
+            });
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.detail || 'Could not start checkout');
+            }
+
+            const { clientSecret } = await response.json();
+            return clientSecret;
+        }
+
+        (async () => {
+            try {
+                const checkout = await stripe.createEmbeddedCheckoutPage({ fetchClientSecret });
+                checkout.mount('#checkout');
+            } catch (err) {
+                document.getElementById('checkout-error').textContent =
+                    'Sorry, we could not start checkout: ' + err.message;
+                document.getElementById('checkout-error').style.display = 'block';
+            }
+        })();
+    </script>
+</body>
+</html>
