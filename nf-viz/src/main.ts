@@ -1173,11 +1173,8 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
   if (data.name) {
     if (data.position) {
       // moved the named object
-      if (data.name == 'hamper') {
-        room.setHamper(data.position);
-      }
-      else if (data.name == 'gamepad') {
-        room.setPersonTagPosition(data.position);
+      if (data.name == 'hamper' || data.name == 'toys' || data.name == 'trash' || data.name == 'gamepad') {
+        room.setNamedObjectPosition(data.name, data.position);
       }
       // else if (data.name == 'gantry_goal_marker') {
 
@@ -1187,6 +1184,51 @@ function handleNamedPosition(data: nf.telemetry.INamedObjectPosition) {
     }
   }
 }
+
+// --- Target route source/destination pickers ---
+
+const TARGET_ROUTE_SOURCE_OPTIONS = ['All targets', 'User targets', 'Toybox', 'Hamper', 'Trash', 'Gamepad', 'Origin'];
+// "All targets" and "User targets" describe groups of targets, not a single named location — only valid as a source.
+const TARGET_ROUTE_DESTINATION_OPTIONS = ['Toybox', 'Hamper', 'Trash', 'Gamepad', 'Origin'];
+
+function initTargetRoutePicker(btnId: string, menuId: string, options: string[], onChange: (value: string) => void) {
+  const btn = document.getElementById(btnId);
+  const label = btn?.querySelector('.route-select-label');
+  const menu = document.getElementById(menuId);
+  if (!btn || !label || !menu) return;
+
+  for (const option of options) {
+    const item = document.createElement('div');
+    item.className = 'menu-item';
+    item.textContent = option;
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      label.textContent = option;
+      menu.classList.remove('show');
+      onChange(option);
+    });
+    menu.appendChild(item);
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('show');
+  });
+
+  document.addEventListener('click', () => menu.classList.remove('show'));
+}
+
+function initTargetRoutePickers() {
+  initTargetRoutePicker('route-source-btn', 'route-source-menu', TARGET_ROUTE_SOURCE_OPTIONS, (value) => {
+    // TODO: send the new source selection to the robot
+    console.log('Target route source changed to:', value);
+  });
+  initTargetRoutePicker('route-destination-btn', 'route-destination-menu', TARGET_ROUTE_DESTINATION_OPTIONS, (value) => {
+    // TODO: send the new destination selection to the robot
+    console.log('Target route destination changed to:', value);
+  });
+}
+initTargetRoutePickers();
 
 async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   const feedNumber = data.feedNumber!; // Note that this is not anchor num in stringman pilot.

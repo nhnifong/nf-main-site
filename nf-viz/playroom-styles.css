@@ -336,7 +336,53 @@ body {
 /* ============================================================
    LEFT PANEL: TARGET LIST
    ============================================================ */
-#panel-left { grid-area: left; }
+#panel-left {
+  grid-area: left;
+  overflow: visible; /* lets the source/destination pop-up menus escape the panel; #target-list scrolls internally */
+}
+
+#target-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+#target-route-info {
+  flex: 0 0 auto;
+  max-height: 110px;
+  overflow: visible; /* lets the source/destination pop-up menus escape this box */
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 2px solid #ddd;
+}
+
+.route-info-row {
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.route-info-label {
+  font-weight: 600;
+  color: black;
+}
+
+/* Source/Destination value pickers — pop-up menu of selectable named locations. */
+.route-select-container { position: relative; display: inline-block; }
+
+.route-select-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.route-select-caret { font-size: 0.7em; }
+
+.route-select-menu {
+  min-width: 160px;
+}
 
 h2 {
   margin-top: 0;

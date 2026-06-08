@@ -13,6 +13,8 @@ export class DynamicRoom {
   public userPers: THREE.Object3D | undefined;
   private hamper: THREE.Object3D | undefined;
   private reticule: THREE.Object3D | undefined;
+  private toybox: THREE.Object3D | undefined;
+  private trash_can: THREE.Object3D | undefined;
 
   // moving walls
   mesh: THREE.Mesh;
@@ -79,6 +81,8 @@ export class DynamicRoom {
           this.userPers = clonedScene.getObjectByName('user_pers');
           this.hamper = clonedScene.getObjectByName('hamper_tag');
           this.reticule = clonedScene.getObjectByName('reticule');
+          this.toybox = clonedScene.getObjectByName('toybox');
+          this.trash_can = clonedScene.getObjectByName('trash_can');
 
       } catch (error) {
           console.error('Error loading decor.glb:', error);
@@ -103,21 +107,14 @@ export class DynamicRoom {
     }
   }
 
-  // Called every time telemetry has an update for it, whether we are using it or not
-  public setPersonTagPosition(position: nf.common.IVec3) {
-    // update the visual represenation of this position
-    if (this.userPers) {
-      this.userPers.position.set(
-          (position.x ?? 0),
-          (position.z ?? 0),
-          -(position.y ?? 0)
-      );
-    }
-  }
-
-  public setHamper(position: nf.common.IVec3) {
-    if (this.hamper) {
-      this.hamper.position.set(
+  public setNamedObjectPosition(name: string, position: nf.common.IVec3) {
+    const target = name === 'hamper' ? this.hamper
+                 : name === 'toys' ? this.toybox
+                 : name === 'trash' ? this.trash_can
+                 : name === 'gamepad' ? this.userPers
+                 : undefined;
+    if (target) {
+      target.position.set(
           (position.x ?? 0),
           (position.z ?? 0),
           -(position.y ?? 0)
