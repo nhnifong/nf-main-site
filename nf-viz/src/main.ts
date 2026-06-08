@@ -595,6 +595,7 @@ function connect(wsUrl: string) {
         else if (update.gripCamPreditions) gripperVideo.setGripperPredictions(update.gripCamPreditions);
         else if (update.operationProgress) handleOperationProgress(update.operationProgress);
         else if (update.swingCancellationState) handleSwingCancellationState(update.swingCancellationState);
+        else if (update.taskStatus) handleTaskStatus(update.taskStatus);
         else if (update.visibilityStates) handleVisibilityStates(update.visibilityStates);
         else if (update.episodeControl) handleEpisodeControl(update.episodeControl);
       }
@@ -1191,6 +1192,20 @@ const TARGET_ROUTE_SOURCE_OPTIONS = ['All targets', 'User targets', 'Toybox', 'H
 // "All targets" and "User targets" describe groups of targets, not a single named location — only valid as a source.
 const TARGET_ROUTE_DESTINATION_OPTIONS = ['Toybox', 'Hamper', 'Trash', 'Gamepad', 'Origin'];
 
+const ROUTE_POINT_BY_LABEL: Record<string, nf.common.RoutePoint> = {
+  'All targets': nf.common.RoutePoint.ROUTEPOINT_ALL_TARGETS,
+  'User targets': nf.common.RoutePoint.ROUTEPOINT_USER_TARGETS,
+  'Toybox': nf.common.RoutePoint.ROUTEPOINT_TOYBOX,
+  'Hamper': nf.common.RoutePoint.ROUTEPOINT_HAMPER,
+  'Trash': nf.common.RoutePoint.ROUTEPOINT_TRASH,
+  'Gamepad': nf.common.RoutePoint.ROUTEPOINT_GAMEPAD,
+  'Origin': nf.common.RoutePoint.ROUTEPOINT_ORIGIN,
+};
+
+const ROUTE_POINT_LABELS: Record<number, string> = Object.fromEntries(
+  Object.entries(ROUTE_POINT_BY_LABEL).map(([label, point]) => [point, label])
+);
+
 function initTargetRoutePicker(btnId: string, menuId: string, options: string[], onChange: (value: string) => void) {
   const btn = document.getElementById(btnId);
   const label = btn?.querySelector('.route-select-label');
@@ -1203,7 +1218,6 @@ function initTargetRoutePicker(btnId: string, menuId: string, options: string[],
     item.textContent = option;
     item.addEventListener('click', (e) => {
       e.stopPropagation();
-      label.textContent = option;
       menu.classList.remove('show');
       onChange(option);
     });
@@ -1220,12 +1234,14 @@ function initTargetRoutePicker(btnId: string, menuId: string, options: string[],
 
 function initTargetRoutePickers() {
   initTargetRoutePicker('route-source-btn', 'route-source-menu', TARGET_ROUTE_SOURCE_OPTIONS, (value) => {
-    // TODO: send the new source selection to the robot
-    console.log('Target route source changed to:', value);
+    sendControl([nf.control.ControlItem.create({
+      setPoint: { routeSource: ROUTE_POINT_BY_LABEL[value] }
+    })]);
   });
   initTargetRoutePicker('route-destination-btn', 'route-destination-menu', TARGET_ROUTE_DESTINATION_OPTIONS, (value) => {
-    // TODO: send the new destination selection to the robot
-    console.log('Target route destination changed to:', value);
+    sendControl([nf.control.ControlItem.create({
+      setPoint: { routeDestination: ROUTE_POINT_BY_LABEL[value] }
+    })]);
   });
 }
 initTargetRoutePickers();
@@ -1314,6 +1330,18 @@ function handleGripSensors(data: nf.telemetry.IGripperSensors) {
     currentGripperTargetForce = data.targetForce;
   } else {
     currentGripperTargetForce = null;
+  }
+}
+
+function handleTaskStatus(data: nf.telemetry.ITaskStatus) {
+  const sourceLabel = document.querySelector('#route-source-btn .route-select-label');
+  if (sourceLabel && data.routeSource !== undefined && data.routeSource !== null) {
+    sourceLabel.textContent = ROUTE_POINT_LABELS[data.routeSource] ?? sourceLabel.textContent;
+  }
+
+  const destinationLabel = document.querySelector('#route-destination-btn .route-select-label');
+  if (destinationLabel && data.routeDestination !== undefined && data.routeDestination !== null) {
+    destinationLabel.textContent = ROUTE_POINT_LABELS[data.routeDestination] ?? destinationLabel.textContent;
   }
 }
 
