@@ -5,7 +5,7 @@ Hardware Version: Arpeggio
 **Print time**: about 20 hours, or about 40 hours if using multicolor instead of stickers for apriltags
 **Build time**: about 2 hours
 
-First you should have printed the parts according to the [print guide](print_guide.md)
+First you should have printed the parts according to the [print guide](arp_print_guide.md)
 
 ## Bill of Materials
 

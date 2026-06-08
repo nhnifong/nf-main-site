@@ -162,6 +162,26 @@ You can select any target by clicking on it in the list or on it's square in any
 
 You can add new targets by clicking twice anywhere in a camera feed (except the gripper camera for now)
 
+At the bottom of the targets panel the **To:** and **From:** fields allow you to configure the pick and place task.
+Pick and palce will continuously take items from the *To* category or location and drop them at the **From** location.
+
+For example, if **To** is `User targets` and **From** is `Trash`, then pick and place will take all user-added targets, move to them, perform the configured type of auto grasp, then move over a point 25cm in front of the `Trash` apriltag, and drop the item.
+
+#### Explanation of tags
+
+Stringman comes with four small tags and four large tags.
+
+The large tags are to mark the origin during calibration and to assist in determinging camera pose. They are only used during calibration and can be removed from the floor thereafter.
+
+The small tags are used to tell the system where named locations are. The actual location being controlled is a point 25cm in front of the front face of the tag. The front face is the one with the name on it.
+
+  * Gamepad - Informs the system where you are when controlling the robot manually for the purpose of orbiting around you. See the Perspective section above.
+  * Trash - mark the location of a open trashcan
+  * Toys - mark the location of an open toybox
+  * Hamper - mark the location of an open laundry hamper
+
+The tags can also be used for any other purpose you like. For example, place the hamper tag near a pile of walnuts, and gamepad tag near your cracking station. Set the appropriate tags as **To** and **From** and start pick and place to have the robot continuously bring you walnuts from the pile. The action continues until you press stop.
+
 ### Robot components
 
 The interface shows the position of each robot component and the lines that connect them. Each anchor can determine whether a line is tight and the this is indicated in the control panel by either drawing the line as straight or curved. if the line is not tight, it is not possible for us to know by how much, thus the amount of curve drawn has no bearing on what it may look like in reality.
@@ -190,12 +210,45 @@ While connected in LAN mode, from the RUN menu, select `Bind to Account`. You wi
 
 ## AI Control
 
-When the motion controller started, it downloaded the latest models for target recognition and gripper centering. Targets will be recognized more frequently if the motion controller is running on a machine with AI acceleration.
+There are currently two main types of models used in Stringman, but this is a continuously changing feature.
 
-In the main menu, select `Pick and drop targets`. Stringman will repeatedly select a target, move over it, center it's gripper, attempt an automated grasp, and take the target to a destination. At this time, all targets are carried to the hamper. this is 20cm in front of wherever you clip the hamper tag.
+### Small targeting and centering models
 
-At any time, you can press `stop` to end AI control. 
+Two small models may be loaded for target finding and camera centering. The `--no_ai` flag suppresses the loading of these models, but does not refer to any other kind of ai.
 
-!!! Note
+#### Target model
 
-    AI control is only decent right now for the Pilot version gripper. For Arpeggio, it is actively being developed but not very useful at the moment.
+The target model picks out potential targets on the floor which resemble laundry, toys, or trash and are small enough to pick up. When running it marks them as white circles on the camera feeds and adds them to the target list.
+
+#### Centering model
+
+An early solution to automatic grasping, the centering model is loaded only when stringman-headless is started with `--arp_grasp`.
+This small model is used as part of an auto grasp routine in which a vector is predicted from the gripper camera to center the gripper over the object.
+
+### Large Lerobot models
+
+The more advanced form of autonomous control available for Stringman is end-to-end control by a Lerobot-based model.
+This is access by the `Connect Lerobot` button at the top of the interface. This panel is used to start a lerobot model eval script as a subprocess of stringman-headless by specifying a compatible huggingface repo id.
+
+![](images/learn/start_session.png){ loading=lazy, width=45% }
+
+The lerobot script connects to the robot's local telemetry stream and consumes video and produces movements as long as an "episode" is active.
+`multitask-dit-8` is a model trained on the task of grasping household objects. The default behavior of pick and place is to try to start an episode in the connected lerobot session, assuming it is runnign a model which grasps objects. It's not yet wired up to automatically start the correct model since it's such an unfinished feature.
+
+Therefore the form of autonomous behavior that is most within reach right now is autonomous grasping using a DIT model chained together with procedural cross room moves based on apriltag positions. However, it is possible in theory to use a model for cross room traversals. I have not been successful in training one that does that well yet though.
+
+### Agentic control
+
+An agent has two main options for controlling stringman.
+
+#### Direct movement control
+
+It can connect to the telemetry stream at `ws://localhost:4245`. Each message read is a serialized TelemetryBatchUpdate and each message sent should be a ControlBatchUpdate.
+
+There are controls for direct gantry velocity or controls to set goal points in room space.
+
+See `src/nf_robot/protos/` from https://github.com/nhnifong/cranebot3-firmware for the interface definition and `src/nf_robot/ml/stringman_lerobot.py` for an example of how the lerobot script connects to telemetry.
+
+#### Lerobot as intermediary
+
+It can use a connected lerobot process evaluating a suitable model for handling low level movement and condition it with prompts. It would still connect to the telemetry stream, but would issue EpisodeControl messages containing prompts and would start and stop episodes from the connected model. Loading `multitask-dit-8` for example would allow an agent to issue a prompt such as "Pick up the orange pen" with the gripper somewhere near the orange pen and track velocity and finger pressure in the telemetry to guage success much like the pick and place routine in observer.py

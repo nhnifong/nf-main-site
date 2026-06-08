@@ -44,6 +44,7 @@ nav:
         - arpeggio_anchor_build_guide.md
         - arpeggio_gripper_build_guide.md
         - arp_install_guide.md
+        - arp_print_guide.md
     - Earlier Versions:
         - gripper_build_guide.md
         - anchor_build_guide.md

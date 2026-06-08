@@ -13,7 +13,7 @@ The UI is web based an accessed at [neufanged.com/control_panel](http://neufangl
 	#### STLs for 3D printing
 
 	 * **[Download STLs](assets/stringman_arppegio_stls.zip)**
-	 * **[Print Guide](print_guide.md)**
+	 * **[Print Guide](arp_print_guide.md)**
 
 	#### CAD Design Document
 
