@@ -28,8 +28,9 @@ Covers, faces, fingers, geared levers, linkage, and parking hooks are all visibl
 ### Frame (2x)
 
  - Print in **PCTG or PETG-CF**, not PLA — this part needs strength and heat tolerance.
- - 2 walls, 15% cubic infill
- - Tree supports, build plate only, 0.5mm XY distance to part
+ - 2 walls, 22% adaptive cubic
+ - Tree supports, build plate only, critical regions only, 0.5mm XY distance to part
+ - Bambu super cool tack plate reccomended
 
 ### Regular bearing block (1x) and Slip ring block (1x)
 
