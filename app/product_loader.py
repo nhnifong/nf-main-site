@@ -27,6 +27,10 @@ Frontmatter fields:
                          products sold in multiple variants (e.g. colors). Takes
                          precedence over `price_id`/`price_id_test`, which are used
                          as a single, unlabeled variant when `variants` is absent.
+  shipping_size    str   Which shipping rate to charge: "small", "large", or
+                         "free" (default "small"). Looked up per-region in
+                         app.main's SHIPPING_REGIONS — the shopper only picks a
+                         destination region, not a rate.
 
 The price actually charged depends on which mode the configured Stripe secret
 key is in — see `test_mode` below. Live-mode IDs are read straight from
@@ -136,6 +140,7 @@ def load_product(slug: str, asset_bucket_url: str, test_mode: bool = False) -> d
         "variants": variants,
         "show_in_store": meta.get("show_in_store", True),
         "store_order": meta.get("store_order", 99),
+        "shipping_size": meta.get("shipping_size", "small"),
     }
 
 

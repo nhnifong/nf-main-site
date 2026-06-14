@@ -11,6 +11,7 @@ variants:
     price_id: "price_REPLACE_ME_WHITE"
   - label: Copper
     price_id: "price_REPLACE_ME_COPPER"
+shipping_size: large
 badge: 
 store_description: >
   The complete and latest Stringman system, fully assembled. Includes 2 anchors,

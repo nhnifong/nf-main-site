@@ -4,6 +4,7 @@ intro: >
   The complete set of hardware you need to build a full Stringman system —
   both the Arpeggio anchors and the Arpeggio gripper.
 price_id: "price_REPLACE_ME"
+shipping_size: large
 badge:
 store_description: >
   Everything you need to build a complete Stringman: a pair of Arpeggio anchors
