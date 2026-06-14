@@ -172,7 +172,10 @@
             .navbar { justify-content: center; padding: 15px; }
             .navbar a { margin: 0 10px; font-size: 0.8rem; }
         }
+
+        .cart-icon { filter: invert(1); }
     </style>
+    <link rel="stylesheet" href="/static/cart-icon.css" />
 </head>
 <body>
 
@@ -183,6 +186,10 @@
         <a href="/playroom">Playroom</a>
         <a href="/company">Company</a>
         <a href="/future">Future</a>
+        <a href="/cart" class="cart-link" aria-label="View cart">
+            <img src="{{ cart_icon_url }}" alt="" class="cart-icon">
+            <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
     </nav>
 
     <header class="store-header">
@@ -217,5 +224,6 @@
         </div>
     </div>
 
+    <script src="/static/cart.js"></script>
 </body>
 </html>

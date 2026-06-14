@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Your Cart | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/checkout-styles.css" />
+    <link rel="stylesheet" href="/static/cart-icon.css" />
+    <link rel="stylesheet" href="/static/cart-styles.css" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/cart" class="cart-link" aria-label="View cart">
+            <img src="{{ cart_icon_url }}" alt="" class="cart-icon">
+            <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
+    </nav>
+
+    <header class="checkout-header">
+        <h1>Your Cart</h1>
+    </header>
+
+    <main class="cart-container">
+        <div id="cart-items"></div>
+        <p id="cart-empty" class="cart-empty" hidden>Your cart is empty. <a href="/store">Continue shopping</a></p>
+
+        <div class="cart-subtotal" id="cart-subtotal" hidden></div>
+
+        <div class="cart-summary" id="cart-summary" hidden>
+            <div class="purchase-field">
+                <label for="region-select">Shipping to</label>
+                <select id="region-select">
+                    {% for key, region in shipping_regions.items() %}
+                    <option value="{{ key }}">{{ region.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button id="checkout-button" class="purchase-btn" type="button">Checkout</button>
+        </div>
+    </main>
+
+    <script src="/static/cart.js"></script>
+    <script>
+        const itemsContainer = document.getElementById('cart-items');
+        const emptyMessage = document.getElementById('cart-empty');
+        const subtotalEl = document.getElementById('cart-subtotal');
+        const summary = document.getElementById('cart-summary');
+        const regionSelect = document.getElementById('region-select');
+        const checkoutButton = document.getElementById('checkout-button');
+
+        function formatAmount(unitAmount, currency) {
+            const amount = unitAmount / 100;
+            const symbol = currency === 'usd' ? '$' : currency.toUpperCase() + ' ';
+            return Number.isInteger(amount) ? `${symbol}${amount}` : `${symbol}${amount.toFixed(2)}`;
+        }
+
+        function buildItemRow(item) {
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+            row.dataset.slug = item.slug;
+            row.dataset.variant = item.variant;
+
+            const img = document.createElement('img');
+            img.className = 'cart-item-image';
+            img.src = item.image_url;
+            img.alt = item.title;
+            row.appendChild(img);
+
+            const info = document.createElement('div');
+            info.className = 'cart-item-info';
+            const title = document.createElement('div');
+            title.className = 'cart-item-title';
+            title.textContent = item.title;
+            info.appendChild(title);
+            if (item.variant_label) {
+                const variantLabel = document.createElement('div');
+                variantLabel.className = 'cart-item-variant';
+                variantLabel.textContent = item.variant_label;
+                info.appendChild(variantLabel);
+            }
+            const price = document.createElement('div');
+            price.className = 'cart-item-price';
+            price.textContent = item.price_display;
+            info.appendChild(price);
+            row.appendChild(info);
+
+            const qty = document.createElement('div');
+            qty.className = 'cart-item-qty';
+
+            const decreaseBtn = document.createElement('button');
+            decreaseBtn.className = 'qty-btn';
+            decreaseBtn.type = 'button';
+            decreaseBtn.textContent = '−';
+            decreaseBtn.addEventListener('click', () => {
+                setCartQuantity(item.slug, item.variant, item.quantity - 1);
+                renderCart();
+            });
+            qty.appendChild(decreaseBtn);
+
+            const qtyValue = document.createElement('span');
+            qtyValue.className = 'qty-value';
+            qtyValue.textContent = item.quantity;
+            qty.appendChild(qtyValue);
+
+            const increaseBtn = document.createElement('button');
+            increaseBtn.className = 'qty-btn';
+            increaseBtn.type = 'button';
+            increaseBtn.textContent = '+';
+            increaseBtn.addEventListener('click', () => {
+                setCartQuantity(item.slug, item.variant, item.quantity + 1);
+                renderCart();
+            });
+            qty.appendChild(increaseBtn);
+
+            row.appendChild(qty);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'cart-item-remove';
+            removeBtn.type = 'button';
+            removeBtn.setAttribute('aria-label', 'Remove from cart');
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', () => {
+                removeFromCart(item.slug, item.variant);
+                renderCart();
+            });
+            row.appendChild(removeBtn);
+
+            return row;
+        }
+
+        async function renderCart() {
+            const cart = getCart();
+            itemsContainer.innerHTML = '';
+
+            if (!cart.length) {
+                emptyMessage.hidden = false;
+                subtotalEl.hidden = true;
+                summary.hidden = true;
+                return;
+            }
+
+            const response = await fetch('/cart-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cart),
+            });
+            const items = await response.json();
+
+            if (!items.length) {
+                emptyMessage.hidden = false;
+                subtotalEl.hidden = true;
+                summary.hidden = true;
+                return;
+            }
+
+            emptyMessage.hidden = true;
+            subtotalEl.hidden = false;
+            summary.hidden = false;
+            items.forEach(item => itemsContainer.appendChild(buildItemRow(item)));
+
+            const subtotalCents = items.reduce((sum, item) => sum + item.unit_amount * item.quantity, 0);
+            const currency = items[0].currency;
+            subtotalEl.textContent = `Subtotal: ${formatAmount(subtotalCents, currency)}`;
+        }
+
+        checkoutButton.addEventListener('click', () => {
+            const params = new URLSearchParams({ region: regionSelect.value });
+            window.location.href = '/checkout?' + params.toString();
+        });
+
+        renderCart();
+    </script>
+</body>
+</html>

@@ -29,6 +29,7 @@ from .store import (
     ASSET_BUCKET_URL,
     STRIPE_TEST_MODE,
     SHIPPING_REGIONS,
+    CART_ICON_URL,
     _enrich_product_pricing,
 )
 
@@ -924,6 +925,7 @@ async def read_page(request: Request, page_name: str):
         return templates.TemplateResponse(request, "product.html", {
             "product": product,
             "shipping_regions": SHIPPING_REGIONS,
+            "cart_icon_url": CART_ICON_URL,
         })
 
     raise HTTPException(status_code=404, detail="Page not found")

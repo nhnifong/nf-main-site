@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Order status | Neufangled Robotics</title>
     <link rel="stylesheet" href="/static/checkout-styles.css" />
+    <script src="/static/cart.js"></script>
 </head>
 <body>
 
@@ -42,6 +43,10 @@
                         ? `A confirmation email will be sent to ${session.customer_email}. `
                         : '';
                     detailEl.textContent = emailNote + 'If you have any questions, email naavox@gmail.com.';
+
+                    if (new URLSearchParams(window.location.search).get('cart') === 'true') {
+                        clearCart();
+                    }
                 } else if (session.status === 'open') {
                     titleEl.textContent = 'Checkout was not completed';
                     detailEl.textContent = 'Your payment was not finished. Visit the store to try again.';

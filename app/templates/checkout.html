@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <title>Checkout — {{ product.title }} | Neufangled Robotics</title>
+    <title>Checkout {% if product %}— {{ product.title }} {% endif %}| Neufangled Robotics</title>
     <link rel="stylesheet" href="/static/checkout-styles.css" />
     <script src="https://js.stripe.com/dahlia/stripe.js"></script>
 </head>
@@ -13,10 +13,15 @@
     <nav class="navbar">
         <a href="/">Home</a>
         <a href="/store">Store</a>
+        {% if product %}
         <a href="/{{ product.slug }}">Back to product</a>
+        {% else %}
+        <a href="/cart">Back to cart</a>
+        {% endif %}
     </nav>
 
     <header class="checkout-header">
+        {% if product %}
         <h1>{{ product.title }}</h1>
         {% set variant = product.variants[variant_index] %}
         {% if variant.label %}
@@ -24,22 +29,38 @@
         {% else %}
         <p>Shipping to {{ shipping_regions[region].label }}</p>
         {% endif %}
+        {% else %}
+        <h1>Your Cart</h1>
+        <p>Shipping to {{ shipping_regions[region].label }}</p>
+        {% endif %}
     </header>
 
     <div id="checkout"></div>
     <div id="checkout-error" style="display: none;"></div>
 
+    <script src="/static/cart.js"></script>
     <script>
         const stripe = Stripe({{ stripe_publishable_key | tojson }});
+        const cartMode = {{ cart_mode | tojson }};
+        const serverItems = {{ items | tojson }};
 
         async function fetchClientSecret() {
+            const items = serverItems || getCart();
+            if (!items.length) {
+                throw new Error('Your cart is empty');
+            }
+
             const response = await fetch('/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    slug: {{ product.slug | tojson }},
                     region: {{ region | tojson }},
-                    variant: {{ variant_index }},
+                    items: items.map(item => ({
+                        slug: item.slug,
+                        variant: item.variant || 0,
+                        quantity: item.quantity || 1,
+                    })),
+                    cart_mode: cartMode,
                 }),
             });
 
