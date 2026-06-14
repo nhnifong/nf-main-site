@@ -74,7 +74,7 @@ steps:
     WS_SERVER_URL=wss://neufangled.com,\
     STAGING_CONTROL_PLANE_URL=https://nf-site-monolith-staging-690802609278.us-east1.run.app"
   - '--set-secrets'
-  - 'DATABASE_URL=PROD_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_PROD:latest'
+  - 'DATABASE_URL=PROD_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_PROD:latest,STRIPE_PUBLISHABLE_KEY=PROD_STRIPE_PUBLISHABLE_KEY:latest,STRIPE_SECRET_KEY=PROD_STRIPE_SECRET_KEY:latest'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com' # Use your actual project number
   waitFor: ['determine-buckets']
