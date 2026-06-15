@@ -3,8 +3,7 @@ title: Actuator Hat
 intro: >
   Most damiao actuators use an XT60 (2+2) connector that combines 24v power with a CAN bus pair. This board allows you to power and control two
   Damiao actuators and power your Raspberry Pi Zero 2W from one barrel jack.
-price: "$22"
-shipping: Free shipping US and Canada
+price_id: "price_REPLACE_ME"
 badge:
 store_description: >
   Raspberry Pi Zero hat for controlling two Damiao actuators

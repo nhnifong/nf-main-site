@@ -5,8 +5,7 @@ intro: >
   task. Whether you're a maker wanting to accelerate your personal project, a
   researcher looking to adapt the Stringman platform to a novel use case, or a
   business looking for help automating your unique task, I can help you.
-price: "$300"
-shipping: In person in RDU or remote via Google Meet
+price_id: "price_REPLACE_ME"
 badge: 
 store_description: >
   Three one-hour sessions to solve your software, hardware, or integration
@@ -15,7 +14,7 @@ store_image: portrait.jpg
 image_folder: ""
 images:
   - portrait.jpg
-show_in_store: true
+show_in_store: false
 store_order: 5
 ---
 

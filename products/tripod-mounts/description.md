@@ -2,8 +2,7 @@
 title: Tripod mounts for Stringman
 intro: >
   Adapters to mount a Stringman Robot on four tripods
-price: "$12"
-shipping: Free shipping US and Canada
+price_id: "price_REPLACE_ME"
 badge:
 store_description: >
   Adapters to mount a Stringman Robot on four tripods

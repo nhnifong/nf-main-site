@@ -3,8 +3,8 @@ title: Stringman Hardware Kit
 intro: >
   The complete set of hardware you need to build a full Stringman system —
   both the Arpeggio anchors and the Arpeggio gripper.
-price: "$730"
-shipping: Ships in 5-8 days to the United States or Canada
+price_id: "price_REPLACE_ME"
+shipping_size: large
 badge:
 store_description: >
   Everything you need to build a complete Stringman: a pair of Arpeggio anchors

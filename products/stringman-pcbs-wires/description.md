@@ -4,8 +4,7 @@ intro: >
   The custom-made parts of the Stringman Arpeggio BOM — the PCBs and the
   specialty wire — for builders who would rather source the common parts
   themselves.
-price: "$65"
-shipping: Ships in 5-8 days to the United States or Canada
+price_id: "price_REPLACE_ME"
 badge:
 store_description: >
   Just the custom PCBs and specialty wire from the Stringman Arpeggio BOM.

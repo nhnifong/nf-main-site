@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{{ product.title }} | Neufangled Robotics</title>
     <link rel="stylesheet" href="/static/detail-page-styles.css" />
+    <link rel="stylesheet" href="/static/cart-icon.css" />
 </head>
 <body>
 
@@ -16,6 +17,10 @@
         <a href="/playroom">Playroom</a>
         <a href="/company">Company</a>
         <a href="/future">Future</a>
+        <a href="/cart" class="cart-link" aria-label="View cart">
+            <img src="{{ cart_icon_url }}" alt="" class="cart-icon">
+            <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
     </nav>
 
     <section class="product-hero">
@@ -37,15 +42,75 @@
         <div class="info-container">
             <h1 class="product-title">{{ product.title }}</h1>
 
+            {% if product.variants %}
+            <p class="product-price" id="product-price">{{ product.variants[0].price_display or "Price unavailable" }}</p>
+            {% endif %}
+
             {% if product.intro %}
             <p class="product-intro">{{ product.intro }}</p>
             {% endif %}
 
-            {% if product.shipping %}
-            <p class="shipping-note">{{ product.shipping }}</p>
-            {% endif %}
+            {% if product.variants %}
+            <div class="purchase-box">
+                {% if product.variants | length > 1 %}
+                <div class="purchase-field">
+                    <label for="variant-select">Option</label>
+                    <select id="variant-select">
+                        {% for variant in product.variants %}
+                        <option value="{{ loop.index0 }}" data-price="{{ variant.price_display or 'Price unavailable' }}">{{ variant.label or "Option " ~ loop.index }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
 
-            {{ product.buy_button | safe }}
+                <div class="purchase-field">
+                    <label for="region-select">Shipping to</label>
+                    <select id="region-select">
+                        {% for key, region in shipping_regions.items() %}
+                        <option value="{{ key }}">{{ region.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="purchase-actions">
+                    <button id="add-to-cart-button" class="purchase-btn" type="button">Add to Cart</button>
+                    <button id="buy-button" class="purchase-btn" type="button">Buy Now</button>
+                </div>
+            </div>
+
+            <script src="/static/cart.js"></script>
+            <script>
+                (function () {
+                    const buyButton = document.getElementById('buy-button');
+                    const addToCartButton = document.getElementById('add-to-cart-button');
+                    const variantSelect = document.getElementById('variant-select');
+                    const regionSelect = document.getElementById('region-select');
+                    const priceEl = document.getElementById('product-price');
+                    const slug = {{ product.slug | tojson }};
+
+                    if (variantSelect && priceEl) {
+                        variantSelect.addEventListener('change', function () {
+                            const option = variantSelect.options[variantSelect.selectedIndex];
+                            priceEl.textContent = option.dataset.price;
+                        });
+                    }
+
+                    addToCartButton.addEventListener('click', function () {
+                        const variant = variantSelect ? parseInt(variantSelect.value, 10) : 0;
+                        addToCart(slug, variant, 1);
+                        window.location.href = '/cart';
+                    });
+
+                    buyButton.addEventListener('click', function () {
+                        const params = new URLSearchParams({
+                            region: regionSelect.value,
+                            variant: variantSelect ? variantSelect.value : '0',
+                        });
+                        window.location.href = '/checkout/{{ product.slug }}?' + params.toString();
+                    });
+                })();
+            </script>
+            {% endif %}
 
             <section class="details-section">
                 {{ product.content | safe }}

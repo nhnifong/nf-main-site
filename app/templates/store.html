@@ -172,7 +172,10 @@
             .navbar { justify-content: center; padding: 15px; }
             .navbar a { margin: 0 10px; font-size: 0.8rem; }
         }
+
+        .cart-icon { filter: invert(1); }
     </style>
+    <link rel="stylesheet" href="/static/cart-icon.css" />
 </head>
 <body>
 
@@ -183,12 +186,16 @@
         <a href="/playroom">Playroom</a>
         <a href="/company">Company</a>
         <a href="/future">Future</a>
+        <a href="/cart" class="cart-link" aria-label="View cart">
+            <img src="{{ cart_icon_url }}" alt="" class="cart-icon">
+            <span class="cart-badge" id="cart-badge" hidden>0</span>
+        </a>
     </nav>
 
     <header class="store-header">
         <h1>Neufangled Robotics Store</h1>
         <p>Complete systems, DIY build kits, and Services.</p>
-        <span class="product-price"><small>Prices include shipping. Current lead time is 3 weeks.</small></span> - 
+        <span class="product-price"><small>Current lead time is 3 weeks.</small></span><br>
         <a href='/payment_options'><span class="gold-note"><small>Settlement in gold or silver available by request</small></span></a>
     </header>
 
@@ -207,7 +214,7 @@
                     <h2 class="product-title">{{ product.title }}</h2>
                     <p class="product-description">{{ product.store_description }}</p>
                     <div class="product-footer">
-                        <span class="product-price">{{ product.price }}</span>
+                        <span class="product-price">{{ product.price_display or "Price unavailable" }}</span>
                         <span class="view-button">View</span>
                     </div>
                 </div>
@@ -217,5 +224,6 @@
         </div>
     </div>
 
+    <script src="/static/cart.js"></script>
 </body>
 </html>

@@ -8,7 +8,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,15 +22,20 @@ from .tickets import create_ticket, create_batch_ticket, get_ticket, delete_user
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
 from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens, ActiveRecordingJob
-from .product_loader import load_product, load_all_products
+from .product_loader import load_product
+from .store import (
+    router as store_router,
+    templates,
+    ASSET_BUCKET_URL,
+    STRIPE_TEST_MODE,
+    SHIPPING_REGIONS,
+    CART_ICON_URL,
+    _enrich_product_pricing,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Asset bucket URL — baked in at Docker build time (same value Vite uses).
-# Falls back to "" in local dev, making image paths relative (e.g. /assets/foo.jpg).
-ASSET_BUCKET_URL = os.environ.get("VITE_ASSET_BUCKET_URL", "")
 
 # Hugging Face OAuth Credentials (Loaded from environment / GCP Secret Manager)
 HF_CLIENT_ID = os.environ.get("HF_CLIENT_ID", "")
@@ -46,8 +50,6 @@ BATCH_IMAGE_URI = os.environ.get("BATCH_IMAGE_URI", f"{GCP_REGION}-docker.pkg.de
 WS_SERVER_URL = os.environ.get("WS_SERVER_URL", "wss://neufangled.com")
 # When set (prod only), auth requests containing staging=1 are forwarded here instead of being handled locally.
 STAGING_CONTROL_PLANE_URL = os.environ.get("STAGING_CONTROL_PLANE_URL", "")
-
-templates = Jinja2Templates(directory="app/templates")
 
 app = FastAPI(
     title="Neufangled Control Plane",
@@ -103,10 +105,7 @@ async def read_index():
     return FileResponse(f"{FRONTEND_DIST}/index.html")
 
 
-@app.get("/store")
-async def store_page(request: Request):
-    products = load_all_products(ASSET_BUCKET_URL)
-    return templates.TemplateResponse(request, "store.html", {"products": products})
+app.include_router(store_router)
 
 # --- Data Models for API Requests ---
 
@@ -920,8 +919,13 @@ async def read_page(request: Request, page_name: str):
         return FileResponse(f"{FRONTEND_DIST}/{page_map[page_name]}")
 
     # Product pages — loaded from products/{slug}/ directory
-    product = load_product(page_name, ASSET_BUCKET_URL)
+    product = load_product(page_name, ASSET_BUCKET_URL, STRIPE_TEST_MODE)
     if product:
-        return templates.TemplateResponse(request, "product.html", {"product": product})
+        await _enrich_product_pricing(product)
+        return templates.TemplateResponse(request, "product.html", {
+            "product": product,
+            "shipping_regions": SHIPPING_REGIONS,
+            "cart_icon_url": CART_ICON_URL,
+        })
 
     raise HTTPException(status_code=404, detail="Page not found")

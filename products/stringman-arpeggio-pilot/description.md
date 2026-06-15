@@ -6,8 +6,11 @@ intro: >
   second hardware version of Stringman. This product contains the Arpeggio
   gripper based on the ST3215 motors featuring a wrist joint, coupled with the
   original Pilot anchors based on Nema 17 motors.
-price: "$1000"
-shipping: Ships in 5-8 days to the United States or Canada
+variants:
+  - label: ""
+    price_id: "price_REPLACE_ME_A"
+  - label: ""
+    price_id: "price_REPLACE_ME_B"
 badge: In Stock
 store_description: >
   Fully assembled room-scale CDPR system. Includes 4 pilot (V1) anchors and

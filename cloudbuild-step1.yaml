@@ -167,7 +167,7 @@ steps:
     BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest,\
     WS_SERVER_URL=wss://nf-site-monolith-staging-690802609278.us-east1.run.app"
   - '--set-secrets'
-  - 'DATABASE_URL=STAGING_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_STAGING:latest'
+  - 'DATABASE_URL=STAGING_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_STAGING:latest,STRIPE_PUBLISHABLE_KEY=SANDBOX_STRIPE_PUBLISHABLE_KEY:latest,STRIPE_SECRET_KEY=SANDBOX_STRIPE_SECRET_KEY:latest'
   - '--service-account'
   - '690802609278-compute@developer.gserviceaccount.com'
   waitFor: ['push-image']

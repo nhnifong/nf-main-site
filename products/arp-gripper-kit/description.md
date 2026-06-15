@@ -4,8 +4,7 @@ intro: >
   The complete set of hardware you need to build the newest stringman gripper,
   featuring a wide angle camera and wrist. "Arpeggio" refers to the second major
   hardware version.
-price: "$210"
-shipping: Ships in 5-8 days to the United States or Canada
+price_id: "price_REPLACE_ME"
 badge: In Stock
 store_description: >
   This kit includes the PCBs, motors, fasteners, and sensors needed to build the
