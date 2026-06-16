@@ -14,6 +14,7 @@ The UI is web based an accessed at [neufanged.com/control_panel](http://neufangl
 
 	 * **[Download STLs](assets/stringman_arppegio_stls.zip)**
 	 * **[Print Guide](arp_print_guide.md)**
+	 * **[All parts in Bambu 3MF file](assets/stringman_bambu.zip)**
 
 	#### CAD Design Document
 
