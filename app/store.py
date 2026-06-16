@@ -69,8 +69,8 @@ SHIPPING_REGIONS = {
         },
     },
     "intl_asia": {
-        "label": "Japan, Korea, and Australia",
-        "allowed_countries": ["JP", "KR", "AU"],
+        "label": "Japan, Korea, Taiwan, Australia",
+        "allowed_countries": ["JP", "KR", "TW", "AU"],
         "shipping_rates": {
             "small": {
                 "shipping_rate": "shr_1TegN0CIW3Ilocb5EZz5ZW71",
