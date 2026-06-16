@@ -55,7 +55,10 @@ class TelemetryManager:
             self.user_email.pop(websocket, None)
 
     async def mark_robot_online(self, robot_id: str, online: bool):
-        await self.decoding_redis.hset(f"robot:{robot_id}:uplink_state", 'online', 'true' if online else 'false')
+        key = f"robot:{robot_id}:uplink_state"
+        await self.decoding_redis.hset(key, 'online', 'true' if online else 'false')
+        if online:
+            await self.decoding_redis.expire(key, 60)
         # publish a serialized batch update for all connected clients announcing that this robot is offline
         batch = telemetry.TelemetryBatchUpdate(
             robot_id=robot_id,
@@ -85,6 +88,7 @@ class TelemetryManager:
                 # Robot sends its state, put on redis channel for this robot. (already serialized data)
                 # We publish this to Redis so all web servers can forward it to UI's connected to this robot.
                 await self.pub_redis.publish(f"state:{robot_id}", data)
+                await self.decoding_redis.expire(f"robot:{robot_id}:uplink_state", 60)
                 
                 # deserialize and look for retain_key in any TelemetryItems
                 batch = telemetry.TelemetryBatchUpdate().parse(data)

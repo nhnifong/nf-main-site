@@ -5,7 +5,7 @@ intro: >
   task. Whether you're a maker wanting to accelerate your personal project, a
   researcher looking to adapt the Stringman platform to a novel use case, or a
   business looking for help automating your unique task, I can help you.
-price_id: "price_REPLACE_ME"
+price_id: "price_1T9mK1CIW3Ilocb5alwvW8ws"
 badge: 
 store_description: >
   Three one-hour sessions to solve your software, hardware, or integration

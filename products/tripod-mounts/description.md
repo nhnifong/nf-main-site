@@ -2,7 +2,8 @@
 title: Tripod mounts for Stringman
 intro: >
   Adapters to mount a Stringman Robot on four tripods
-price_id: "price_REPLACE_ME"
+price_id: "price_1TRxOQCIW3Ilocb545fXEpjs"
+shipping_size: small
 badge:
 store_description: >
   Adapters to mount a Stringman Robot on four tripods

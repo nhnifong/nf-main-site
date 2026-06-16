@@ -4,7 +4,8 @@ intro: >
   The custom-made parts of the Stringman Arpeggio BOM — the PCBs and the
   specialty wire — for builders who would rather source the common parts
   themselves.
-price_id: "price_REPLACE_ME"
+price_id: "price_1TYLu4CIW3Ilocb5Hu38TNH9"
+shipping_size: small
 badge:
 store_description: >
   Just the custom PCBs and specialty wire from the Stringman Arpeggio BOM.

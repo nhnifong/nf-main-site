@@ -73,7 +73,7 @@ SHIPPING_REGIONS = {
         "allowed_countries": ["JP", "KR", "TW", "AU"],
         "shipping_rates": {
             "small": {
-                "shipping_rate": "shr_1TegN0CIW3Ilocb5EZz5ZW71",
+                "shipping_rate": "shr_1TixQiCIW3Ilocb5ZPVS9ndz",
                 "shipping_rate_test": "shr_1Tg60eCIW3Ilocb5ICRBVyDo",
             },
             "large": {
@@ -130,7 +130,7 @@ def _combined_shipping_size(sizes: list[str]) -> str:
 
 # Shown when a Price ID can't be resolved (placeholder ID, Stripe unreachable,
 # etc.) so the storefront still has a plausible price instead of going blank.
-DEFAULT_PRICE_AMOUNT = 9900
+DEFAULT_PRICE_AMOUNT = 99
 DEFAULT_PRICE_CURRENCY = "usd"
 
 # Cached by Price ID, as (info, fetched_at) — caches misses too (placeholder/
