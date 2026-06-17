@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="assets/favicon.png" />
     <title>Stringman - Future Roadmap</title>
+    
     <style>
         /* --- RESET & TYPOGRAPHY --- */
         * {
@@ -87,23 +88,6 @@
             border-bottom: none;
         }
 
-        .section-header {
-            margin-bottom: 60px;
-            text-align: center;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            color: #fff;
-        }
-
-        .section-header p {
-            font-size: 1.1rem;
-            color: #888;
-        }
-
-        /* Content Layout */
         .roadmap-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -148,6 +132,14 @@
             color: #fff;
             display: block;
             margin-bottom: 5px;
+        }
+
+        code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #7cdbfb;
+            font-size: 0.9em;
         }
 
         .image-content img {
@@ -197,17 +189,19 @@
         <div class="roadmap-grid">
             <div class="text-content">
                 <h3>Events & Demos</h3>
+                <p style="margin-bottom: 20px; color: #aaa;">
+                    I'm heading out to the west coas this summer to attend open source conferences and show off Stringman. If you want to talk robotics in person, here's where to find me.
+                </p>
                 <ul>
                     <li>
-                        <strong>Arpeggio Launch Demo Day</strong>
-                        Come to the 79°West Coworking Space & Innovation Hub Wednesday May 6th at 11:00 to 1:00 for a Stringman demo and lunch!
-                        I will be showing the newest hardware as well as giving a talk on Imitation learning with 3D printed robots
-                        <br><br>
-                        Add Event <a target="_blank" href="https://calendar.google.com/calendar/event?action=TEMPLATE&amp;tmeid=MjlyODVudWJ0dnZlaGlwZmRyZTM0Nm5xb2cgbmFhdm94QG0&amp;tmsrc=naavox%40gmail.com"><img border="0" src="https://calendar.google.com/calendar/images/ext/gc_button1_en.gif" alt="Google Calendar"></a>
+                        <strong>Open Sauce 2026</strong>
+                        I'll be attending Open Sauce this coming July (July 17-19) in San Mateo. I'll be available in SF for a few days afterwards as well.
                     </li>
                     <li>
-                        <strong>Raleigh-Durham Startup Week</strong>
-                        Neufangled Robotics will be present at <a href="https://www.raleighdurhamstartupweek.com/">Raleigh-Durham Startup Week</a> on April 20-24, 2026. I'll be there personally with a prototype you can examine. Come say hi and grab some stickers.
+                        <strong>Teardown 2026</strong>
+                        Neufangled Robotics is also heading to Crowd Supply's Teardown conference (July 24-26) in Portland, OR. Crowd Supply is an enthusiastic supporter of open-source hardware. 
+                        <br><br>
+                        <em>If you'll be at either event, email me or send me a message on Discord to coordinate a meetup!</em>
                     </li>
                 </ul>
             </div>
@@ -221,60 +215,65 @@
     <section class="section">
         <div class="roadmap-grid">
             <div class="text-content">
-                <h3>Software Evolution</h3>
-                <ul>
-                    <li>
-                        <strong>Project "Playroom"</strong>
-                        We will soon be opening a special public-access robot, codenamed "Playroom," which users will be able to drive remotely for two minutes at a time. This will serve as a stress test for our new remote stack and let you try before you buy.
-                    </li>
-                    <li>
-                        <strong>Advanced Dataset Management</strong>
-                        Making Stringman's AI effective requires a variety of data. We are making the target selection system more robust, introducing the ability to build distinct Public and Private datasets. The Public set will ship as a baseline for all new robots, while your Private set allows the robot to learn the specific objects and quirks of your own home.
-                    </li>
-                </ul>
-            </div>
-            <div class="image-content">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/web_control_panel.png" alt="Software Features">
-            </div>
-        </div>
-    </section>
-
-    <!-- Hardware Updates -->
-    <section class="section">
-        <div class="roadmap-grid">
-            <div class="text-content">
-                <h3>Next-Gen Hardware</h3>
+                <h3>Pushing for more useful household capabilities</h3>
                 <p style="margin-bottom: 20px; color: #aaa;">
-                    While the <a href="stringman-pilot">Pilot edition</a> is being manufactured for early adopters, The next hardware revision, code named Arpeggio is nearly complete
+                    Stringman has come a long way. We're now beyond kinematics and focused on practical, vision-based autonomy. Action spaces and camera formats are now stable enough that a large corpus can start to be accumulated.
                 </p>
                 <ul>
                     <li>
-                        <strong>Consolidated Anchor Modules</strong>
-                        Rectangular CDPRs need four pull points, but since the lines have such low stretch and friction, the motors don't actually need to be at the corners. Arpeggio anchors merge pairs of anchors into single components to save cost and complexity, while using eyelets in the adjacent corners to maintain ideal geometry. Install time is decreased, and half as many outlets are required.
+                        <strong>Laundry Picking Model</strong>
+                        Several new models have been successfully trained to identify, pick up, and place laundry directly into hampers. The latest at the time of this writing being <a href="https://huggingface.co/naavox/dit-grasp-3">naavox/dit-grasp-3</a> Watching the system run, the frontier of truly intelligent behavior suddenly feels within reach. Testing a new model is always an exciting moment.
                     </li>
                     <li>
-                        <strong>High-Torque BLDC Motors</strong>
-                        Moving away from steppers, the next generation utilizes Brushless DC (BLDC) motors. They provide a roughly 8x increase in torque and a more favorable torque curve. We are targeting a payload capacity of around 4kg.
-                    </li>
-                    <li>
-                        <strong>Versatile Mounting</strong>
-                        Stringman's new anchors have a mounting block that can be changed out for various types of mounting methods including studs, tripods, and drop ceiling T-bars.
+                        <strong>Evaluating New Architectures</strong>
+                        Right now, We're actively evaluating and comparing several model types in the search for a combined system that can handle the task stringman is meant for - clearing your floor. We're experimenting JEPA (Joint-Embedding Predictive Architecture) and a custom variant of DiT (Diffusion Transformer) that leverages DinoV3's patch embeddings for improved spatial awareness. 
+                        <br><br>
+                        As always, Stringman users are highly encouraged to try out the latest experimental models as they are published here.
                     </li>
                 </ul>
             </div>
             <div class="image-content">
-                <img src="%VITE_ASSET_BUCKET_URL%/assets/onshape_v2.png" alt="Hardware Updates">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/web_control_panel.png" onerror="this.src='https://placehold.co/800x500/2a2a2a/7cdbfb?text=Model+Training'" alt="Software Features">
+            </div>
+        </div>
+    </section>
+
+    <!-- Hardware Updates & Long Term Plans -->
+    <section class="section">
+        <div class="roadmap-grid">
+            <div class="text-content">
+                <h3>The Long-Term Vision</h3>
+                <p style="margin-bottom: 20px; color: #aaa;">
+                    Neufangled Robotics aims to bring order to your home. Here is a look at what we are planning to make that happen.
+                </p>
+                <ul>
+                    <li>
+                        <strong>Project Playroom Update</strong>
+                        The software and hardware are in place to launch a public-access Stringman robot. This will allow anyone to remotely drive the robot from a web browser and test its capabilities before committing to a build. We are ready to go, but we're currently still looking for a suitable physical location to host the setup at a decent price. It's not easy to find a 250 sqft room in the RDU area under $500/month with internet - if that existed someone would be living in it.
+                    </li>
+                    <li>
+                        <strong>Future Product Ideas</strong>
+                        While ceiling-mounted cable robots remain our primary focus, we have several other long-term projects in the conceptual phase. First, a scaled-up, outdoor-rated cable robot. Second, a self-organizing—or at the very least, highly searchable—drawer storage cabinet to eliminate workshop clutter. Also, just because it re-uses our existing components, a garage target practice device.
+                        <br><br>
+                        If these concepts interest you, or if you have features you'd desperately want to see in them, feel free to add your thoughts in the <code>#ideas</code> channel on Discord!
+                    </li>
+                </ul>
+            </div>
+            <div class="image-content">
+                <img src="%VITE_ASSET_BUCKET_URL%/assets/onshape_v2.png" onerror="this.src='https://placehold.co/800x500/2a2a2a/7cdbfb?text=Hardware+Vision'" alt="Hardware Updates">
             </div>
         </div>
     </section>
 
     <section class="section">
-        <div class="text-content">
-            <strong>Subscribe on Youtube for more</strong>
+        <div class="text-content" style="text-align: center; margin-bottom: 30px;">
+            <h3 style="color: #fff;">Subscribe on YouTube for more</h3>
         </div>
-        <div class="roadmap-grid">
-            <div class="image-content">
-                <iframe width="960" height="540" src="https://www.youtube.com/embed/hb1P9MxVfys" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <div style="display: flex; justify-content: center;">
+            <div class="image-content" style="width: 100%; max-width: 960px;">
+                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+                    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/hb1P9MxVfys" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
             </div>
         </div>
     </section>

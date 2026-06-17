@@ -8,9 +8,9 @@ intro: >
   Damiao hub motor based anchors in a 2+2 configuration.
 variants:
   - label: White
-    price_id: "price_1TixJJCIW3Ilocb54imdkkEP"
+    price_id: "price_1TRv2hCIW3Ilocb51Jm8aVWH"
   - label: Copper
-    price_id: "price_1TixJgCIW3Ilocb508WZPmfF"
+    price_id: "price_1TRv3LCIW3Ilocb5xHW3WC8w"
 shipping_size: large
 badge: 
 store_description: >

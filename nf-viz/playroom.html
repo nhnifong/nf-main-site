@@ -464,13 +464,15 @@
         <h3 id="lerobot-title" class="overlay-title">LeRobot Session</h3>
 
         <div id="lerobot-panel-inactive">
-          <!-- Cloud instance status — lives outside inactive-content so it stays visible during the pending/spinner state too -->
-          <div id="lerobot-cloud-status" class="hidden" style="margin-bottom:8px; padding:8px 10px; background:var(--bg-card, #2a2a2a); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:0.75rem;">
-            <span style="text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light);">Cloud Instance</span>
-            <span id="lerobot-cloud-state-badge" style="padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.7rem; letter-spacing:0.05em;"></span>
-          </div>
-          <div id="lerobot-cloud-stop-container" class="hidden" style="margin-bottom:14px;">
-            <button id="btn-stop-cloud-session" class="run-button btn-red btn-full">Stop Cloud Session</button>
+          <!-- Cloud lerobot features hidden — robot subprocess sessions only -->
+          <div style="display:none">
+            <div id="lerobot-cloud-status" class="hidden" style="margin-bottom:8px; padding:8px 10px; background:var(--bg-card, #2a2a2a); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:0.75rem;">
+              <span style="text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light);">Cloud Instance</span>
+              <span id="lerobot-cloud-state-badge" style="padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.7rem; letter-spacing:0.05em;"></span>
+            </div>
+            <div id="lerobot-cloud-stop-container" class="hidden" style="margin-bottom:14px;">
+              <button id="btn-stop-cloud-session" class="run-button btn-red btn-full">Stop Cloud Session</button>
+            </div>
           </div>
 
           <div id="lerobot-pending-overlay" class="pending-container hidden">
@@ -494,21 +496,24 @@
               <div id="lerobot-location-lan" class="hidden" style="font-size:0.85rem; color:var(--text-light);">local — subprocess of stringman-headless</div>
 
               <div id="lerobot-rec-linked" class="hidden">
-                <div class="session-input-group">
-                  <div class="input-label">Run On</div>
-                  <div class="seg-control">
-                    <button id="btn-mode-robot" class="seg-btn seg-active" title="Run the recording session on the same machine where stringman-headless is running.">Robot Host</button>
-                    <button id="btn-mode-cloud" class="seg-btn" title="Run the recording session on a Google Cloud spot instance. You may only have one at a time and for a maximum of one hour.">Google Cloud</button>
+                <!-- "Run On" cloud option hidden — robot subprocess sessions only -->
+                <div style="display:none">
+                  <div class="session-input-group">
+                    <div class="input-label">Run On</div>
+                    <div class="seg-control">
+                      <button id="btn-mode-robot" class="seg-btn seg-active" title="Run the recording session on the same machine where stringman-headless is running.">Robot Host</button>
+                      <button id="btn-mode-cloud" class="seg-btn" title="Run the recording session on a Google Cloud spot instance. You may only have one at a time and for a maximum of one hour.">Google Cloud</button>
+                    </div>
                   </div>
-                </div>
 
-                <!-- Shown only when cloud mode is selected and HF is not linked -->
-                <div id="lerobot-hf-link-prompt" class="hidden" style="margin-bottom:8px;">
-                  <a id="lerobot-hf-oauth-link"
-                     href="https://huggingface.co/oauth/authorize?client_id=%HF_CLIENT_ID%&redirect_uri=%HF_REDIRECT_URI%&response_type=code&scope=contribute-repos%20openid%20profile&prompt=consent&state=1234567890"
-                     class="run-button btn-green btn-full" style="text-decoration:none; justify-content:center;">
-                    Link HuggingFace Account
-                  </a>
+                  <!-- Shown only when cloud mode is selected and HF is not linked -->
+                  <div id="lerobot-hf-link-prompt" class="hidden" style="margin-bottom:8px;">
+                    <a id="lerobot-hf-oauth-link"
+                       href="https://huggingface.co/oauth/authorize?client_id=%HF_CLIENT_ID%&redirect_uri=%HF_REDIRECT_URI%&response_type=code&scope=contribute-repos%20openid%20profile&prompt=consent&state=1234567890"
+                       class="run-button btn-green btn-full" style="text-decoration:none; justify-content:center;">
+                      Link HuggingFace Account
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
