@@ -1,3 +1,35 @@
+:root {
+    --c-bg:            #fff;
+    --c-border:        #f0f0f0;
+    --c-bg-image:      #f5f5f5;
+    --c-text:          #333;
+    --c-text-muted:    #888;
+    --c-text-price:    #555;
+    --c-text-muted-label: #999;
+    --c-btn-border:    #ddd;
+    --c-btn-bg:        #fff;
+    --c-btn-hover-bg:  #f5f5f5;
+    --c-select-bg:     #fff;
+    --c-remove:        #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --c-bg:            #222;
+        --c-border:        rgba(255,255,255,0.1);
+        --c-bg-image:      #2a2a2a;
+        --c-text:          #eee;
+        --c-text-muted:    #888;
+        --c-text-price:    #bbb;
+        --c-text-muted-label: #777;
+        --c-btn-border:    rgba(255,255,255,0.2);
+        --c-btn-bg:        #2a2a2a;
+        --c-btn-hover-bg:  #3a3a3a;
+        --c-select-bg:     #2a2a2a;
+        --c-remove:        #e06c6c;
+    }
+}
+
 .cart-container {
     max-width: 720px;
     margin: 20px auto 60px;
@@ -9,7 +41,7 @@
     align-items: center;
     gap: 20px;
     padding: 20px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--c-border);
 }
 
 .cart-item-image {
@@ -17,7 +49,7 @@
     height: 80px;
     object-fit: cover;
     border-radius: 8px;
-    background-color: #f5f5f5;
+    background-color: var(--c-bg-image);
     flex-shrink: 0;
 }
 
@@ -31,12 +63,12 @@
 }
 
 .cart-item-variant {
-    color: #888;
+    color: var(--c-text-muted);
     font-size: 0.9rem;
 }
 
 .cart-item-price {
-    color: #555;
+    color: var(--c-text-price);
     margin-top: 4px;
 }
 
@@ -49,16 +81,17 @@
 .qty-btn {
     width: 32px;
     height: 32px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--c-btn-border);
     border-radius: 6px;
-    background-color: #fff;
+    background-color: var(--c-btn-bg);
+    color: var(--c-text);
     font-size: 1.1rem;
     cursor: pointer;
     line-height: 1;
 }
 
 .qty-btn:hover {
-    background-color: #f5f5f5;
+    background-color: var(--c-btn-hover-bg);
 }
 
 .qty-value {
@@ -70,7 +103,7 @@
 .cart-item-remove {
     background: transparent;
     border: none;
-    color: #b3261e;
+    color: var(--c-remove);
     font-size: 1.4rem;
     cursor: pointer;
     line-height: 1;
@@ -79,12 +112,12 @@
 
 .cart-empty {
     text-align: center;
-    color: #888;
+    color: var(--c-text-muted);
     padding: 60px 0;
 }
 
 .cart-empty a {
-    color: #333;
+    color: var(--c-text);
     font-weight: 600;
 }
 
@@ -114,16 +147,16 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #999;
+    color: var(--c-text-muted-label);
 }
 
 .cart-summary .purchase-field select {
     padding: 14px 18px;
     font-size: 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--c-btn-border);
     border-radius: 8px;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--c-select-bg);
+    color: var(--c-text);
     min-width: 220px;
 }
 

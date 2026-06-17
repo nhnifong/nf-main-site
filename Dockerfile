@@ -20,9 +20,10 @@ RUN apt-get update && apt-get install -y ca-certificates curl gnupg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && apt-get install -y nodejs build-essential
 
-# Install latest nf_robot for the proto files
-# This ensures sync_protos.py can find 'nf_robot' in the site-packages
-RUN pip install --no-cache-dir nf_robot==3.21.0
+# Install nf_robot at the same version pinned in app/requirements.txt so proto
+# files stay in sync with the runtime package.
+COPY app/requirements.txt /tmp/app-requirements.txt
+RUN grep nf_robot /tmp/app-requirements.txt | xargs pip install --no-cache-dir
 
 # Setup Frontend Directory
 WORKDIR /app/nf-viz

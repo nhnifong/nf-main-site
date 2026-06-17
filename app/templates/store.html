@@ -6,13 +6,61 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Store | Neufangled Robotics</title>
     <style>
+        :root {
+            --c-bg:          #fff;
+            --c-bg-navbar:   #fff;
+            --c-bg-card:     #f4f4f4;
+            --c-bg-image:    #eaeaea;
+            --c-border:      rgba(0,0,0,0.08);
+            --c-border-card: rgba(0,0,0,0.08);
+            --c-border-hover: rgba(0,0,0,0.2);
+            --c-navbar-border: #f0f0f0;
+            --c-text:        #222;
+            --c-text-nav:    #333;
+            --c-text-secondary: #666;
+            --c-text-accent: #7cdbfb;
+            --c-gold:        #d89c36;
+            --c-btn-text:    #333;
+            --c-btn-border:  rgba(0,0,0,0.25);
+            --c-btn-hover-bg: #000;
+            --c-btn-hover-text: #fff;
+            --c-btn-hover-border: #000;
+            --c-shadow:      rgba(0,0,0,0.12);
+            --c-cart-filter: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --c-bg:          #222;
+                --c-bg-navbar:   #1a1a1a;
+                --c-bg-card:     #2a2a2a;
+                --c-bg-image:    #1a1a1a;
+                --c-border:      rgba(255,255,255,0.05);
+                --c-border-card: rgba(255,255,255,0.05);
+                --c-border-hover: rgba(255,255,255,0.15);
+                --c-navbar-border: rgba(255,255,255,0.1);
+                --c-text:        #fff;
+                --c-text-nav:    rgba(255,255,255,0.9);
+                --c-text-secondary: #aaa;
+                --c-text-accent: #7cdbfb;
+                --c-gold:        #d89c36;
+                --c-btn-text:    rgba(255,255,255,0.9);
+                --c-btn-border:  rgba(255,255,255,0.4);
+                --c-btn-hover-bg: #fff;
+                --c-btn-hover-text: #000;
+                --c-btn-hover-border: #fff;
+                --c-shadow:      rgba(0,0,0,0.4);
+                --c-cart-filter: invert(1);
+            }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: white;
+            color: var(--c-text);
             line-height: 1.6;
-            background-color: #222;
+            background-color: var(--c-bg);
         }
 
         .navbar {
@@ -20,15 +68,15 @@
             display: flex;
             justify-content: flex-end;
             padding: 20px 40px;
-            background-color: #1a1a1a;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--c-bg-navbar);
+            border-bottom: 1px solid var(--c-navbar-border);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .navbar a {
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--c-text-nav);
             text-decoration: none;
             margin-left: 30px;
             font-weight: 500;
@@ -38,7 +86,7 @@
             transition: color 0.3s;
         }
 
-        .navbar a:hover { color: white; text-decoration: underline; }
+        .navbar a:hover { color: var(--c-text); text-decoration: underline; }
 
         .store-header {
             text-align: center;
@@ -54,7 +102,7 @@
             letter-spacing: -1px;
         }
 
-        .store-header p { font-size: 1.2rem; color: #ccc; font-weight: 300; }
+        .store-header p { font-size: 1.2rem; color: var(--c-text-secondary); font-weight: 300; }
 
         .store-container {
             max-width: 1200px;
@@ -69,27 +117,27 @@
         }
 
         .product-card {
-            background-color: #2a2a2a;
-            border: 1px solid rgba(255,255,255,0.05);
+            background-color: var(--c-bg-card);
+            border: 1px solid var(--c-border-card);
             border-radius: 16px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             text-decoration: none;
-            color: white;
+            color: var(--c-text);
             transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 20px 40px var(--c-shadow);
+            border-color: var(--c-border-hover);
         }
 
         .product-image-container {
             width: 100%;
             height: 350px;
-            background-color: #1a1a1a;
+            background-color: var(--c-bg-image);
             position: relative;
             display: flex;
             align-items: center;
@@ -120,7 +168,7 @@
             line-height: 1.3;
         }
 
-        .product-description { font-size: 1rem; color: #aaa; margin-bottom: 25px; flex-grow: 1; }
+        .product-description { font-size: 1rem; color: var(--c-text-secondary); margin-bottom: 25px; flex-grow: 1; }
 
         .product-footer {
             display: flex;
@@ -129,14 +177,14 @@
             margin-top: auto;
         }
 
-        .product-price { font-size: 1.4rem; font-weight: 400; color: #7cdbfb; }
+        .product-price { font-size: 1.4rem; font-weight: 400; color: var(--c-text-accent); }
 
-        .gold-note { font-size: 1.4rem; font-weight: 400; color: #d89c36; }
+        .gold-note { font-size: 1.4rem; font-weight: 400; color: var(--c-gold); }
 
         .view-button {
             background: transparent;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.4);
+            color: var(--c-btn-text);
+            border: 1px solid var(--c-btn-border);
             padding: 8px 20px;
             border-radius: 30px;
             font-size: 0.9rem;
@@ -146,7 +194,11 @@
             transition: all 0.2s;
         }
 
-        .product-card:hover .view-button { background: white; color: #000; border-color: white; }
+        .product-card:hover .view-button {
+            background: var(--c-btn-hover-bg);
+            color: var(--c-btn-hover-text);
+            border-color: var(--c-btn-hover-border);
+        }
 
         .badge {
             position: absolute;
@@ -173,7 +225,7 @@
             .navbar a { margin: 0 10px; font-size: 0.8rem; }
         }
 
-        .cart-icon { filter: invert(1); }
+        .cart-icon { filter: var(--c-cart-filter); }
     </style>
     <link rel="stylesheet" href="/static/cart-icon.css" />
 </head>
