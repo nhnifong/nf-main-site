@@ -40,7 +40,7 @@
                 if (session.status === 'complete') {
                     titleEl.textContent = 'Thanks for your order!';
                     const emailNote = session.customer_email
-                        ? `A confirmation email will be sent to ${session.customer_email}. `
+                        ? `A receipt has been sent to ${session.customer_email}. `
                         : '';
                     detailEl.textContent = emailNote + 'If you have any questions, email naavox@gmail.com.';
 

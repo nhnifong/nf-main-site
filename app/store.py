@@ -367,6 +367,12 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
     return {"clientSecret": session.client_secret}
 
 
+# Session IDs for which we've already set receipt_email on the PaymentIntent.
+# In-memory is fine for a low-volume store — worst case is one extra receipt on
+# server restart, which is harmless.
+_receipt_email_sent: set[str] = set()
+
+
 @router.get("/session-status")
 async def session_status(session_id: str):
     try:
@@ -375,6 +381,25 @@ async def session_status(session_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
     customer_email = session.customer_details.email if session.customer_details else None
+
+    # The Dashboard "send receipts" setting is ignored for API-created payments
+    # unless receipt_email is explicitly set on the PaymentIntent. Do that once
+    # per completed session, immediately after we confirm it's paid.
+    if (
+        session.status == "complete"
+        and customer_email
+        and session.payment_intent
+        and session_id not in _receipt_email_sent
+    ):
+        try:
+            await stripe_client.v1.payment_intents.update_async(
+                session.payment_intent,
+                params={"receipt_email": customer_email},
+            )
+            _receipt_email_sent.add(session_id)
+        except stripe.StripeError as e:
+            logger.warning(f"Could not set receipt_email on {session.payment_intent}: {e}")
+
     return {"status": session.status, "customer_email": customer_email}
 
 
