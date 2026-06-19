@@ -1,9 +1,33 @@
 // when vite server is running, forwards any requests for backend API to port 8080 where fastAPI is presumed to be running
 
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { resolve } from 'path'
 
+// In production the FastAPI backend serves playroom.html for the /tutorial
+// alias. The Vite dev server doesn't know that route, so /tutorial would 404
+// and fall back to /. This dev-only plugin internally rewrites /tutorial ->
+// /playroom.html (an internal rewrite, not a redirect, so the address bar
+// stays /tutorial — which is what isTutorialMode() keys off of). HMR is
+// preserved because Vite still serves the file locally.
+function pageAliases(): Plugin {
+  const aliases: Record<string, string> = {
+    tutorial: 'playroom.html',
+  }
+  return {
+    name: 'page-aliases',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const match = req.url?.match(/^\/([^/?#]+)\/?(\?.*)?$/)
+        const target = match && aliases[match[1]]
+        if (target) req.url = `/${target}${match![2] ?? ''}`
+        next()
+      })
+    },
+  }
+}
+
 export default defineConfig({
+  plugins: [pageAliases()],
   server: {
     host: "0.0.0.0", // allow lan connections so we can test on mobile
     proxy: {
@@ -88,6 +112,7 @@ export default defineConfig({
         // Product pages are now server-side rendered from products/ — do not add them here.
         main: resolve(__dirname, 'index.html'),
         playroom: resolve(__dirname, 'playroom.html'),
+        tutorial: resolve(__dirname, 'playroom.html'),
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
         payment_options: resolve(__dirname, 'payment_options.html'),

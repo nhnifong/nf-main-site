@@ -909,6 +909,7 @@ async def read_page(request: Request, page_name: str):
     page_map = {
         "control_panel": "playroom.html",
         "playroom": "playroom.html",
+        "tutorial": "playroom.html",  # alias that activates the guided tutorial
         "company": "company.html",
         "future": "future.html",
         "payment_options": "payment_options.html",

@@ -16,6 +16,7 @@ import { GamepadController } from './ui/gamepad.ts'
 import { MobileShell } from './ui/mobile.ts'
 import { TargetListManager } from './ui/target_list_manager.ts'
 import { Say, Listen } from './utils.ts';
+import { isTutorialMode, maybeStartTutorial } from './tutorial.ts';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -273,7 +274,11 @@ function initApp() {
   
   document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
 
-  if (currentRobotId === 'lan') {
+  // The /tutorial alias always starts in LAN mode and overlays the guided tour.
+  if (isTutorialMode()) {
+    startLanFlow();
+    maybeStartTutorial();
+  } else if (currentRobotId === 'lan') {
     startLanFlow();
   } else if (currentRobotId === 'sim') {
     startSimFlow();
@@ -1039,7 +1044,7 @@ interface ComponentState {
 }
 const componentStates = new Map<string, ComponentState>();
 
-function isFullyConnected(): boolean {
+export function isFullyConnected(): boolean {
   const expectedAnchors = anchorType === nf.common.AnchorType.ANCHORTYPE_ARPEGGIO ? 2 : 4;
   let anchorConnected = 0;
   let gripperConnected = 0;

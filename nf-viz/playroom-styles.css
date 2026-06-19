@@ -1302,3 +1302,108 @@ h2 {
   from { opacity: 0; transform: translate(-50%, -100%) scale(0.8); }
   to   { opacity: 1; transform: translate(-50%, -130%) scale(1); }
 }
+
+/* ============================================================
+   TUTORIAL OVERLAY
+   Floating explanation panels and element highlighting used by
+   the /tutorial alias. Sits above every other layer.
+   ============================================================ */
+
+/* Glowing emphasis applied to whichever element a step points at. */
+.tutorial-highlight {
+  position: relative;
+  z-index: 10001;
+  border-radius: 6px;
+  outline: 2px solid #87ceeb; /* light sky blue */
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.40), 0 0 18px 4px rgba(135, 206, 235, 0.60);
+  animation: tutorialPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.35), 0 0 14px 3px rgba(135, 206, 235, 0.50); }
+  50%      { box-shadow: 0 0 0 5px rgba(135, 206, 235, 0.55), 0 0 24px 7px rgba(135, 206, 235, 0.80); }
+}
+
+/* The floating explanation panel — positioned in JS, floats over everything. */
+.tutorial-panel {
+  position: fixed;
+  z-index: 10002;
+  max-width: 340px;
+  background: #ffffff;
+  border: 1px solid #87ceeb;
+  border-top: 4px solid #87ceeb;
+  border-radius: 10px;
+  padding: 16px 18px 16px 16px;
+  color: #111111;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  animation: tutorialFade 0.18s ease-out;
+}
+
+@keyframes tutorialFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-panel-message {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #111111;
+  padding-right: 18px;
+}
+.tutorial-panel-message strong { color: #000000; }
+
+.tutorial-panel-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #888888;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tutorial-panel-dismiss:hover { background: #eaf6fc; color: #111111; }
+
+.tutorial-copy-block {
+  position: relative;
+  margin-top: 12px;
+  background: #f3f8fb;
+  border: 1px solid #cfe6f2;
+  border-radius: 6px;
+}
+.tutorial-copy-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #111111;
+  white-space: pre;
+  overflow-x: auto;
+}
+.tutorial-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #87ceeb;
+  border: 1px solid #6fbfe0;
+  color: #06384d;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tutorial-copy-btn:hover { background: #6fbfe0; color: #04222f; border-color: #5bb0e8; }
+
+/* The "End Tutorial" button keeps the default .header-back-btn styling so it
+   matches the other top-bar buttons — no color override needed. */
