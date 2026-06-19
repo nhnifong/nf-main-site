@@ -130,7 +130,7 @@ Mesh the two geared levers together in the closed position, making sure they are
 
 Feed the plug of the pressure sense wire through the smile shaped slot in back_plate, and place the fingers on the bolts simultaneously, keeping them meshed, and keeping the sense wire from being pinched anywhere.
 
-Place M3 washers over the bolts after they protrude from the fingers.
+Place an M3 washers over each of the two bolts after they protrude from the hole in the geared lever.
 
 ![](images/grip_arp/PXL_20260331_214309109.png){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260331_214349018.png){ loading=lazy, width=45% }
@@ -335,7 +335,7 @@ you can then run on the pi
 
 and pull power when the green light goes out.
 
-Screw on the front and back face plates with three M3x4 screws on each side. Two at the top near the pole, one at the botttom near the sensors.
+Screw on the front and back face plates with two M2.5x6 screws on each side. One at the top near the pole, one at the botttom near the sensors.
 
 ![](images/grip_arp/PXL_20260207_193350888.png){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260207_193526006.png){ loading=lazy, width=45% } 

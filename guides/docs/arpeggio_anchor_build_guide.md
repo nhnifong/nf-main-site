@@ -2,11 +2,8 @@
 
 Hardware Version: Arpeggio
 
-This is a rough draft of how to assemble the arpeggio anchor (double damiao anchor)
-TThe design is not finished, particularly wrt how the cover attaches.
-
-**Print time**: unmeasured
-**Build time**: unmeasured
+**Print time**: approx 40h
+**Build time**: 1.5h
 
 ## Bill of Materials
 
@@ -25,7 +22,7 @@ Spool side A is different on the powerline spool, it has a wider center hole.
 
 Glue side A to side B
 
-![](images/anc_arp/PXL_20260407_212731244.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260407_212731244.png){ loading=lazy, width=45% }
 ![](images/anc_arp/PXL_20260407_212833336.png){ loading=lazy, width=45% } 
 
 ### For regular spools (3X)
@@ -56,7 +53,7 @@ When dry, put 3/8 * 7/8 stainless steel washer on the plastic tube, followed by 
 ![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
 
-Place the slip ring into the slip ring block and secure it using 2 M3x8 screws with an m4 washer on each in the 2/3 accessible screw holes. 
+Place the slip ring into the slip ring block and secure it using 2 M3x8 screws with an m4 washer on each in the 2 out of 3 accessible screw holes. 
 
 ![](images/anc_arp/PXL_20260406_222724209.png){ loading=lazy, width=45% } 
 
@@ -136,7 +133,7 @@ Same as the other one, thread the plug, align the shaft, and align the bearing b
 ![](images/anc_arp/PXL_20260406_224812284.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_231646223.png){ loading=lazy, width=45% } 
 
-Secure the "sunglasses" rounded side down with 4 M3x14 screws.
+Secure the "sunglasses" to the top of the frame with 4 M3x8 screws.
 
 ## Spool winding
 
