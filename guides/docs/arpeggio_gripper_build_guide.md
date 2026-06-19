@@ -2,14 +2,14 @@
 
 Hardware Version: Arpeggio
 
-**Print time**: about 20 hours, or about 40 hours if using multicolor instead of stickers for apriltags
-**Build time**: about 2 hours
+**Print time**: 20 hours  
+**Build time**: 2 hours
 
-First you should have printed the parts according to the [print guide](arp_print_guide.md)
+## Resources
 
-## Bill of Materials
-
-[Stringman Arpeggio Gripper BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)
+ * [Hardware Kit](/stringman-hardware-kit)
+ * [Print Guide](arp_print_guide.md)
+ * [Bill of Materials](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)
 
 ## Tool list
 
