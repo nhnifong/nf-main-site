@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 from typing import Optional, Annotated
 import time
@@ -78,6 +79,16 @@ async def startup_event():
 
 # Define where the static files live in the container
 FRONTEND_DIST = "nf-viz/dist"
+
+# Extensionless page routes -> built HTML files. Single source of truth lives
+# in nf-viz/public/page-routes.json (the Vite dev server reads the same file to
+# mirror these routes in development). The build copies public/ into dist/.
+try:
+    with open(f"{FRONTEND_DIST}/page-routes.json") as _f:
+        PAGE_ROUTES = json.load(_f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    logger.warning(f"Could not load page-routes.json, page aliases disabled: {e}")
+    PAGE_ROUTES = {}
 
 # Redirect /docs → /docs/ so both paths work (StaticFiles needs the trailing slash).
 @app.get("/docs")
@@ -905,19 +916,10 @@ async def stop_lerobot_job(
 # by putting this at the end, it is matched with a lower priority.
 @app.get("/{page_name}")
 async def read_page(request: Request, page_name: str):
-    # Static pages built by Vite
-    page_map = {
-        "control_panel": "playroom.html",
-        "playroom": "playroom.html",
-        "tutorial": "playroom.html",  # alias that activates the guided tutorial
-        "company": "company.html",
-        "future": "future.html",
-        "payment_options": "payment_options.html",
-        "hf-redirect": "hf-redirect.html",
-    }
-
-    if page_name in page_map:
-        return FileResponse(f"{FRONTEND_DIST}/{page_map[page_name]}")
+    # Static pages built by Vite (route map shared with the frontend, see
+    # PAGE_ROUTES / nf-viz/public/page-routes.json).
+    if page_name in PAGE_ROUTES:
+        return FileResponse(f"{FRONTEND_DIST}/{PAGE_ROUTES[page_name]}")
 
     # Product pages — loaded from products/{slug}/ directory
     product = load_product(page_name, ASSET_BUCKET_URL, STRIPE_TEST_MODE)

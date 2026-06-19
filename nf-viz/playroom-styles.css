@@ -1353,6 +1353,12 @@ h2 {
   padding-right: 18px;
 }
 .tutorial-panel-message strong { color: #000000; }
+.tutorial-panel-message img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
 
 .tutorial-panel-dismiss {
   position: absolute;

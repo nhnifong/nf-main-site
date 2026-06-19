@@ -21,6 +21,12 @@ export interface TutorialStep {
   message: string;
   /** id of the element to highlight and anchor the panel next to. */
   highlightId: string;
+  /**
+   * Optional id of a menu/popup element (a `.run-menu-content`) to force open
+   * while this step is active by adding the `show` class. Used when the
+   * highlighted element lives inside a menu. Closed again when the step ends.
+   */
+  openMenuId?: string;
   /** Optional monospaced, copyable command block shown under the message. */
   copyBlock?: string;
   /**
@@ -53,6 +59,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     message: 'Great job!<br> Now power on the robot and check here for Anchors and Gripper to be detected on the same wifi network',
     dismissWhen: () => isFullyConnected(),
   },
+
+  { // attach your carabiners to the marker box and tension lines
+    id: 'attach-carabiners',
+    highlightId: 'action-half-cal',
+    openMenuId: 'run-menu',
+    message: `With the gripper in the center of the room, Attach all four lines with carabiners so no lines cross, then select "Tension Lines"<br><br><img src="${import.meta.env.VITE_ASSET_BUCKET_URL}/assets/simplified_box.png">`,
+    dismissWhen: () => false,
+  },
 ];
 
 export function isTutorialMode(): boolean {
@@ -64,8 +78,12 @@ class TutorialManager {
   private index = 0;
   private panel: HTMLElement | null = null;
   private highlighted: HTMLElement | null = null;
+  private openedMenu: HTMLElement | null = null;
   private endBtn: HTMLElement | null = null;
   private pollTimer: number | null = null;
+  // True when the user manually hid the current step's message. We stay on the
+  // step and keep polling its predicate; only the predicate advances steps.
+  private dismissed = false;
   private repositionHandler = () => this.positionPanel();
 
   constructor(steps: TutorialStep[]) {
@@ -77,12 +95,17 @@ class TutorialManager {
     this.index = 0;
     this.showCurrentStep();
 
-    // Poll auto-dismiss predicates and keep the panel anchored to its target.
+    // Poll the current step's predicate. Advancing to the next step happens
+    // only when the predicate becomes true — never from a manual dismiss. While
+    // the message is still showing keep it anchored to its target.
     this.pollTimer = window.setInterval(() => {
       const step = this.steps[this.index];
-      if (step?.dismissWhen?.()) {
-        this.dismissCurrent();
-      } else {
+      if (!step) return; // ran out of steps; tutorial stays active until End.
+      if (step.dismissWhen?.()) {
+        this.advance();
+      } else if (!this.dismissed) {
+        // Re-assert the menu in case a stray click elsewhere closed it.
+        this.openedMenu?.classList.add('show');
         this.positionPanel();
       }
     }, 400);
@@ -113,8 +136,16 @@ class TutorialManager {
 
   private showCurrentStep() {
     this.clearPanel();
+    this.dismissed = false;
     const step = this.steps[this.index];
     if (!step) return; // ran out of steps; tutorial stays active until End.
+
+    // Force open any menu the highlighted element lives inside.
+    if (step.openMenuId) {
+      const menu = document.getElementById(step.openMenuId);
+      menu?.classList.add('show');
+      this.openedMenu = menu;
+    }
 
     const target = document.getElementById(step.highlightId);
     if (target) {
@@ -129,16 +160,34 @@ class TutorialManager {
     this.positionPanel();
   }
 
-  /** Dismiss the active message, unhighlight its target, advance to the next. */
-  private dismissCurrent = () => {
+  /** Move to the next step. Driven only by the current step's predicate. */
+  private advance = () => {
     this.index++;
     this.showCurrentStep();
+  };
+
+  /**
+   * Hide the current step's message and unhighlight its target, but stay on the
+   * step — the predicate still decides when we advance. A step with no
+   * predicate has nothing to wait on, so a manual dismiss advances it instead.
+   */
+  private dismissPanel = () => {
+    if (this.steps[this.index]?.dismissWhen) {
+      this.clearPanel();
+      this.dismissed = true;
+    } else {
+      this.advance();
+    }
   };
 
   private clearPanel() {
     if (this.highlighted) {
       this.highlighted.classList.remove('tutorial-highlight');
       this.highlighted = null;
+    }
+    if (this.openedMenu) {
+      this.openedMenu.classList.remove('show');
+      this.openedMenu = null;
     }
     this.panel?.remove();
     this.panel = null;
@@ -154,7 +203,7 @@ class TutorialManager {
     dismiss.className = 'tutorial-panel-dismiss';
     dismiss.title = 'Dismiss this message';
     dismiss.textContent = '✕';
-    dismiss.addEventListener('click', this.dismissCurrent);
+    dismiss.addEventListener('click', this.dismissPanel);
     panel.appendChild(dismiss);
 
     const msg = document.createElement('div');
