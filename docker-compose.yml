@@ -25,6 +25,7 @@ services:
       # the server still starts, it just can't create checkout sessions.
       - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - BOOTSTRAP_ADMIN_EMAILS=${BOOTSTRAP_ADMIN_EMAILS:-}
     volumes:
       - ${HOME}/.config/gcloud/application_default_credentials.json:/app/service-account.json
       - ./app/templates:/app/app/templates

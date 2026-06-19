@@ -1,14 +1,33 @@
 import logging
-from typing import Optional
+import os
+from typing import Optional, Annotated
 import firebase_admin
 from firebase_admin import auth as firebase_auth
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy import select
-from .database import async_session, RobotOwnership, RobotSharedAccess
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from .database import (
+    async_session,
+    RobotOwnership,
+    RobotSharedAccess,
+    UserRole,
+    EMPLOYEE_ROLES,
+    ROLE_EMPLOYEE_ADMIN,
+)
 from .tickets import get_ticket
 from urllib.parse import parse_qs
 
 logger = logging.getLogger(__name__)
+
+# Emails (comma-separated, case-insensitive) that are always granted
+# employee_admin the first time they authenticate. This bootstraps the very
+# first admin, who can then grant roles to everyone else via the admin API.
+BOOTSTRAP_ADMIN_EMAILS = frozenset(
+    e.strip().lower()
+    for e in os.environ.get("BOOTSTRAP_ADMIN_EMAILS", "").split(",")
+    if e.strip()
+)
 
 # Initialize Firebase Admin SDK
 # On Cloud Run, this automatically uses the default service account.
@@ -39,6 +58,94 @@ async def verify_google_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
         )
+
+
+# --- Role management ---
+
+async def get_user_roles(user_id: str) -> set[str]:
+    """Returns the set of roles held by this Firebase UID (empty if none)."""
+    async with async_session() as session:
+        result = await session.execute(
+            select(UserRole.role).where(UserRole.user_id == user_id)
+        )
+        return set(result.scalars().all())
+
+
+async def resolve_user_roles(user_id: str, email: Optional[str]) -> set[str]:
+    """Returns the user's roles, granting bootstrap admins their role on first sight.
+
+    A user whose email is in BOOTSTRAP_ADMIN_EMAILS is persisted as an
+    employee_admin the first time this runs, so the very first staff member can
+    sign in and start assigning roles without any manual database edits.
+    """
+    roles = await get_user_roles(user_id)
+
+    if email and email.lower() in BOOTSTRAP_ADMIN_EMAILS and ROLE_EMPLOYEE_ADMIN not in roles:
+        await grant_role(user_id, ROLE_EMPLOYEE_ADMIN)
+        roles.add(ROLE_EMPLOYEE_ADMIN)
+        logger.info(f"Bootstrapped employee_admin for {email} ({user_id})")
+
+    return roles
+
+
+async def grant_role(user_id: str, role: str) -> None:
+    """Grants a role to a user. Idempotent — granting an existing role is a no-op."""
+    async with async_session() as session:
+        # ON CONFLICT DO NOTHING so re-granting an existing role doesn't error.
+        await session.execute(
+            pg_insert(UserRole)
+            .values(user_id=user_id, role=role)
+            .on_conflict_do_nothing(index_elements=["user_id", "role"])
+        )
+        await session.commit()
+
+
+async def revoke_role(user_id: str, role: str) -> bool:
+    """Revokes a role from a user. Returns True if a role was actually removed."""
+    from sqlalchemy import delete
+    async with async_session() as session:
+        result = await session.execute(
+            delete(UserRole).where(UserRole.user_id == user_id, UserRole.role == role)
+        )
+        await session.commit()
+        return result.rowcount > 0
+
+
+# --- Auth dependencies (FastAPI) ---
+
+_bearer_scheme = HTTPBearer()
+
+
+async def get_current_user(
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(_bearer_scheme)],
+) -> dict:
+    """Dependency: verifies the Firebase token and returns the decoded claims."""
+    return await verify_google_token(creds.credentials)
+
+
+async def require_employee(
+    user: Annotated[dict, Depends(get_current_user)],
+) -> dict:
+    """Dependency: allows the request only if the user holds any employee role.
+
+    Returns the decoded token with a `roles` set attached for downstream use.
+    """
+    roles = await resolve_user_roles(user["uid"], user.get("email"))
+    if not (roles & EMPLOYEE_ROLES):
+        raise HTTPException(status_code=403, detail="Employees only")
+    user["roles"] = roles
+    return user
+
+
+async def require_admin(
+    user: Annotated[dict, Depends(get_current_user)],
+) -> dict:
+    """Dependency: allows the request only if the user is an employee_admin."""
+    roles = await resolve_user_roles(user["uid"], user.get("email"))
+    if ROLE_EMPLOYEE_ADMIN not in roles:
+        raise HTTPException(status_code=403, detail="Admins only")
+    user["roles"] = roles
+    return user
 
 
 async def check_robot_ownership(user_id: str, robot_id: str) -> bool:

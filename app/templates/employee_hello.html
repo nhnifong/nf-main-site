@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Employee Area | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/detail-page-styles.css" />
+    <style>
+        .employee-panel {
+            max-width: 640px;
+            margin: 4rem auto;
+            padding: 2rem;
+            text-align: center;
+        }
+        .employee-panel pre {
+            text-align: left;
+            background: rgba(127, 127, 127, 0.12);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .employee-status { margin-top: 1rem; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <section class="employee-panel">
+        <h1 id="heading">Employee Area</h1>
+        <p id="status" class="employee-status">Checking your access&hellip;</p>
+        <pre id="details" hidden></pre>
+    </section>
+
+    <!-- Firebase (compat build, loaded from CDN). Config matches nf-viz/src/auth.ts. -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
+            authDomain: "nf-web-480214.firebaseapp.com",
+            projectId: "nf-web-480214",
+            storageBucket: "nf-web-480214.firebasestorage.app",
+            messagingSenderId: "690802609278",
+            appId: "1:690802609278:web:8165450202df8179029c2f"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const statusEl = document.getElementById('status');
+        const detailsEl = document.getElementById('details');
+
+        async function loadEmployeeContent(user) {
+            if (!user) {
+                statusEl.textContent = 'Please sign in to view this page.';
+                return;
+            }
+            try {
+                const token = await user.getIdToken();
+                const res = await fetch('/employee/hello', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.status === 403) {
+                    statusEl.textContent = 'Access denied — this page is for employees only.';
+                    return;
+                }
+                if (!res.ok) {
+                    statusEl.textContent = `Something went wrong (HTTP ${res.status}).`;
+                    return;
+                }
+                const data = await res.json();
+                statusEl.textContent = data.message;
+                detailsEl.textContent =
+                    `Signed in as: ${data.email}\nRoles: ${data.roles.join(', ')}`;
+                detailsEl.hidden = false;
+            } catch (e) {
+                statusEl.textContent = 'Could not verify access. Please try again.';
+                console.error(e);
+            }
+        }
+
+        // Sign in with Google if not already authenticated, then load content.
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                loadEmployeeContent(user);
+            } else {
+                statusEl.textContent = 'Signing you in…';
+                firebase.auth()
+                    .signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                    .catch((e) => {
+                        statusEl.textContent = 'Sign-in was cancelled. Reload to try again.';
+                        console.error(e);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>

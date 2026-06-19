@@ -24,6 +24,27 @@ async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False
 class Base(DeclarativeBase):
     pass
 
+# --- User roles ---
+# A user (identified by Firebase UID) may hold more than one role, so roles are
+# stored one-per-row rather than as a single column on a user record.
+ROLE_ROBOT_OWNER = "robot_owner"
+ROLE_EMPLOYEE_BASIC = "employee_basic"
+ROLE_EMPLOYEE_ADMIN = "employee_admin"
+
+# Every role the application recognizes; used to reject typos when assigning roles.
+VALID_ROLES = frozenset({ROLE_ROBOT_OWNER, ROLE_EMPLOYEE_BASIC, ROLE_EMPLOYEE_ADMIN})
+
+# Roles that count as "an employee" for pages/endpoints gated to staff.
+EMPLOYEE_ROLES = frozenset({ROLE_EMPLOYEE_BASIC, ROLE_EMPLOYEE_ADMIN})
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    # user_id is the Firebase UID. (user_id, role) is the primary key so a user
+    # can hold several roles but never the same role twice.
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    role: Mapped[str] = mapped_column(String, primary_key=True)
+
 class RobotOwnership(Base):
     __tablename__ = "robot_ownership"
     

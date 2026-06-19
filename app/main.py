@@ -17,11 +17,30 @@ from google.api_core import exceptions as gcp_exceptions
 from google.protobuf import duration_pb2
 
 from .telemetry_manager import telemetry_manager
-from .auth import verify_google_token, validate_stream_auth, check_robot_ownership, check_robot_access
+from .auth import (
+    verify_google_token,
+    validate_stream_auth,
+    check_robot_ownership,
+    check_robot_access,
+    require_employee,
+    require_admin,
+    get_user_roles,
+    grant_role,
+    revoke_role,
+)
 from .tickets import create_ticket, create_batch_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
-from .database import init_db, get_db, RobotOwnership, RobotSharedAccess, UserExternalTokens, ActiveRecordingJob
+from .database import (
+    init_db,
+    get_db,
+    RobotOwnership,
+    RobotSharedAccess,
+    UserExternalTokens,
+    ActiveRecordingJob,
+    UserRole,
+    VALID_ROLES,
+)
 from .product_loader import load_product
 from .store import (
     router as store_router,
@@ -128,6 +147,11 @@ class HuggingFaceExchangeRequest(BaseModel):
 
 class StartLerobotSessionRequest(BaseModel):
     repo_id: str
+
+class RoleAssignmentRequest(BaseModel):
+    """Payload for an admin granting or revoking a role for a user."""
+    user_id: str
+    role: str
 
 # --- HTTP Endpoints ---
 
@@ -900,6 +924,67 @@ async def stop_lerobot_job(
     await db.commit()
 
     return {"status": "success", "message": f"LeRobot {action} session stopped and cleared."}
+
+
+# --- Employee area ---
+
+@app.get("/employee")
+async def employee_home(request: Request):
+    """Serves the employee hello-world page shell.
+
+    The page itself is a thin shell — it signs in via Firebase client-side and
+    then calls /employee/hello, which is what actually enforces the employee
+    gate. Non-employees who load this page see an access-denied message.
+    """
+    return templates.TemplateResponse(request, "employee_hello.html", {})
+
+
+@app.get("/employee/hello")
+async def employee_hello(user: Annotated[dict, Depends(require_employee)]):
+    """Employee-only data, used by the hello-world page. 403 for everyone else."""
+    return {
+        "message": "Hello, world! Welcome to the employee area.",
+        "email": user.get("email"),
+        "roles": sorted(user.get("roles", [])),
+    }
+
+
+# --- Role administration (employee_admin only) ---
+
+@app.get("/admin/roles/{target_user_id}")
+async def admin_get_roles(
+    target_user_id: str,
+    admin: Annotated[dict, Depends(require_admin)],
+):
+    """Returns the roles held by a given Firebase UID."""
+    roles = await get_user_roles(target_user_id)
+    return {"user_id": target_user_id, "roles": sorted(roles)}
+
+
+@app.post("/admin/roles")
+async def admin_grant_role(
+    req: RoleAssignmentRequest,
+    admin: Annotated[dict, Depends(require_admin)],
+):
+    """Grants a role to a user (idempotent)."""
+    if req.role not in VALID_ROLES:
+        raise HTTPException(status_code=400, detail=f"Unknown role: {req.role}")
+    await grant_role(req.user_id, req.role)
+    return {"status": "granted", "user_id": req.user_id, "role": req.role}
+
+
+@app.delete("/admin/roles")
+async def admin_revoke_role(
+    req: RoleAssignmentRequest,
+    admin: Annotated[dict, Depends(require_admin)],
+):
+    """Revokes a role from a user."""
+    if req.role not in VALID_ROLES:
+        raise HTTPException(status_code=400, detail=f"Unknown role: {req.role}")
+    removed = await revoke_role(req.user_id, req.role)
+    if not removed:
+        raise HTTPException(status_code=404, detail="User did not have that role")
+    return {"status": "revoked", "user_id": req.user_id, "role": req.role}
 
 
 # by putting this at the end, it is matched with a lower priority.
