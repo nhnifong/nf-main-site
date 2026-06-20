@@ -23,10 +23,12 @@ Frontmatter fields:
   price_id_test    str   Price ID used instead when Stripe is running in test mode
                          (falls back to DEFAULT_TEST_PRICE_ID if omitted, so test
                          checkout always works even before a product is configured)
-  variants         list  Optional list of {label, price_id, price_id_test} for
-                         products sold in multiple variants (e.g. colors). Takes
-                         precedence over `price_id`/`price_id_test`, which are used
-                         as a single, unlabeled variant when `variants` is absent.
+  variants         list  Optional list of {label, price_id, price_id_test, image}
+                         for products sold in multiple variants (e.g. colors).
+                         Takes precedence over `price_id`/`price_id_test`, which
+                         are used as a single, unlabeled variant when `variants`
+                         is absent. `image` (optional) is a filename from `images`
+                         the gallery jumps to when that variant is selected.
   shipping_size    str   Which shipping rate to charge: "small", "large", or
                          "free" (default "small"). Looked up per-region in
                          app.main's SHIPPING_REGIONS — the shopper only picks a
@@ -112,7 +114,11 @@ def load_product(slug: str, asset_bucket_url: str, test_mode: bool = False) -> d
     explicit_variants = meta.get("variants")
     if explicit_variants:
         variants = [
-            {"label": v.get("label", ""), "price_id": _resolve_price_id(v, test_mode)}
+            {
+                "label": v.get("label", ""),
+                "price_id": _resolve_price_id(v, test_mode),
+                "image": v.get("image", ""),
+            }
             for v in explicit_variants
         ]
     else:

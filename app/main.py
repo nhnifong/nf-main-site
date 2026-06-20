@@ -90,6 +90,13 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     logger.warning(f"Could not load page-routes.json, page aliases disabled: {e}")
     PAGE_ROUTES = {}
 
+# Permanent redirects for retired slugs -> their current path. Lets old links
+# keep working after a product folder is renamed (e.g. the "arpeggio" codename
+# was dropped from the public-facing slug).
+SLUG_REDIRECTS = {
+    "stringman-arpeggio": "stringman",
+}
+
 # Redirect /docs → /docs/ so both paths work (StaticFiles needs the trailing slash).
 @app.get("/docs")
 async def docs_redirect():
@@ -916,6 +923,10 @@ async def stop_lerobot_job(
 # by putting this at the end, it is matched with a lower priority.
 @app.get("/{page_name}")
 async def read_page(request: Request, page_name: str):
+    # Retired slugs (e.g. renamed product folders) redirect to their new path.
+    if page_name in SLUG_REDIRECTS:
+        return RedirectResponse(url=f"/{SLUG_REDIRECTS[page_name]}", status_code=301)
+
     # Static pages built by Vite (route map shared with the frontend, see
     # PAGE_ROUTES / nf-viz/public/page-routes.json).
     if page_name in PAGE_ROUTES:

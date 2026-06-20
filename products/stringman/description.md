@@ -1,21 +1,20 @@
 ---
-title: Stringman Arpeggio
+title: Stringman
 intro: >
   An automatic decluttering system, hung from anchors mounted in the corners of
-  your ceiling and controlled by self-hosted AI or gamepad. 'Arpeggio' is the
-  second hardware version of Stringman. This product contains the newest gripper
-  based on the ST3215 motors featuring a wrist joint, and powerful, quiet,
+  your ceiling and controlled by self-hosted AI or gamepad. This is the assembled version that requires only installation and calibration in your room. It contains the newest gripper based on the ST3215 motors featuring a wrist joint, and powerful, quiet,
   Damiao hub motor based anchors in a 2+2 configuration.
 variants:
   - label: White
     price_id: "price_1TRv2hCIW3Ilocb51Jm8aVWH"
+    image: stringman_white.jpg
   - label: Copper
     price_id: "price_1TRv3LCIW3Ilocb5xHW3WC8w"
+    image: stringman_copper.jpg
 shipping_size: large
 badge: 
 store_description: >
-  The complete and latest Stringman system, fully assembled. Includes 2 anchors,
-  2 eyelets, gripper, and accessories.
+  The complete system, fully assembled. Ready for installation and calibration in your room. Choose either this or the hardware kit, you don't need both.
 store_image: stringman_white.jpg
 image_folder: ""
 images:

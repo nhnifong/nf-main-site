@@ -1,14 +1,12 @@
 ---
 title: Stringman Hardware Kit
 intro: >
-  The complete set of hardware you need to build a full Stringman system —
-  both the Arpeggio anchors and the Arpeggio gripper.
+  The complete set of hardware you need to build a full Stringman system. This is the DIY version including the pi's, cameras, motors, wires, and screws from the BOM. Print the structural components and assemble it according to our guide.
 price_id: "price_1TiI5OCIW3Ilocb5Her9YhWT"
 shipping_size: small
 badge:
 store_description: >
-  Everything you need to build a complete Stringman: a pair of Arpeggio anchors
-  with quiet Damiao hub motors and the Arpeggio gripper with wide angle camera.
+  This is the DIY version containing all parts from the BOM. Print the structural components and assemble it according to our guide.
 store_image: arp_anchor_kit_top_down.jpg
 image_folder: ""
 images:
@@ -27,7 +25,7 @@ store_order: 3
 
 ## Build it Yourself
 
-This bundle includes everything in the [Stringman Arpeggio BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?gid=204754068#gid=204754068)
+This bundle includes everything in the [Stringman BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?gid=204754068#gid=204754068)
 
 The anchors feature four powerful and silent Damiao hub motors. They can position a 4 kg payload anywhere in a room up to 7 meters from ceiling corner to opposite floor corner. Two anchors are mounted in opposing corners and in the other two corners ceramic eyelets are mounted. Three tethers are composed of 40 lb test braided fishing line, with one being a FEP-jacketed wire to supply power to the gripper, or whatever end effector you come up with.
 
@@ -45,7 +43,7 @@ The gripper features a Raspberry Pi Zero 2W streaming video from a wide angle ca
 - 2 aluminum heatsinks
 - 2 Raspberry Pi Camera Module 3
 - 2 4cm ribbon cables
-- 2 Neufangled Arpeggio Anchor Hats (PCBs)
+- 2 Neufangled Anchor Hats (PCBs)
 - bearing kit for powerline spool
 - bearings for support spools
 - 4 small carabiners
