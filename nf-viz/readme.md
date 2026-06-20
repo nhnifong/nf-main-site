@@ -34,6 +34,20 @@ from this directory
 
     npm run build
 
+### Generate AV1 versions of videos
+
+The video elements on the page list an AV1-encoded `_av1.mp4` source first (smaller,
+better quality) and fall back to the plain H.264 `.mp4` for browsers that can't decode
+AV1. Run `make_av1.sh` from this directory to (re)generate the `_av1.mp4` companions in
+a batch. It defaults to the `public/assets` directory where the source `.mp4` files live:
+
+    ./make_av1.sh
+
+Already-converted `_av1.mp4` files are skipped, so it's safe to re-run. Set `CRF` to
+trade quality for size (lower = higher quality / larger), e.g. `CRF=34 ./make_av1.sh`.
+Upload the resulting `_av1.mp4` files next to the existing `.mp4` files in the asset
+bucket. See the comments at the top of the script for encoder details.
+
 ### first time setup commands
 
 (for reference)

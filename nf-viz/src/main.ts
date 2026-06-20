@@ -16,6 +16,7 @@ import { GamepadController } from './ui/gamepad.ts'
 import { MobileShell } from './ui/mobile.ts'
 import { TargetListManager } from './ui/target_list_manager.ts'
 import { Say, Listen } from './utils.ts';
+import { isTutorialMode, maybeStartTutorial } from './tutorial.ts';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -172,8 +173,6 @@ const wallCables: Cable[] = [];
 const winchCable = new Cable(scene);
 winchCable.update(gantry.position, gripper.grommet_pos, 0.0)
 
-
-
 // Visual gantry factor
 const gantryVisualCube = new THREE.Mesh(
   new THREE.BoxGeometry(0.1, 0.1, 0.1),
@@ -239,6 +238,52 @@ function setUrlParam(id: string | null) {
   window.history.pushState({}, '', url);
 }
 
+// ============================================================
+//  Log Panel — bottom-of-screen strip toggled from the
+//  Calibration & Maintenance menu.
+// ============================================================
+const MAX_LOG_LINES = 1000;
+const logLines: string[] = [];
+
+// Append forwarded log lines from telemetry, capping the buffer at
+// MAX_LOG_LINES and keeping the panel scrolled to the bottom if the
+// user was already there.
+function handleLogs(data: nf.telemetry.ILogs) {
+  if (!data.line || data.line.length === 0) return;
+  logLines.push(...data.line);
+  if (logLines.length > MAX_LOG_LINES) {
+    logLines.splice(0, logLines.length - MAX_LOG_LINES);
+  }
+
+  const content = document.getElementById('log-panel-content');
+  if (!content) return;
+  const atBottom = content.scrollHeight - content.scrollTop - content.clientHeight < 4;
+  content.textContent = logLines.join('\n');
+  if (atBottom) {
+    content.scrollTop = content.scrollHeight;
+  }
+}
+
+function showLogPanel() {
+  document.getElementById('ui-layer')?.classList.add('logs-open');
+  // Ask the robot to start forwarding debug logs over telemetry.
+  simpleCommand(nf.control.Command.COMMAND_DEBUG_LOG_OVER_T);
+}
+
+function hideLogPanel() {
+  document.getElementById('ui-layer')?.classList.remove('logs-open');
+}
+
+function toggleLogPanel() {
+  const uiLayer = document.getElementById('ui-layer');
+  if (!uiLayer) return;
+  if (uiLayer.classList.contains('logs-open')) {
+    hideLogPanel();
+  } else {
+    showLogPanel();
+  }
+}
+
 // Entry Point
 function initApp() {
   // If a user is already logged in via Firebase session, 
@@ -273,7 +318,11 @@ function initApp() {
   
   document.getElementById('btn-confirm-bind')?.addEventListener('click', executeBind);
 
-  if (currentRobotId === 'lan') {
+  // The /tutorial alias always starts in LAN mode and overlays the guided tour.
+  if (isTutorialMode()) {
+    startLanFlow();
+    maybeStartTutorial();
+  } else if (currentRobotId === 'lan') {
     startLanFlow();
   } else if (currentRobotId === 'sim') {
     startSimFlow();
@@ -597,6 +646,7 @@ function connect(wsUrl: string) {
         else if (update.swingCancellationState) handleSwingCancellationState(update.swingCancellationState);
         else if (update.taskStatus) handleTaskStatus(update.taskStatus);
         else if (update.visibilityStates) handleVisibilityStates(update.visibilityStates);
+        else if (update.logs) handleLogs(update.logs);
         else if (update.episodeControl) handleEpisodeControl(update.episodeControl);
       }
     } catch (err) {
@@ -676,14 +726,23 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
   }
 }
 
+// Operation names that have reached 100% completion at least once this session.
+const completedOperations: Record<string, boolean> = {};
+
+/** True if the named operation has ever reached 100% completion this session. */
+export function hasOperationCompleted(name: string): boolean {
+  return completedOperations[name] === true;
+}
+
 function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
+  let percentComplete = (data.percentComplete ?? 0);
+
   const container = document.getElementById('op-progress-container');
   const nameEl = document.getElementById('op-name');
   const actionEl = document.getElementById('op-action');
   const fillEl = document.getElementById('op-bar-fill');
 
   // Track if we are inside the 'Full Calibration' operation to manage monkey emoji visibility
-  let percentComplete = (data.percentComplete ?? 0);
   if (data.name?.toLowerCase().includes('alibration')) {
     isFullCalibrationActive = percentComplete < 100;
     if (percentComplete < 0.1) {
@@ -698,6 +757,7 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
 
   // 100% Logic
   if (percentComplete >= 100) {
+    if (data.name) completedOperations[data.name] = true;
     container.classList.add('hidden');
     // Use data.name and data.currentAction for the popup
     showPopup({ message: `${data.name ?? 'Operation'} Complete\n${data.currentAction ?? ''}` });
@@ -1039,7 +1099,7 @@ interface ComponentState {
 }
 const componentStates = new Map<string, ComponentState>();
 
-function isFullyConnected(): boolean {
+export function isFullyConnected(): boolean {
   const expectedAnchors = anchorType === nf.common.AnchorType.ANCHORTYPE_ARPEGGIO ? 2 : 4;
   let anchorConnected = 0;
   let gripperConnected = 0;
@@ -1345,6 +1405,11 @@ function handleTaskStatus(data: nf.telemetry.ITaskStatus) {
   }
 }
 
+/** True while swing cancellation is currently enabled on the robot. */
+export function isSwingCancellationEnabled(): boolean {
+  return swingCancellationEnabled;
+}
+
 function handleSwingCancellationState(data: nf.telemetry.ISwingCancellationState) {
   swingCancellationEnabled = data.enabled ?? false;
   const btn = document.getElementById('btn-swing-cancel');
@@ -1642,6 +1707,15 @@ function initRunMenu() {
   document.getElementById('action-get-ticket')?.addEventListener('click', () => {
     maintMenu?.classList.remove('show');
     handleGetTicket();
+  });
+
+  // Log panel toggle (from the Calibration & Maintenance menu)
+  document.getElementById('action-toggle-logs')?.addEventListener('click', () => {
+    maintMenu?.classList.remove('show');
+    toggleLogPanel();
+  });
+  document.getElementById('log-panel-close')?.addEventListener('click', () => {
+    hideLogPanel();
   });
 
   // Bind bind action (connecting your robot to your account so you can use cloud relay)

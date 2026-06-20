@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <title>Neufangled - Scoreboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        a:link { color: #7cdbfb; text-decoration: none; }
+
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.3s;
+        }
+
+        .navbar a:hover { opacity: 0.7; text-decoration: underline; }
+
+        /* --- HERO: total deployed robots --- */
+        .scoreboard-hero {
+            min-height: 55vh;
+            background-color: #111;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 20px 60px;
+        }
+
+        .scoreboard-hero .eyebrow {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .hero-number {
+            font-size: 9rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -3px;
+            color: #7cdbfb;
+        }
+
+        .hero-label {
+            font-size: 1.3rem;
+            color: #ccc;
+            margin-top: 12px;
+            max-width: 520px;
+        }
+
+        /* --- METRIC SECTIONS --- */
+        .metrics-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 70px 24px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-rule {
+            height: 3px;
+            width: 60px;
+            background: #7cdbfb;
+            border-radius: 2px;
+            margin-bottom: 32px;
+        }
+
+        .metrics-section { margin-bottom: 64px; }
+        .metrics-section:last-child { margin-bottom: 0; }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .metric-card {
+            border: 1px solid #e6e6e6;
+            border-radius: 14px;
+            padding: 24px 24px 28px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+        }
+
+        .metric-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .metric-card p {
+            font-size: 0.95rem;
+            color: #555;
+            flex: 1;
+        }
+
+        .metric-readout {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid #e6e6e6;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .metric-value {
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #111;
+        }
+
+        .metric-value.pending { color: #bbb; }
+
+        .metric-unit {
+            font-size: 0.95rem;
+            color: #888;
+        }
+
+        /* --- FOOTER --- */
+        .nc-footer {
+            padding: 40px;
+            text-align: center;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .nc-seal { width: 280px; height: auto; opacity: 0.8; }
+
+        .nc-text {
+            font-size: 0.9rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .hero-number { font-size: 6rem; }
+            .navbar { justify-content: center; }
+            .metrics-wrap { padding: 50px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <!-- Hero: total deployed robots -->
+    <header class="scoreboard-hero">
+        <div class="eyebrow">Success Metrics</div>
+        <div class="hero-number" id="deployed-count">4</div>
+        <div class="hero-label">Stringman robots deployed</div>
+    </header>
+
+    <main class="metrics-wrap">
+
+        <!-- Robot Evaluation -->
+        <section class="metrics-section">
+            <h2 class="section-title">Robot Evaluation</h2>
+            <div class="section-rule"></div>
+
+            <div class="metric-grid">
+
+                <div class="metric-card">
+                    <h3>Installation Success</h3>
+                    <p>Starting from a fresh image, install the Stringman software, set up the robot, and run it following the same instructions a customer would. How many problems came up during install?</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">problems during install</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Positioning Accuracy</h3>
+                    <p>Freshly calibrate the robot. Pick ten random starting locations in the work area and command a move to a known location — e.g. placing the fingers around a marble on a stick exactly one meter above the origin. Measure the distance to target after the move.</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">avg distance to target</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Move Linearity</h3>
+                    <p>Sensitive to calibration errors in a cable robot. Command the robot to move in a horizontal line at constant speed across the work area. Measure the average deviation from the target altitude with the laser rangefinder, in a clear area with nothing on the floor.</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">avg altitude deviation</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Uptime</h3>
+                    <p>Average number of hours the robot can stay turned on before something makes it unusable. (Currently the limiter is overheating Raspberry Pis.)</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">hours before failure</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Model Evaluation -->
+        <section class="metrics-section">
+            <h2 class="section-title">Model Evaluation</h2>
+            <div class="section-rule"></div>
+
+            <div class="metric-grid">
+
+                <div class="metric-card">
+                    <h3>Grasping Success</h3>
+                    <p>From a collection of 20 objects that do not occur in the training data, challenge the robot to pick up each object starting from a close position. It succeeds if it lifts the object securely within 30 seconds. The metric is the fraction of the set that can be grasped.</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">/ 20 objects grasped</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Target Identification</h3>
+                    <p>From an overhead picture of a room captured with the same kind of cameras, output video overlays pointing out the targets the model plans to pick up. The room contains 20 objects absent from the training data. The metric is targets positively identified minus false positives.</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">identified − false positives</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Room Cleanup Test</h3>
+                    <p>20 objects from each category the robot handles (currently laundry, toys, and trash) are thrown around the work area. The "pick and place" job is activated with a single button, as a non-technical customer would. The score is how many items end up in the correct bin after 30 minutes.</p>
+                    <div class="metric-readout">
+                        <span class="metric-value pending">—</span>
+                        <span class="metric-unit">items in correct bin (30 min)</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="nc-footer">
+        <div class="nc-text">Built in North Carolina</div>
+        <img class="nc-seal" src="assets/nc_dogwood.png" alt="North Carolina Seal">
+    </footer>
+
+</body>
+</html>

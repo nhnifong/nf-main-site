@@ -57,7 +57,7 @@
                     <label for="variant-select">Option</label>
                     <select id="variant-select">
                         {% for variant in product.variants %}
-                        <option value="{{ loop.index0 }}" data-price="{{ variant.price_display or 'Price unavailable' }}">{{ variant.label or "Option " ~ loop.index }}</option>
+                        <option value="{{ loop.index0 }}" data-price="{{ variant.price_display or 'Price unavailable' }}" data-image="{{ variant.image or '' }}">{{ variant.label or "Option " ~ loop.index }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -92,6 +92,7 @@
                         variantSelect.addEventListener('change', function () {
                             const option = variantSelect.options[variantSelect.selectedIndex];
                             priceEl.textContent = option.dataset.price;
+                            showSlideForImage(option.dataset.image);
                         });
                     }
 
@@ -128,6 +129,21 @@
         currentSlide += direction;
         if (currentSlide >= slides.length) currentSlide = 0;
         else if (currentSlide < 0) currentSlide = slides.length - 1;
+        slides[currentSlide].classList.add('active');
+    }
+
+    // Jump the gallery to the slide whose image matches `filename` (used when a
+    // product variant with an associated image is selected). No-op if unset or
+    // the image isn't in the gallery.
+    function showSlideForImage(filename) {
+        if (!filename) return;
+        const idx = Array.from(slides).findIndex(function (slide) {
+            const img = slide.querySelector('img');
+            return img && img.getAttribute('src').endsWith(filename);
+        });
+        if (idx < 0 || idx === currentSlide) return;
+        slides[currentSlide].classList.remove('active');
+        currentSlide = idx;
         slides[currentSlide].classList.add('active');
     }
 </script>

@@ -2,14 +2,14 @@
 
 Hardware Version: Arpeggio
 
-**Print time**: about 20 hours, or about 40 hours if using multicolor instead of stickers for apriltags
-**Build time**: about 2 hours
+**Print time**: 20 hours  
+**Build time**: 2 hours
 
-First you should have printed the parts according to the [print guide](arp_print_guide.md)
+## Resources
 
-## Bill of Materials
-
-[Stringman Arpeggio Gripper BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)
+ * [Hardware Kit](/stringman-hardware-kit)
+ * [Print Guide](arp_print_guide.md)
+ * [Bill of Materials](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?usp=sharing)
 
 ## Tool list
 
@@ -130,7 +130,7 @@ Mesh the two geared levers together in the closed position, making sure they are
 
 Feed the plug of the pressure sense wire through the smile shaped slot in back_plate, and place the fingers on the bolts simultaneously, keeping them meshed, and keeping the sense wire from being pinched anywhere.
 
-Place M3 washers over the bolts after they protrude from the fingers.
+Place an M3 washers over each of the two bolts after they protrude from the hole in the geared lever.
 
 ![](images/grip_arp/PXL_20260331_214309109.png){ loading=lazy, width=45% }
 ![](images/grip_arp/PXL_20260331_214349018.png){ loading=lazy, width=45% }
@@ -335,7 +335,7 @@ you can then run on the pi
 
 and pull power when the green light goes out.
 
-Screw on the front and back face plates with three M3x4 screws on each side. Two at the top near the pole, one at the botttom near the sensors.
+Screw on the front and back face plates with two M2.5x6 screws on each side. One at the top near the pole, one at the botttom near the sensors.
 
 ![](images/grip_arp/PXL_20260207_193350888.png){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260207_193526006.png){ loading=lazy, width=45% } 

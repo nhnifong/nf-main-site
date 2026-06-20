@@ -8,8 +8,8 @@ price_id: "price_1TYLu4CIW3Ilocb5Hu38TNH9"
 shipping_size: small
 badge:
 store_description: >
-  Just the custom PCBs and specialty wire from the Stringman Arpeggio BOM.
-  Source the rest of the parts yourself.
+  Just the custom PCBs and specialty wire from the Stringman BOM.
+  For when you can source the other parts yourself.
 store_image: pcb_kit.png
 image_folder: ""
 images:

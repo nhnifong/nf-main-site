@@ -269,6 +269,7 @@
             <div id="action-disable-torque" class="menu-item" title="Stop actively holding position, switch to damped fall mode.">Disable torque</div>
             <div id="action-enable-torque" class="menu-item" title="Resume active position holding on all motors.">Enable torque</div>
             <div id="action-get-ticket" class="menu-item" title="Request a temporary auth ticket for accessing the robot's video streams directly.">Get Stream Ticket</div>
+            <div id="action-toggle-logs" class="menu-item" title="Show or hide the log panel at the bottom of the screen.">Toggle Log Panel</div>
 
             <div class="menu-item menu-item-debug">
               <div class="input-label">Debug Command</div>
@@ -283,7 +284,7 @@
         <div class="footer-divider"></div>
 
         <!-- System Status -->
-        <div class="footer-stats-group">
+        <div id="system-status" class="footer-stats-group">
           <div class="stat-line">
             <span id="status-dot-el" class="status-dot status-offline"></span>
             <strong id="status-text">Offline</strong>
@@ -293,7 +294,7 @@
             <strong id="ui-robot-id">Unknown</strong>
           </div>
           <!-- Component Status -->
-          <div class="component-menu-container">
+          <div id="component-status" class="component-menu-container">
             <button id="component-status-btn" class="component-status-btn">
               <strong id="component-status-text">Anchors (0/0)</strong>
             </button>
@@ -368,6 +369,15 @@
 
         <button id="stop-btn" class="stop-button" title="Stop any running motion task and hold position. Also flushes python exceptions.">STOP</button>
       </footer>
+
+      <!-- Log Panel (toggled from the Calibration & Maintenance menu) -->
+      <div id="log-panel">
+        <div id="log-panel-header">
+          <span>Logs</span>
+          <button id="log-panel-close" title="Hide log panel">✕</button>
+        </div>
+        <div id="log-panel-content"></div>
+      </div>
 
     </div>
 
@@ -631,7 +641,12 @@
           <!-- Section: Tilt Adapters -->
           <div class="session-section">
             <div class="fullcal-section-heading">Confirm Tilt Adapters</div>
-            <p class="fullcal-body">Provide the angles of the installed tilt adapters on this robot's anchors.</p>
+            <p class="fullcal-body">Provide the angles of the installed tilt adapters on this robot's anchors.
+              <span class="help-hint" tabindex="0">
+                <span class="help-hint-icon">?</span>
+                <img class="help-hint-img" src="%VITE_ASSET_BUCKET_URL%/assets/tilt_adapter.png" alt="Tilt adapters" />
+              </span>
+            </p>
             <div style="display:flex; gap:16px;">
               <div class="session-input-group" style="flex:1; margin-bottom:0;">
                 <div class="input-label">Anchor 0 tilt angle</div>
@@ -647,7 +662,7 @@
           <!-- Section: Robot Position -->
           <div class="session-section">
             <div class="fullcal-section-heading">Confirm Safe Robot Position</div>
-            <p class="fullcal-body">The ideal starting position for calibration is in the center of the room with the gripper touching the floor. If necessary, close this dialog and reposition it — disable torque to move it by hand, but don't forget to re-enable it before proceeding.</p>
+            <p class="fullcal-body">The ideal starting position for calibration is in the center of the room with the gripper touching the floor. If necessary, close this dialog and reposition it — disable torque to move it by hand. It will be re-enabled when calibration starts.</p>
           </div>
 
           <!-- Section: Origin Markers -->

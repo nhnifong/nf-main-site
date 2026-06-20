@@ -200,6 +200,8 @@ Hold `E` for a second or two to move up off the ground. More complex motion requ
 
 Prepare for calibration by placing the four large paper cards on the floor. The one labelled "origin" should be in the center, with the others around it anywhere. The small plastic cards are not part of calibration, they are for labelling drop points during normal operation.
 
+![](images/arp_install/cards_on_floor.png){ loading=lazy, width=45% }
+
 With the gripper near the center of the room, touching the floor, select "Calibration and Maintenence" > "Full Calibration" from the run menu.
 It is normal for some lines to be slack during calibration, this is a necessary step to determine the location of the eyelets.
 

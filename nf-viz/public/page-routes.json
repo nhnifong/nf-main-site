@@ -1,0 +1,10 @@
+{
+  "control_panel": "playroom.html",
+  "playroom": "playroom.html",
+  "tutorial": "playroom.html",
+  "company": "company.html",
+  "future": "future.html",
+  "scoreboard": "scoreboard.html",
+  "payment_options": "payment_options.html",
+  "hf-redirect": "hf-redirect.html"
+}
