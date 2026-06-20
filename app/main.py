@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from typing import Optional, Annotated
+from datetime import date
 import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, Depends, Header
@@ -11,6 +12,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, delete
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
 from google.cloud import batch_v1
@@ -41,7 +43,10 @@ from .database import (
     ActiveRecordingJob,
     UserRole,
     VALID_ROLES,
+    MetricMeasurement,
+    count_recently_active_robots,
 )
+from .metrics import METRIC_DEFINITIONS, METRIC_KEYS
 from .product_loader import load_product
 from .store import (
     router as store_router,
@@ -170,6 +175,13 @@ class RoleAssignmentRequest(BaseModel):
     """Payload for an admin granting or revoking a role for a user."""
     user_id: str
     role: str
+
+class MetricSubmission(BaseModel):
+    """A month's success-metric measurements entered from the employee wizard."""
+    # ISO date (YYYY-MM-DD) the measurements were taken.
+    measured_on: date
+    # Map of metric_key -> recorded score. Unknown keys are rejected.
+    values: dict[str, float]
 
 # --- HTTP Endpoints ---
 
@@ -965,6 +977,102 @@ async def employee_hello(user: Annotated[dict, Depends(require_employee)]):
         "email": user.get("email"),
         "roles": sorted(user.get("roles", [])),
     }
+
+
+# --- Success metrics ---
+
+@app.get("/employee/metrics")
+async def employee_metrics_page(request: Request):
+    """Serves the monthly score-entry page. It signs in via Firebase and fetches
+    the employee-gated /api/metrics/definitions; the gate is enforced there and
+    on the POST, not by this page."""
+    return templates.TemplateResponse(request, "metrics_entry.html", {})
+
+
+@app.get("/api/metrics/definitions")
+async def metrics_definitions(user: Annotated[dict, Depends(require_employee)]):
+    """The metric list the score-entry page prompts through. Employee-gated; also
+    serves as the access check the page runs on load before showing the form."""
+    return {"metrics": METRIC_DEFINITIONS}
+
+
+@app.get("/api/metrics")
+async def metrics_all(db: AsyncSession = Depends(get_db)):
+    """Public: the entire measurement history, in one call, for the scoreboard.
+
+    The scoreboard derives both the latest value per metric and the time-series
+    plots from this single response. Sorted oldest-first.
+    """
+    result = await db.execute(
+        select(MetricMeasurement).order_by(
+            MetricMeasurement.measured_on.asc(), MetricMeasurement.id.asc()
+        )
+    )
+    return {
+        # Metadata so the scoreboard can label and color the trend lines without a
+        # second request.
+        "metrics": [
+            {
+                "key": m["key"],
+                "title": m["title"],
+                "section": m["section"],
+                "unit": m["unit"],
+            }
+            for m in METRIC_DEFINITIONS
+        ],
+        "measurements": [
+            {
+                "measured_on": row.measured_on.isoformat(),
+                "metric_key": row.metric_key,
+                "value": row.value,
+            }
+            for row in result.scalars().all()
+        ],
+    }
+
+
+@app.get("/api/fleet/active_count")
+async def fleet_active_count():
+    """Public: number of distinct robots seen online in the last 3 months — the
+    'deployed' fleet size shown on the scoreboard hero."""
+    count = await count_recently_active_robots(months=3)
+    return {"active_count": count, "window_months": 3}
+
+
+@app.post("/api/metrics")
+async def submit_metrics(
+    submission: MetricSubmission,
+    user: Annotated[dict, Depends(require_employee)],
+    db: AsyncSession = Depends(get_db),
+):
+    """Records a measurement session. History is kept per day, but a metric may
+    have only one score per day — re-submitting a metric for the same day
+    overwrites that day's value. Employee-gated."""
+    unknown = set(submission.values) - METRIC_KEYS
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown metric keys: {sorted(unknown)}")
+    if not submission.values:
+        raise HTTPException(status_code=400, detail="No metric values provided")
+
+    uid = user["uid"]
+    for key, value in submission.values.items():
+        # Upsert on (measured_on, metric_key): one score per metric per day.
+        await db.execute(
+            pg_insert(MetricMeasurement)
+            .values(
+                measured_on=submission.measured_on,
+                metric_key=key,
+                value=value,
+                recorded_by=uid,
+            )
+            .on_conflict_do_update(
+                index_elements=["measured_on", "metric_key"],
+                set_={"value": value, "recorded_by": uid},
+            )
+        )
+    await db.commit()
+    return {"status": "recorded", "measured_on": submission.measured_on.isoformat(),
+            "count": len(submission.values)}
 
 
 # --- Role administration (employee_admin only) ---

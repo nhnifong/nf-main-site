@@ -9,6 +9,7 @@ import os
 from nf_robot.generated.nf import telemetry, control, common
 
 from .queue_manager import queue_manager
+from .database import record_robot_seen
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,12 @@ class TelemetryManager:
 
         self.active_robot_connections[robot_id] = websocket
         await self.mark_robot_online(robot_id, True)
+
+        # Record fleet activity (best-effort — never drop the connection over it).
+        try:
+            await record_robot_seen(robot_id)
+        except Exception as e:
+            logger.error(f"Failed to record activity for robot {robot_id}: {e}")
 
         try:
             while True:

@@ -3,7 +3,9 @@ import logging
 from typing import Optional
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, select, UniqueConstraint
+from datetime import date, datetime, timedelta, timezone
+from sqlalchemy import String, Float, Date, DateTime, func, select, UniqueConstraint
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 # Format: postgresql+asyncpg://user:password@host:port/dbname
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -95,6 +97,62 @@ class ActiveRecordingJob(Base):
     
     # The GCP Job UID for tracking status
     gcp_uid: Mapped[str] = mapped_column(String)
+
+class MetricMeasurement(Base):
+    __tablename__ = "metric_measurements"
+
+    # Long format: one row per (metric, day). Metric keys are defined in
+    # app/metrics.py. Each distinct day is kept as history so the scoreboard can
+    # plot scores over time, but a given metric may have only one score per day —
+    # re-entering it for the same day overwrites that day's value (see the unique
+    # constraint below).
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # The day this measurement was taken.
+    measured_on: Mapped[date] = mapped_column(Date, index=True)
+    # One of metrics.METRIC_KEYS.
+    metric_key: Mapped[str] = mapped_column(String)
+    # The recorded score. Stored as float; integer-valued metrics round-trip fine.
+    value: Mapped[float] = mapped_column(Float)
+    # Firebase UID of the employee who entered it (for provenance).
+    recorded_by: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    # At most one score per metric per day.
+    __table_args__ = (
+        UniqueConstraint('measured_on', 'metric_key', name='_measurement_metric_uc'),
+    )
+
+class RobotActivity(Base):
+    __tablename__ = "robot_activity"
+
+    # One row per robot, tracking when it was last seen online. Used to count how
+    # many distinct robots have been active recently (the "deployed" fleet size).
+    robot_id: Mapped[str] = mapped_column(String, primary_key=True)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+async def record_robot_seen(robot_id: str) -> None:
+    """Upserts a robot's last-seen timestamp to now. Call when a robot connects."""
+    now = datetime.now(timezone.utc)
+    async with async_session() as session:
+        await session.execute(
+            pg_insert(RobotActivity)
+            .values(robot_id=robot_id, last_seen=now)
+            .on_conflict_do_update(index_elements=["robot_id"], set_={"last_seen": now})
+        )
+        await session.commit()
+
+
+async def count_recently_active_robots(months: int = 3) -> int:
+    """Number of distinct robots seen online within the last `months` (~30d each)."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=months * 30)
+    async with async_session() as session:
+        result = await session.execute(
+            select(func.count())
+            .select_from(RobotActivity)
+            .where(RobotActivity.last_seen >= cutoff)
+        )
+        return result.scalar_one() or 0
+
 
 async def init_db():
     async with engine.begin() as conn:

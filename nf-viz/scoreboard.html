@@ -47,7 +47,6 @@
 
         /* --- HERO: total deployed robots --- */
         .scoreboard-hero {
-            min-height: 55vh;
             background-color: #111;
             color: white;
             display: flex;
@@ -55,29 +54,29 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 80px 20px 60px;
+            padding: 64px 20px 36px;
         }
 
         .scoreboard-hero .eyebrow {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 3px;
             color: #888;
-            margin-bottom: 24px;
+            margin-bottom: 14px;
         }
 
         .hero-number {
-            font-size: 9rem;
+            font-size: 5rem;
             font-weight: 700;
             line-height: 1;
-            letter-spacing: -3px;
+            letter-spacing: -2px;
             color: #7cdbfb;
         }
 
         .hero-label {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             color: #ccc;
-            margin-top: 12px;
+            margin-top: 8px;
             max-width: 520px;
         }
 
@@ -157,6 +156,23 @@
             color: #888;
         }
 
+        /* --- TRENDS: one combined, normalized chart (filled in by JS) --- */
+        .trends-section {
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+            padding: 48px 24px;
+        }
+        .trends-inner { max-width: 1100px; margin: 0 auto; }
+        .trends-inner .section-title { margin-bottom: 4px; }
+        .trends-caption {
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            max-width: 720px;
+        }
+        .trends-chart { position: relative; height: 380px; }
+        .trends-empty { color: #bbb; font-style: italic; padding: 40px 0; }
+
         /* --- FOOTER --- */
         .nc-footer {
             padding: 40px;
@@ -180,7 +196,7 @@
         }
 
         @media (max-width: 700px) {
-            .hero-number { font-size: 6rem; }
+            .hero-number { font-size: 3.5rem; }
             .navbar { justify-content: center; }
             .metrics-wrap { padding: 50px 18px; }
         }
@@ -203,7 +219,19 @@
         <div class="eyebrow">Success Metrics</div>
         <div class="hero-number" id="deployed-count">4</div>
         <div class="hero-label">Stringman robots deployed</div>
+        <div class="eyebrow" id="as-of" style="margin-top:18px;"></div>
     </header>
+
+    <!-- Combined trends: every metric on one chart, normalized so up = better -->
+    <section class="trends-section">
+        <div class="trends-inner">
+            <h2 class="section-title">Measuring Success</h2>
+            <p class="trends-caption">
+                Neufangled uses several metrics of success to quantify how well Stringman performs. We measure these onece per month according to the details below. The purpose of this exercise is to show a clear indicator of the current capabilities of the product and how it has improved over time.
+            </p>
+            <div class="trends-chart"><canvas id="trend-chart"></canvas></div>
+        </div>
+    </section>
 
     <main class="metrics-wrap">
 
@@ -218,7 +246,7 @@
                     <h3>Installation Success</h3>
                     <p>Starting from a fresh image, install the Stringman software, set up the robot, and run it following the same instructions a customer would. How many problems came up during install?</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="installation_problems">—</span>
                         <span class="metric-unit">problems during install</span>
                     </div>
                 </div>
@@ -227,7 +255,7 @@
                     <h3>Positioning Accuracy</h3>
                     <p>Freshly calibrate the robot. Pick ten random starting locations in the work area and command a move to a known location — e.g. placing the fingers around a marble on a stick exactly one meter above the origin. Measure the distance to target after the move.</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="positioning_accuracy">—</span>
                         <span class="metric-unit">avg distance to target</span>
                     </div>
                 </div>
@@ -236,7 +264,7 @@
                     <h3>Move Linearity</h3>
                     <p>Sensitive to calibration errors in a cable robot. Command the robot to move in a horizontal line at constant speed across the work area. Measure the average deviation from the target altitude with the laser rangefinder, in a clear area with nothing on the floor.</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="move_linearity">—</span>
                         <span class="metric-unit">avg altitude deviation</span>
                     </div>
                 </div>
@@ -245,7 +273,7 @@
                     <h3>Uptime</h3>
                     <p>Average number of hours the robot can stay turned on before something makes it unusable. (Currently the limiter is overheating Raspberry Pis.)</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="uptime_hours">—</span>
                         <span class="metric-unit">hours before failure</span>
                     </div>
                 </div>
@@ -264,7 +292,7 @@
                     <h3>Grasping Success</h3>
                     <p>From a collection of 20 objects that do not occur in the training data, challenge the robot to pick up each object starting from a close position. It succeeds if it lifts the object securely within 30 seconds. The metric is the fraction of the set that can be grasped.</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="grasping_success">—</span>
                         <span class="metric-unit">/ 20 objects grasped</span>
                     </div>
                 </div>
@@ -273,7 +301,7 @@
                     <h3>Target Identification</h3>
                     <p>From an overhead picture of a room captured with the same kind of cameras, output video overlays pointing out the targets the model plans to pick up. The room contains 20 objects absent from the training data. The metric is targets positively identified minus false positives.</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="target_identification">—</span>
                         <span class="metric-unit">identified − false positives</span>
                     </div>
                 </div>
@@ -282,7 +310,7 @@
                     <h3>Room Cleanup Test</h3>
                     <p>20 objects from each category the robot handles (currently laundry, toys, and trash) are thrown around the work area. The "pick and place" job is activated with a single button, as a non-technical customer would. The score is how many items end up in the correct bin after 30 minutes.</p>
                     <div class="metric-readout">
-                        <span class="metric-value pending">—</span>
+                        <span class="metric-value pending" data-metric="room_cleanup">—</span>
                         <span class="metric-unit">items in correct bin (30 min)</span>
                     </div>
                 </div>
@@ -297,6 +325,118 @@
         <div class="nc-text">Built in North Carolina</div>
         <img class="nc-seal" src="assets/nc_dogwood.png" alt="North Carolina Seal">
     </footer>
+
+    <script type="module">
+        import Chart from 'chart.js/auto';
+
+        // The scoreboard fetches the entire measurement history (plus metric
+        // metadata) in one call. From it we fill each card's latest value and draw
+        // one combined trend chart. Entered at /employee/metrics.
+        const fmt = (v) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 3 });
+
+        // Distinct, readable line colors (one per metric, assigned by order).
+        const PALETTE = ['#e6194B', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#469990', '#9A6324'];
+
+        // Deployed fleet size = distinct robots seen online in the last 3 months.
+        (async function loadFleetCount() {
+            try {
+                const res = await fetch('/api/fleet/active_count');
+                if (!res.ok) return;
+                const { active_count } = await res.json();
+                document.getElementById('deployed-count').textContent = active_count;
+            } catch (e) {
+                console.error('Failed to load fleet count', e);
+            }
+        })();
+
+        (async function loadMetrics() {
+            let data;
+            try {
+                const res = await fetch('/api/metrics');
+                if (!res.ok) return;
+                data = await res.json();
+            } catch (e) {
+                console.error('Failed to load metrics', e);
+                return;
+            }
+
+            const meta = data.metrics || [];
+            const measurements = data.measurements || [];
+
+            // Group into per-metric series and collect the shared date axis.
+            const series = {};
+            const dateSet = new Set();
+            for (const m of measurements) {
+                if (m.value === null || m.value === undefined) continue;
+                (series[m.metric_key] ||= []).push(m);
+                dateSet.add(m.measured_on);
+            }
+            const labels = [...dateSet].sort();
+
+            // Fill each card's latest value.
+            let newest = null;
+            document.querySelectorAll('[data-metric]').forEach((el) => {
+                const points = series[el.dataset.metric];
+                if (!points || points.length === 0) return;
+                const last = points[points.length - 1];
+                el.textContent = fmt(last.value);
+                el.classList.remove('pending');
+                if (!newest || last.measured_on > newest) newest = last.measured_on;
+            });
+            if (newest) document.getElementById('as-of').textContent = `As of ${newest}`;
+
+            const host = document.getElementById('trend-chart');
+            if (labels.length === 0) {
+                host.closest('.trends-chart').innerHTML =
+                    '<div class="trends-empty">No measurements yet — enter some at /employee/metrics.</div>';
+                return;
+            }
+
+            // One dataset per metric, aligned to the shared date labels (null = no
+            // measurement that day). Points plot the raw measured value directly.
+            const datasets = meta.map((mt, idx) => {
+                const byDate = new Map((series[mt.key] || []).map((p) => [p.measured_on, p.value]));
+                const color = PALETTE[idx % PALETTE.length];
+                return {
+                    label: mt.unit,
+                    metricTitle: mt.title,
+                    borderColor: color,
+                    backgroundColor: color,
+                    spanGaps: true,
+                    tension: 0.2,
+                    data: labels.map((d) => {
+                        if (!byDate.has(d)) return null;
+                        return { x: d, y: byDate.get(d), unit: mt.unit };
+                    }),
+                };
+            });
+
+            new Chart(host, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: false },
+                    scales: {
+                        y: { title: { display: true, text: 'measured value' } },
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                // Show the metric's title with the measured value and unit.
+                                label: (ctx) => {
+                                    const unit = ctx.raw?.unit ?? '';
+                                    return `${ctx.dataset.metricTitle}: ${fmt(ctx.parsed.y)} ${unit}`;
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        })();
+    </script>
 
 </body>
 </html>
