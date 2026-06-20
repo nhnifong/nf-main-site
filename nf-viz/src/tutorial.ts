@@ -12,7 +12,7 @@
 // Add or reorder steps there — the TutorialManager handles the rest.
 // ============================================================
 
-import { isFullyConnected, hasOperationCompleted } from './main.ts';
+import { isFullyConnected, hasOperationCompleted, isSwingCancellationEnabled } from './main.ts';
 
 export interface TutorialStep {
   /** Stable id, handy for debugging. */
@@ -89,6 +89,13 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     openMenuId: 'maintenance-menu',
     message: `Select <strong>"Full Calibration"</strong>`,
     dismissWhen: () => hasOperationCompleted('Calibration'),
+  },
+
+  { // enable swing cancellation
+    id: 'swing-cancellation',
+    highlightId: 'btn-swing-cancel',
+    message: `Enable swing cancellation for smoother movement`,
+    dismissWhen: () => isSwingCancellationEnabled(),
   },
 
 ];
@@ -199,12 +206,12 @@ class TutorialManager {
    * predicate has nothing to wait on, so a manual dismiss advances it instead.
    */
   private dismissPanel = () => {
-    // if (this.steps[this.index]?.dismissWhen) {
-    //   this.clearPanel();
-    //   this.dismissed = true;
-    // } else {
-    this.advance();
-    // }
+    if (this.steps[this.index]?.dismissWhen) {
+      this.clearPanel();
+      this.dismissed = true;
+    } else {
+      this.advance();
+    }
   };
 
   private clearPanel() {

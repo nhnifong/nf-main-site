@@ -120,6 +120,7 @@ export default defineConfig({
         playroom: resolve(__dirname, 'playroom.html'),
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
+        scoreboard: resolve(__dirname, 'scoreboard.html'),
         payment_options: resolve(__dirname, 'payment_options.html'),
         "hf-redirect": resolve(__dirname, 'hf-redirect.html'),
       }

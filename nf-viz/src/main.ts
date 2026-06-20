@@ -1405,6 +1405,11 @@ function handleTaskStatus(data: nf.telemetry.ITaskStatus) {
   }
 }
 
+/** True while swing cancellation is currently enabled on the robot. */
+export function isSwingCancellationEnabled(): boolean {
+  return swingCancellationEnabled;
+}
+
 function handleSwingCancellationState(data: nf.telemetry.ISwingCancellationState) {
   swingCancellationEnabled = data.enabled ?? false;
   const btn = document.getElementById('btn-swing-cancel');
