@@ -12,15 +12,18 @@
 // Add or reorder steps there — the TutorialManager handles the rest.
 // ============================================================
 
-import { isFullyConnected } from './main.ts';
+import { isFullyConnected, hasOperationCompleted } from './main.ts';
 
 export interface TutorialStep {
   /** Stable id, handy for debugging. */
   id: string;
   /** Explanation shown in the floating panel. May contain inline HTML. */
   message: string;
-  /** id of the element to highlight and anchor the panel next to. */
-  highlightId: string;
+  /**
+   * id of the element to highlight and anchor the panel next to. Omit for
+   * steps that have no on-screen anchor (the panel floats near the top).
+   */
+  highlightId?: string;
   /**
    * Optional id of a menu/popup element (a `.run-menu-content`) to force open
    * while this step is active by adding the `show` class. Used when the
@@ -56,17 +59,38 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   { // turn on the robot and detect the components
     id: 'connect-components',
     highlightId: 'component-status',
-    message: 'Great job!<br> Now power on the robot and check here for Anchors and Gripper to be detected on the same wifi network',
+    message: 'Great job!<br><br>Now power on the robot and check here for Anchors and Gripper to be detected on the same wifi network',
     dismissWhen: () => isFullyConnected(),
   },
 
-  { // attach your carabiners to the marker box and tension lines
-    id: 'attach-carabiners',
-    highlightId: 'action-half-cal',
-    openMenuId: 'run-menu',
-    message: `With the gripper in the center of the room, Attach all four lines with carabiners so no lines cross, then select "Tension Lines"<br><br><img src="${import.meta.env.VITE_ASSET_BUCKET_URL}/assets/simplified_box.png">`,
-    dismissWhen: () => false,
+  { // bring every component up to the latest firmware
+    id: 'update-firmware',
+    highlightId: 'action-update-firmware',
+    openMenuId: 'maintenance-menu',
+    message: 'Looks like everything is online<br><br>If this is a new install, update the components before using them: select <strong>"Update Firmware on Components"</strong> to run the upgrade on all connected anchors and the gripper.',
+    dismissWhen: () => hasOperationCompleted('Update Component Firmware'),
   },
+
+  { // attach your carabiners to the marker box
+    id: 'carabiners',
+    highlightId: 'action-disable-torque',
+    openMenuId: 'maintenance-menu',
+    message: `With the gripper in the center of the room, Attach all four lines with carabiners so no lines cross. In order to be able to pull out the lines while the robot is turned on, disable the torque.<br><br><img src="${import.meta.env.VITE_ASSET_BUCKET_URL}/assets/simplified_box.png">`,
+  },
+
+  { // Place markers on the floor
+    id: 'markers',
+    message: `Place the four large marker cards on the floor.<br<br>"origin" goes in the center<br><br><img src="${import.meta.env.VITE_ASSET_BUCKET_URL}/assets/cards_on_floor.png">`,
+  },
+
+  { // run calibration
+    id: 'run-calibration',
+    highlightId: 'action-full-cal',
+    openMenuId: 'maintenance-menu',
+    message: `Select <strong>"Full Calibration"</strong>`,
+    dismissWhen: () => hasOperationCompleted('Calibration'),
+  },
+
 ];
 
 export function isTutorialMode(): boolean {
@@ -147,12 +171,15 @@ class TutorialManager {
       this.openedMenu = menu;
     }
 
-    const target = document.getElementById(step.highlightId);
-    if (target) {
-      target.classList.add('tutorial-highlight');
-      this.highlighted = target;
-    } else {
-      console.warn(`Tutorial step "${step.id}": no element with id "${step.highlightId}"`);
+    // Steps without a highlightId have no anchor; the panel floats near the top.
+    if (step.highlightId) {
+      const target = document.getElementById(step.highlightId);
+      if (target) {
+        target.classList.add('tutorial-highlight');
+        this.highlighted = target;
+      } else {
+        console.warn(`Tutorial step "${step.id}": no element with id "${step.highlightId}"`);
+      }
     }
 
     this.panel = this.buildPanel(step);
@@ -172,12 +199,12 @@ class TutorialManager {
    * predicate has nothing to wait on, so a manual dismiss advances it instead.
    */
   private dismissPanel = () => {
-    if (this.steps[this.index]?.dismissWhen) {
-      this.clearPanel();
-      this.dismissed = true;
-    } else {
-      this.advance();
-    }
+    // if (this.steps[this.index]?.dismissWhen) {
+    //   this.clearPanel();
+    //   this.dismissed = true;
+    // } else {
+    this.advance();
+    // }
   };
 
   private clearPanel() {
