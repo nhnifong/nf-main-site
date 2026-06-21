@@ -15,9 +15,6 @@ from sqlalchemy import select, delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 import httpx
-from google.cloud import batch_v1
-from google.api_core import exceptions as gcp_exceptions
-from google.protobuf import duration_pb2
 
 from .telemetry_manager import telemetry_manager
 from .auth import (
@@ -31,7 +28,7 @@ from .auth import (
     grant_role,
     revoke_role,
 )
-from .tickets import create_ticket, create_batch_ticket, get_ticket, delete_user_robot_tickets
+from .tickets import create_ticket, get_ticket, delete_user_robot_tickets
 from .queue_manager import queue_manager
 from .simulation_manager import simulation_manager
 from .database import (
@@ -40,7 +37,6 @@ from .database import (
     RobotOwnership,
     RobotSharedAccess,
     UserExternalTokens,
-    ActiveRecordingJob,
     UserRole,
     VALID_ROLES,
     MetricMeasurement,
@@ -68,11 +64,6 @@ HF_CLIENT_SECRET = os.environ.get("HF_CLIENT_SECRET", "")
 # This must exactly match the redirect URI registered in Hugging Face developer settings
 HF_REDIRECT_URI = os.environ.get("HF_REDIRECT_URI", "https://neufangled.com/hf-redirect")
 
-# GCP Batch Configuration
-GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "nf-web-480214")
-GCP_REGION = os.environ.get("GCP_REGION", "us-east1")
-BATCH_IMAGE_URI = os.environ.get("BATCH_IMAGE_URI", f"{GCP_REGION}-docker.pkg.dev/{GCP_PROJECT_ID}/record-session-containers/stringman-lerobot:latest")
-WS_SERVER_URL = os.environ.get("WS_SERVER_URL", "wss://neufangled.com")
 # When set (prod only), auth requests containing staging=1 are forwarded here instead of being handled locally.
 STAGING_CONTROL_PLANE_URL = os.environ.get("STAGING_CONTROL_PLANE_URL", "")
 
@@ -167,9 +158,6 @@ class ShareRequest(BaseModel):
 
 class HuggingFaceExchangeRequest(BaseModel):
     code: str
-
-class StartLerobotSessionRequest(BaseModel):
-    repo_id: str
 
 class RoleAssignmentRequest(BaseModel):
     """Payload for an admin granting or revoking a role for a user."""
@@ -666,294 +654,6 @@ async def get_huggingface_status(
 
     return {"connected": False, "oauth_url": oauth_url}
 
-
-@app.get("/lerobot/status")
-async def get_lerobot_job_status(
-    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
-    db: AsyncSession = Depends(get_db)
-):
-    """Returns the current GCP Batch job state for the authenticated user."""
-    user_token = await verify_google_token(creds.credentials)
-    user_id = user_token["uid"]
-
-    result = await db.execute(
-        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
-    )
-    job = result.scalar_one_or_none()
-
-    if not job:
-        return {"has_job": False, "job_name": None, "state": None}
-
-    gcp_job_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{job.job_name}"
-    try:
-        client = batch_v1.BatchServiceAsyncClient()
-        gcp_job = await client.get_job(name=gcp_job_path)
-        state_name = batch_v1.types.JobStatus.State(gcp_job.status.state).name
-    except gcp_exceptions.NotFound:
-        return {"has_job": False, "job_name": job.job_name, "state": "NOT_FOUND"}
-    except Exception as e:
-        logger.warning(f"Could not fetch GCP job status for {job.job_name}: {e}")
-        return {"has_job": True, "job_name": job.job_name, "state": "UNKNOWN"}
-
-    return {"has_job": True, "job_name": job.job_name, "state": state_name}
-
-
-async def _check_hf_repo_permission(hf_token: str, repo_id: str, action: str) -> None:
-    """
-    Pre-flight HuggingFace permission check before provisioning a cloud instance.
-      record: caller must own the repo namespace (to write/create the dataset repo).
-      eval:   caller must be able to read the model repo.
-    Raises HTTPException on any failure so the GCP job is never started unnecessarily.
-    """
-    if "/" not in repo_id:
-        raise HTTPException(status_code=400, detail=f"Invalid repo_id '{repo_id}': expected 'owner/name' format.")
-
-    namespace = repo_id.split("/")[0]
-    hf_api = "https://huggingface.co/api"
-    headers = {"Authorization": f"Bearer {hf_token}"}
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        whoami_res = await client.get(f"{hf_api}/whoami-v2", headers=headers)
-        if whoami_res.status_code != 200:
-            raise HTTPException(status_code=400, detail="Hugging Face token is invalid or expired.")
-
-        whoami = whoami_res.json()
-        hf_username: str = whoami.get("name", "")
-        hf_orgs: set[str] = {org["name"] for org in whoami.get("orgs", [])}
-
-        if action == "record":
-            if namespace != hf_username and namespace not in hf_orgs:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Your Hugging Face account '{hf_username}' does not have write access to namespace '{namespace}'."
-                )
-            # Confirm the repo exists OR that it doesn't yet (both are fine for recording);
-            # anything other than 200/404 means the token can't reach it at all.
-            repo_res = await client.get(f"{hf_api}/datasets/{repo_id}", headers=headers)
-            if repo_res.status_code not in (200, 404):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Cannot access dataset repo '{repo_id}' on Hugging Face (HTTP {repo_res.status_code})."
-                )
-
-        elif action == "eval":
-            model_res = await client.get(f"{hf_api}/models/{repo_id}", headers=headers)
-            if model_res.status_code == 200:
-                return
-            elif model_res.status_code == 404:
-                raise HTTPException(status_code=404, detail=f"Policy repo '{repo_id}' was not found on Hugging Face.")
-            else:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Your Hugging Face token cannot read policy repo '{repo_id}' (HTTP {model_res.status_code})."
-                )
-
-
-@app.post("/lerobot/{action}/start/{robot_id}")
-async def start_lerobot_job(
-    action: str,
-    robot_id: str,
-    req: StartLerobotSessionRequest,
-    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
-    db: AsyncSession = Depends(get_db)
-):
-    """Starts a GCP Batch Spot instance to run a LeRobot record or eval session."""
-    if action not in ("record", "eval"):
-        raise HTTPException(status_code=400, detail="action must be 'record' or 'eval'.")
-
-    user_token = await verify_google_token(creds.credentials)
-    user_id = user_token["uid"]
-    user_email = user_token.get("email", "")
-
-    # Verify access to the robot
-    if not await check_robot_access(user_id, user_email, robot_id):
-        raise HTTPException(status_code=403, detail="Access denied for this robot.")
-
-    # Check if the user already has an active job; auto-clear it if the GCP job is no longer running
-    existing_job_result = await db.execute(
-        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
-    )
-    existing_job = existing_job_result.scalar_one_or_none()
-    if existing_job:
-        stale = False
-        gcp_job_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{existing_job.job_name}"
-        try:
-            check_client = batch_v1.BatchServiceAsyncClient()
-            gcp_job = await check_client.get_job(name=gcp_job_path)
-            terminal_states = {
-                batch_v1.types.JobStatus.State.FAILED,
-                batch_v1.types.JobStatus.State.SUCCEEDED,
-                batch_v1.types.JobStatus.State.DELETION_IN_PROGRESS,
-            }
-            stale = gcp_job.status.state in terminal_states
-        except gcp_exceptions.NotFound:
-            stale = True  # Job is gone from GCP; safe to clear the DB entry
-        except Exception as e:
-            logger.warning(f"Could not check GCP job status for {existing_job.job_name}: {e}")
-
-        if stale:
-            logger.info(f"Clearing stale session record for user {user_id} (job: {existing_job.job_name})")
-            await db.delete(existing_job)
-            await db.flush()
-        else:
-            raise HTTPException(status_code=400, detail="You already have an active session. Limit is 1 active job per user.")
-
-    # Retrieve Hugging Face token
-    hf_result = await db.execute(
-        select(UserExternalTokens).where(UserExternalTokens.user_id == user_id)
-    )
-    hf_record = hf_result.scalar_one_or_none()
-    if not hf_record or not hf_record.hf_access_token:
-        raise HTTPException(status_code=400, detail="Hugging Face account not connected.")
-    hf_token = hf_record.hf_access_token
-
-    await _check_hf_repo_permission(hf_token, req.repo_id, action)
-
-    # Generate a batch ticket — unlike a regular stream ticket this is NOT tied to the user's
-    # WebSocket session and will not be deleted if the user disconnects while the job is starting.
-    ticket = await create_batch_ticket(telemetry_manager.decoding_redis, user_id, user_email, robot_id)
-
-    # Build and submit the GCP Batch Job (using Async client so we don't block FastAPI)
-    client = batch_v1.BatchServiceAsyncClient()
-
-    runnable = batch_v1.Runnable()
-    runnable.container = batch_v1.Runnable.Container(
-        image_uri=BATCH_IMAGE_URI,
-        commands=[
-            action,
-            f"--robot_id={robot_id}",
-            f"--server_address={WS_SERVER_URL}",
-            f"--repo_id={req.repo_id}",
-            f"--remote_stream_token={ticket}"
-        ]
-    )
-    # Inject Hugging Face token securely into the environment
-    runnable.environment = batch_v1.Environment(variables={"HF_TOKEN": hf_token})
-
-    task_spec = batch_v1.TaskSpec()
-    task_spec.runnables = [runnable]
-
-    # Enforce maximum execution duration of 1 Hour (3600 seconds)
-    task_spec.max_run_duration = duration_pb2.Duration(seconds=3600)
-
-    if action == "eval":
-        # Eval needs a GPU; provision half the CPUs/RAM of record on an n1 with a T4
-        task_spec.compute_resource = batch_v1.ComputeResource(
-            cpu_milli=8000,
-            memory_mib=32768
-        )
-        instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
-            machine_type="n1-standard-8",
-            accelerators=[batch_v1.AllocationPolicy.Accelerator(type_="nvidia-tesla-t4", count=1)],
-            provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
-        )
-    else:
-        task_spec.compute_resource = batch_v1.ComputeResource(
-            cpu_milli=8000,
-            memory_mib=8192
-        )
-        instance_policy = batch_v1.AllocationPolicy.InstancePolicy(
-            machine_type="e2-standard-16",
-            provisioning_model=batch_v1.AllocationPolicy.ProvisioningModel.SPOT
-        )
-
-    task_group = batch_v1.TaskGroup()
-    task_group.task_count = 1
-    task_group.task_spec = task_spec
-
-    allocation_policy = batch_v1.AllocationPolicy()
-    allocation_policy.instances = [
-        batch_v1.AllocationPolicy.InstancePolicyOrTemplate(policy=instance_policy)
-    ]
-
-    job = batch_v1.Job()
-    job.task_groups = [task_group]
-    job.allocation_policy = allocation_policy
-    job.logs_policy = batch_v1.LogsPolicy(
-        destination=batch_v1.LogsPolicy.Destination.CLOUD_LOGGING
-    )
-
-    job_name = f"lerobot-{user_id.lower()[:8]}-{int(time.time())}"
-    parent = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}"
-
-    create_request = batch_v1.CreateJobRequest(
-        parent=parent,
-        job_id=job_name,
-        job=job
-    )
-
-    # if "localhost" in WS_SERVER_URL:
-    #     logger.info(
-    #         "Local environment detected — skipping GCP Batch job submission. "
-    #         "CreateJobRequest args: parent=%s, job_id=%s, runnables=%s",
-    #         parent, job_name, [r.container.commands for r in task_spec.runnables]
-    #     )
-    #     return {
-    #         "status": "success",
-    #         "job_name": job_name,
-    #         "job_uid": "local-dry-run",
-    #         "state": "DRY_RUN",
-    #         "message": "Local environment: GCP Batch job was not submitted."
-    #     }
-
-    try:
-        created_job = await client.create_job(request=create_request)
-    except Exception as e:
-        logger.error(f"GCP Batch Job Creation Failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to start the Cloud Batch job.")
-
-    # Save job info to the database
-    new_job = ActiveRecordingJob(
-        user_id=user_id,
-        job_name=job_name,
-        robot_id=robot_id,
-        gcp_uid=created_job.uid
-    )
-    db.add(new_job)
-    await db.commit()
-
-    return {
-        "status": "success",
-        "job_name": job_name,
-        "job_uid": created_job.uid,
-        "state": str(created_job.status.state),
-        "message": f"LeRobot {action} session started in Google Cloud Batch."
-    }
-
-@app.delete("/lerobot/{action}/stop")
-async def stop_lerobot_job(
-    action: str,
-    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
-    db: AsyncSession = Depends(get_db)
-):
-    """Stops the active GCP Batch job and clears the database record."""
-    user_token = await verify_google_token(creds.credentials)
-    user_id = user_token["uid"]
-
-    # Find the active job
-    existing_job_result = await db.execute(
-        select(ActiveRecordingJob).where(ActiveRecordingJob.user_id == user_id)
-    )
-    active_job = existing_job_result.scalar_one_or_none()
-
-    if not active_job:
-        raise HTTPException(status_code=404, detail="No active session found.")
-
-    # Delete from GCP Batch
-    client = batch_v1.BatchServiceAsyncClient()
-    job_name_path = f"projects/{GCP_PROJECT_ID}/locations/{GCP_REGION}/jobs/{active_job.job_name}"
-
-    try:
-        await client.delete_job(name=job_name_path)
-    except Exception as e:
-        # If it's already gone from GCP, we still want to clear the DB so the user isn't locked out
-        logger.warning(f"Could not delete GCP Batch job {active_job.job_name}: {e}")
-
-    # Clear from Database
-    await db.delete(active_job)
-    await db.commit()
-
-    return {"status": "success", "message": f"LeRobot {action} session stopped and cleared."}
 
 
 # --- Employee area ---

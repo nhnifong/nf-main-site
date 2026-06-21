@@ -89,26 +89,6 @@ export default defineConfig({
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
       },
-      '/lerobot/record/start': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true
-      },
-      '/lerobot/record/stop': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true
-      },
-      '/lerobot/eval/start': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true
-      },
-      '/lerobot/eval/stop': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true
-      },
-      '/lerobot/status': {
-        target: 'http://127.0.0.1:8080',
-        changeOrigin: true
-      },
       '/huggingface/unlink': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true

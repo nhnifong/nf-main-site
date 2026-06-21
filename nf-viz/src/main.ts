@@ -60,9 +60,6 @@ let lerobotError: string | null = null;
 let episodeStartTime: number | null = null;
 let sentFinalizeCommand = false;
 let episodesUntilCheckpoint: number | null = null;
-let isCloudRecordingSession = false; // true when the recording job is running in GCP Batch
-let cloudRecordingMode: 'robot' | 'cloud' = 'robot'; // selected mode in the inactive panel
-let isHfLinked = false;
 
 // Motion perspective modes
 const perspViewport = 0; 
@@ -701,13 +698,6 @@ function handleEpisodeControl(data: nf.common.IEpisodeControl) {
       Say(`Recording Ended, Processing video`);
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_ALL_COMPLETE) {
       Say(`Complete`);
-      if (isCloudRecordingSession) {
-        isCloudRecordingSession = false;
-        AuthManager.getAuthToken().then(token =>
-          fetch('/lerobot/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
-            .catch(e => console.warn('Could not call /record/stop:', e))
-        );
-      }
     } else if (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_REC_EP_ABANDONED) {
       Say(`Abandoned Episode`);
     }
@@ -1977,8 +1967,7 @@ function updateLeRobotUI() {
       completionLink?.classList.add('hidden');
 
       const isEval = (leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_IDLE || leRobotState === nf.common.LerobotStatus.LEROBOTSTATUS_EVAL_ACTIVE);
-      const cloudTag = isCloudRecordingSession ? ' <span style="font-size:0.65rem;background:#1a6bb5;color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle;font-weight:600;">CLOUD</span>' : '';
-      if (titleEl) titleEl.innerHTML = (isEval ? "AI Control Session" : "LeRobot Session") + cloudTag;
+      if (titleEl) titleEl.textContent = isEval ? "AI Control Session" : "LeRobot Session";
       if (repoLabel) repoLabel.textContent = isEval ? "Policy" : "Dataset";
       if (repoEl) repoEl.textContent = isEval ? policyRepoId : hfRepoId;
 
@@ -2101,38 +2090,13 @@ function updateLeRobotUI() {
   }
 }
 
-async function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
+function handleLeRobotStart(type: 'recording' | 'eval', repoId: string) {
   isLeRobotStarting = true;
   lerobotError = null;
   sentFinalizeCommand = false;
   episodesUntilCheckpoint = null;
-  isCloudRecordingSession = false;
 
-  if (cloudRecordingMode === 'cloud' && detectedRobotId) {
-    updateLeRobotUI();
-    try {
-      const token = await AuthManager.getAuthToken();
-      const endpoint = `/lerobot/${type}/start/${detectedRobotId}`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_id: repoId })
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail ?? `Failed to start cloud ${type} job.`);
-      }
-      const result = await res.json();
-      isCloudRecordingSession = true;
-      console.log(`Cloud ${type} job started: ${result.job_name} (${result.state})`);
-      setTimeout(() => refreshCloudStatus(), 2000);
-    } catch (e: unknown) {
-      isLeRobotStarting = false;
-      lerobotError = e instanceof Error ? e.message : `Failed to start cloud ${type} job.`;
-      isLeRobotSessionActive = false;
-      updateLeRobotUI();
-    }
-  } else if (type === 'recording') {
+  if (type === 'recording') {
     sendControl([nf.control.ControlItem.create({
       manageLerobotSession: { action: nf.control.LerobotSessionAction.LEROBOTSESSIONACTION_START_RECORD, repoId: repoId }
     })]);
@@ -2157,12 +2121,10 @@ function handleLeRobotFinalize() {
 }
 
 async function refreshHfStatus() {
-  const linked = document.getElementById('lerobot-rec-linked');
   const lanSection = document.getElementById('lerobot-rec-lan');
   const linkedInputs = document.getElementById('lerobot-rec-linked-inputs');
   const locationLan = document.getElementById('lerobot-location-lan');
 
-  linked?.classList.add('hidden');
   lanSection?.classList.add('hidden');
   linkedInputs?.classList.add('hidden');
   locationLan?.classList.add('hidden');
@@ -2180,18 +2142,10 @@ async function refreshHfStatus() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const data = await res.json();
-    if (data.oauth_url) {
-      const oauthLink = document.getElementById('lerobot-hf-oauth-link') as HTMLAnchorElement;
-      if (oauthLink) oauthLink.href = data.oauth_url;
-    }
-    isHfLinked = !!data.connected;
     const usernameEl = document.getElementById('lerobot-hf-username');
     if (usernameEl && data.hf_username) usernameEl.textContent = data.hf_username;
-    linked?.classList.remove('hidden');
   } catch (e) {
     console.warn('Could not fetch HF status:', e);
-    isHfLinked = false;
-    linked?.classList.remove('hidden');
   }
   updateSessionLocationUI();
 }
@@ -2199,81 +2153,13 @@ async function refreshHfStatus() {
 function updateSessionLocationUI() {
   const usernameEl = document.getElementById('lerobot-hf-username');
   const slashEl = document.getElementById('lerobot-dataset-slash');
-  const linkPrompt = document.getElementById('lerobot-hf-link-prompt');
-  const startRecBtn = document.getElementById('btn-lerobot-start-rec-linked') as HTMLButtonElement | null;
-  const startEvalBtn = document.getElementById('btn-lerobot-start-eval') as HTMLButtonElement | null;
   const nameInput = document.getElementById('lerobot-input-dataset-name') as HTMLInputElement | null;
 
-  const isCloud = cloudRecordingMode === 'cloud';
-  const cloudBlocked = isCloud && !isHfLinked;
-
-  if (usernameEl) usernameEl.style.display = isCloud ? '' : 'none';
-  if (slashEl) slashEl.style.display = isCloud ? '' : 'none';
-  if (linkPrompt) linkPrompt.classList.toggle('hidden', !cloudBlocked);
-  if (startRecBtn) startRecBtn.disabled = cloudBlocked;
-  if (startEvalBtn) startEvalBtn.disabled = cloudBlocked;
-  if (nameInput) nameInput.placeholder = isCloud ? 'my-dataset' : 'username/my-dataset';
-}
-
-const STOPPABLE_CLOUD_STATES = new Set(['QUEUED', 'SCHEDULED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'NOT_FOUND', 'UNKNOWN']);
-
-async function refreshCloudStatus() {
-  const statusEl = document.getElementById('lerobot-cloud-status');
-  const badgeEl = document.getElementById('lerobot-cloud-state-badge');
-  const stopContainer = document.getElementById('lerobot-cloud-stop-container');
-  if (!statusEl || !badgeEl) return;
-  if (isLanMode || isSimMode) {
-    statusEl.classList.add('hidden');
-    stopContainer?.classList.add('hidden');
-    return;
-  }
-  try {
-    const token = await AuthManager.getAuthToken();
-    const res = await fetch('/lerobot/status', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
-    if (data.state) {
-      const stateColors: Record<string, string> = {
-        'QUEUED': '#8a6800',
-        'SCHEDULED': '#9b5e00',
-        'RUNNING': '#1e7a40',
-        'SUCCEEDED': '#1a6bb5',
-        'FAILED': '#b03020',
-        'DELETION_IN_PROGRESS': '#8a5000',
-        'NOT_FOUND': '#555',
-        'STATE_UNSPECIFIED': '#555',
-        'UNKNOWN': '#555',
-      };
-      const color = stateColors[data.state] ?? '#555';
-      badgeEl.style.background = color;
-      badgeEl.style.color = '#fff';
-      badgeEl.textContent = data.state.replace(/_/g, ' ');
-      statusEl.classList.remove('hidden');
-    } else {
-      statusEl.classList.add('hidden');
-    }
-    const showStop = !!(data.job_name && STOPPABLE_CLOUD_STATES.has(data.state));
-    stopContainer?.classList.toggle('hidden', !showStop);
-  } catch (e) {
-    console.warn('Could not fetch cloud job status:', e);
-    statusEl.classList.add('hidden');
-    stopContainer?.classList.add('hidden');
-  }
-}
-
-async function stopCloudSession() {
-  const btn = document.getElementById('btn-stop-cloud-session') as HTMLButtonElement | null;
-  if (btn) { btn.disabled = true; btn.textContent = 'Stopping...'; }
-  try {
-    const token = await AuthManager.getAuthToken();
-    await fetch('/lerobot/record/stop', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-  } catch (e) {
-    console.warn('Could not stop cloud session:', e);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Stop Cloud Session'; }
-    setTimeout(() => refreshCloudStatus(), 2000);
-  }
+  // Recording always runs as a subprocess of stringman-headless, so the dataset
+  // is given as a full "owner/name" repo id rather than split into username + name.
+  if (usernameEl) usernameEl.style.display = 'none';
+  if (slashEl) slashEl.style.display = 'none';
+  if (nameInput) nameInput.placeholder = 'username/my-dataset';
 }
 
 function initLeRobotPanel() {
@@ -2284,15 +2170,12 @@ function initLeRobotPanel() {
   const startEvalBtn = document.getElementById('btn-lerobot-start-eval');
   const finalizeBtn = document.getElementById('btn-lerobot-finalize');
 
-  document.getElementById('btn-stop-cloud-session')?.addEventListener('click', stopCloudSession);
-
   headerBtn?.addEventListener('click', () => {
     if (isSimMode) return;
     overlay?.classList.remove('hidden');
     updateLeRobotUI();
     if (!isLeRobotSessionActive) {
       refreshHfStatus();
-      refreshCloudStatus();
     }
   });
 
@@ -2305,28 +2188,9 @@ function initLeRobotPanel() {
   closeBtn?.addEventListener('click', closePanel);
   catcher?.addEventListener('click', closePanel);
 
-  const btnModeRobot = document.getElementById('btn-mode-robot');
-  const btnModeCloud = document.getElementById('btn-mode-cloud');
-  btnModeRobot?.addEventListener('click', () => {
-    cloudRecordingMode = 'robot';
-    btnModeRobot.classList.add('seg-active');
-    btnModeCloud?.classList.remove('seg-active');
-    updateSessionLocationUI();
-  });
-  btnModeCloud?.addEventListener('click', () => {
-    cloudRecordingMode = 'cloud';
-    btnModeCloud.classList.add('seg-active');
-    btnModeRobot?.classList.remove('seg-active');
-    updateSessionLocationUI();
-  });
-
   document.getElementById('btn-lerobot-start-rec-linked')?.addEventListener('click', () => {
-    const usernameEl = document.getElementById('lerobot-hf-username');
     const nameInput = document.getElementById('lerobot-input-dataset-name') as HTMLInputElement;
-    const repoId = cloudRecordingMode === 'cloud'
-      ? `${usernameEl?.textContent ?? 'username'}/${nameInput?.value ?? ''}`
-      : nameInput?.value ?? '';
-    handleLeRobotStart('recording', repoId);
+    handleLeRobotStart('recording', nameInput?.value ?? '');
   });
 
   document.getElementById('btn-lerobot-start-rec-lan')?.addEventListener('click', () => {

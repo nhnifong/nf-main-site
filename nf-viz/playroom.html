@@ -474,17 +474,6 @@
         <h3 id="lerobot-title" class="overlay-title">LeRobot Session</h3>
 
         <div id="lerobot-panel-inactive">
-          <!-- Cloud lerobot features hidden — robot subprocess sessions only -->
-          <div style="display:none">
-            <div id="lerobot-cloud-status" class="hidden" style="margin-bottom:8px; padding:8px 10px; background:var(--bg-card, #2a2a2a); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:0.75rem;">
-              <span style="text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light);">Cloud Instance</span>
-              <span id="lerobot-cloud-state-badge" style="padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.7rem; letter-spacing:0.05em;"></span>
-            </div>
-            <div id="lerobot-cloud-stop-container" class="hidden" style="margin-bottom:14px;">
-              <button id="btn-stop-cloud-session" class="run-button btn-red btn-full">Stop Cloud Session</button>
-            </div>
-          </div>
-
           <div id="lerobot-pending-overlay" class="pending-container hidden">
             <div class="spinner"></div>
             <div class="starting-text">Starting session...</div>
@@ -496,7 +485,7 @@
           </div>
 
           <div id="lerobot-inactive-content">
-            <!-- Start error (shown after a failed cloud job submission) -->
+            <!-- Start error (shown if a session fails to start) -->
             <div id="lerobot-start-error" class="hidden" style="margin-bottom:12px; padding:8px 10px; background:#3a1a1a; border:1px solid #7a2a2a; border-radius:6px; color:#e07070; font-size:0.8rem; line-height:1.4;"></div>
 
             <!-- Session Location -->
@@ -504,28 +493,6 @@
               <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; color:var(--text-light); margin-bottom:12px;">Session Location</div>
 
               <div id="lerobot-location-lan" class="hidden" style="font-size:0.85rem; color:var(--text-light);">local — subprocess of stringman-headless</div>
-
-              <div id="lerobot-rec-linked" class="hidden">
-                <!-- "Run On" cloud option hidden — robot subprocess sessions only -->
-                <div style="display:none">
-                  <div class="session-input-group">
-                    <div class="input-label">Run On</div>
-                    <div class="seg-control">
-                      <button id="btn-mode-robot" class="seg-btn seg-active" title="Run the recording session on the same machine where stringman-headless is running.">Robot Host</button>
-                      <button id="btn-mode-cloud" class="seg-btn" title="Run the recording session on a Google Cloud spot instance. You may only have one at a time and for a maximum of one hour.">Google Cloud</button>
-                    </div>
-                  </div>
-
-                  <!-- Shown only when cloud mode is selected and HF is not linked -->
-                  <div id="lerobot-hf-link-prompt" class="hidden" style="margin-bottom:8px;">
-                    <a id="lerobot-hf-oauth-link"
-                       href="https://huggingface.co/oauth/authorize?client_id=%HF_CLIENT_ID%&redirect_uri=%HF_REDIRECT_URI%&response_type=code&scope=contribute-repos%20openid%20profile&prompt=consent&state=1234567890"
-                       class="run-button btn-green btn-full" style="text-decoration:none; justify-content:center;">
-                      Link HuggingFace Account
-                    </a>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <!-- Recording Mode -->
@@ -537,7 +504,7 @@
                   <div style="display:flex; align-items:center; gap:6px;">
                     <strong id="lerobot-hf-username" style="color:var(--text-bright); white-space:nowrap;">username</strong>
                     <span id="lerobot-dataset-slash" style="color:var(--text-dim);">/</span>
-                    <input type="text" id="lerobot-input-dataset-name" class="input-text" placeholder="my-dataset" style="margin:0; flex:1;" title="Hugginface repo id. When running locally, supply the whole repo-id. Your username must match the logged in huggingface session in the enviroment where stringman-headless is running. When running in google cloud, supply only the name of the dataset.">
+                    <input type="text" id="lerobot-input-dataset-name" class="input-text" placeholder="username/my-dataset" style="margin:0; flex:1;" title="Huggingface repo id. Supply the whole repo-id. Your username must match the logged in huggingface session in the environment where stringman-headless is running.">
                   </div>
                 </div>
                 <button id="btn-lerobot-start-rec-linked" class="run-button btn-green btn-full" title="Begin a LeRobot recording session. Each time you press Start Episode and Stop Episode, one episode is saved to the dataset.">Start recording session</button>
@@ -598,7 +565,7 @@
             <div id="lerobot-last-prompt" style="font-size:0.75rem; color:var(--text-dim); min-height:1em;"></div>
           </div>
 
-          <button id="btn-lerobot-finalize" class="run-button btn-blue btn-full" title="Stop the recording session and finalize the dataset. If using Google Cloud, this will also shut down the cloud instance.">End Session</button>
+          <button id="btn-lerobot-finalize" class="run-button btn-blue btn-full" title="Stop the recording session and finalize the dataset.">End Session</button>
         </div>
       </div>
     </div>
