@@ -27,7 +27,7 @@ Glue side A to side B
 ![](images/anc_arp/PXL_20260407_212731244.png){ loading=lazy, width=45% }
 ![](images/anc_arp/PXL_20260407_212833336.png){ loading=lazy, width=45% } 
 
-### For regular spools (3X)
+### Regular spools (create 3 per system)
 
 Press the dry spool onto the motor until fully seated. twist until the holes align, secure with 3 M3x8 screws.
 
@@ -40,20 +40,23 @@ Put an M4x12 screw through a 4x13x5 bearing follow by 2 M4 washers, then screw i
 ![](images/anc_arp/PXL_20260406_223504485.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260406_223525909.png){ loading=lazy, width=45% } 
 
-### For powerline spools (1X)
+### Powerline spools (create 1 per system)
 
 Solder a JST ZH female plug housing onto the fixed end of the slip ring.
 
-Use an "imp" pipe cutter to cut an 10 mm long peice of 10 mm diameter ABS tube. The same tube used on the marker box of the arp gripper. Glue the piece of tube in the hole on spool side A. You can use a coin to press it in. 
+Glue the 1cm abs tube (included in the kit) into the hole in the powerline spool side A. You can use a coin to press it in. 
 
-![](images/anc_arp/PXL_20260406_205618415.png){ loading=lazy, width=45% } 
-![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
-![](images/anc_arp/PXL_20260406_210115354.png){ loading=lazy, width=45% } 
+??? tip "Creating the 1cm tube"
+
+    Use an "imp" pipe cutter to cut an 10 mm long peice of 10 mm diameter ABS tube. The same tube used on the marker box of the arp gripper.
+
+    ![](images/anc_arp/PXL_20260406_205618415.png){ loading=lazy, width=45% } 
+    ![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
 
 When dry, put 3/8 * 7/8 stainless steel washer on the plastic tube, followed by a 10x15x4 bearing.
 
-![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
-![](images/anc_arp/PXL_20260406_210024131.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260406_210115354.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_222728168.png){ loading=lazy, width=45% }
 
 Place the slip ring into the slip ring block and secure it using 2 M3x8 screws with an m4 washer on each in the 2 out of 3 accessible screw holes. 
 
