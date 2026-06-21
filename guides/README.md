@@ -10,7 +10,7 @@ Guides and downloads for the Stringman robot
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
-    mkdocs serve
+    mkdocs serve --livereload
 
 ### Wireviz
 
@@ -34,3 +34,9 @@ build the docs directly into vite's public folder.
 
 Hot reloading doesn't work in development with vite or from the docker container.
 just use mkdocs serve for that.
+
+### Converting images to web size
+
+There is a script to convert the images to PNG of reasonable size. run it with
+
+    python3 convert_images.py

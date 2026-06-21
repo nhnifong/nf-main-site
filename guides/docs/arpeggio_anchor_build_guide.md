@@ -139,38 +139,101 @@ Secure the "sunglasses" to the top of the frame with 4 M3x8 screws.
 
 ## Spool winding
 
-If a powerline is present, on this anchor thread the slip ring's JST-ZH connector through the vertical hole in the frame and plug it into the board in the header marked "slip ring 24v"
+Winding is performed by running a post-assembly script on the anchor (qa-anchor-arp)
+It sets motor ids, winds the correct amount of line for the spool type, and checks the camera.
 
-For the powerline spool, with [solder seal wire connectors](https://www.amazon.com/dp/B0CL1Q75VS), splice the end of a 7 meter length of FEP cable onto the spools slip ring wire, tighen heatshrink and secure with tape.
+[This video summarizes the process for a non powerline anchor](https://x.com/VMises76153/status/2067794617873973295)
 
-Or if working from a spool of wire, like I do, splice the spool end on, let the script wind the correct amount, then power off and cut it.
+Power on the anchor.
 
-![](images/anc_arp/PXL_20260409_165941386.png){ loading=lazy, width=45% } 
-![](images/anc_arp/PXL_20260409_170034898.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_205141146.png){ loading=lazy, width=45% } 
 
-For fishing line spools, tie a peice of braided fishing line (Power Pro Super 8 Slick V2 40lb test is my reccomendation) onto the small tie off point on the spool with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
-
-Power on the device and ssh into it with 
+Begin by logging into the anchor. You can connect it to the internet either by [wifi](arp_install_guide/#connect-all-components-to-wifi) or ethernet using an [adapter](https://www.amazon.com/dp/B00L32UUJK). Power on the device and ssh into it with 
 
     ssh pi@<hostname or ip>
 
-run
+Password `Fo0bar!!`. Then run
 
+    /opt/robot/env/bin/pip install --upgrade "nf_robot[pi]"
     /opt/robot/env/bin/qa-anchor-arp
 
-And follow the prompts. It will ask you to plug in one motor at a time and wind the spools.
+Follow the prompts. It will ask you to plug in one motor at a time and power cycle them which can be done by pulling and replugging the barrel jack. If you are connected via a powered eithernet adapter, the pi won't turn off. But if you do have to lose your connection at this step, just log back in and run the script again, it will pick up where it left off.
 
-When you have both wound, power off.
+Once motor ids are set, it prompts you to wind the spools. If you are not ready to wind a particular spool or need to skip it, answer no (n) at the prompt for that spool.
 
-!!! tip "Warning"
+![](images/anc_arp/foo.jpg){ loading=lazy, width=45% } 
 
-    When trimming the power line to length, pull the motor power first. the wire is live when winding.
+!!! tip "Tip"
+
+    It helps to have a beanbag to set the anchor on during these steps.
+
+### Fishing line spools
+![](images/anc_arp/foo.jpg){ loading=lazy, width=45% } 
+
+Before winding a fishing line spool, tie the end of the line to the small tie off point on the spool with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
+Hold the supply spool loosely in a clear place. Winding is pretty fast. Winding starts after answering yes (y) for a spool and pressing enter in the `/opt/robot/env/bin/qa-anchor-arp` script.
+
+When winding is finished, feed the line end out of the sunglasses from back to front, then tie a carabiner on the end with a [palomar knot](https://www.animatedknots.com/palomar-knot).
+
+![](images/anc_arp/PXL_20260621_211402483.png){ loading=lazy, width=45% } 
+
+### Power line spools
+
+First, if you bought a kit and received a pre-cut length of cable, thread one carabiner onto the bare end of the cable now through the carabiner's small hole, and send it all the way to the other end where the JST plug is. We'll need it there later.
+
+![](images/anc_arp/PXL_20260621_200836008.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_211133464.png){ loading=lazy, width=45% } 
+
+Next, feed the bare end of the cable into the front of the "sunglasses". Pull a lot of slack through, and then feed the cable through the spool's tie off hole in the other direction, from the back of the anchor to the front, as pictured.
+
+![](images/anc_arp/PXL_20260621_201153345.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_201322658.png){ loading=lazy, width=45% } 
+
+Pull more slack through the tie off hole and tie a simple square knot. **Do not cinch it tight yet**.
+
+![](images/anc_arp/PXL_20260621_201502267.png){ loading=lazy, width=45% } 
+
+Rotate the spool forwards and trim the slip ring wires at the point pictured. this causes them to wrap about 2/3 of the way around the spool but not reach the tie off point. This length is important.
+
+![](images/anc_arp/PXL_20260621_201624140.png){ loading=lazy, width=45% } 
+
+#### Splice the line
+
+Splice the grey power line to the slip ring wires using heat shrink and a pair of solder seal connectors. **Put the heat shrink tube on first.** If you have never used solder seal connectors, the kit includes a few extra so you can practice on some scrap.
+
+ * <span class="wire-brown">Brown</span> to <span class="wire-red">Red</span>
+ * <span class="wire-blue">Blue</span> to <span class="wire-black">Black</span>
+
+![](images/anc_arp/PXL_20260621_202806229.png){ loading=lazy, width=45% } 
+
+!!! tip "Stripping"
+
+    I get the best results stripping the jacket of the cable with the 18 AWG jaws of my wire stripper, and the cores with 28 AWG on a smaller wire stripper.
+
+Now take out the slack in the square knot enough the covered splice sits at the base of the spool, but not enough that the splice takes any of the weight. The knot should take the weight if it comes to that.
+
+![](images/anc_arp/PXL_20260621_203038488.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_203041310.png){ loading=lazy, width=45% } 
+
+#### Wind the powerline cable
+
+Once the splice is complete, winding the powerline cable is similar to the fishing line. Answer yes (y) to the upper spool and press Enter to begin winding.
+
+When winding is complete, tie the carabiner that was threaded before to the end of the line with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot) such that the knot takes the weight and the splice at the end is protected from any mechanical stress.
+
+![](images/anc_arp/PXL_20260621_211243999.MP.png){ loading=lazy, width=45% } 
+![](images/anc_arp/PXL_20260621_211348091.png){ loading=lazy, width=45% } 
 
 
-Feed the end of the wires/lines through the hole in the sunglasses.
+### Finishing the anchor
 
-For fishing lines, tie on a small carabiner with a [palomar knot](https://www.animatedknots.com/palomar-knot).
-For power lines, tie on a carabiner *above the splice* with a [buntline hitch](https://www.animatedknots.com/buntline-hitch-knot).
+The script will prompt you to check the camera feed, and then complete. Power off the anchor by simply pulling the power.
+
+Finally, make sure the black motor cables are tucked away properly in the cavity under the anchor.
+
+The anchor is now finished.
+
+![](images/anc_arp/PXL_20260621_211428575.png){ loading=lazy, width=45% } 
 
 ## Create the Eyelets
 

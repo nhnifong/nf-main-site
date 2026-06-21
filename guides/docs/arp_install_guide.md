@@ -23,7 +23,9 @@ Choose two opposing corners to be the mounting locations for the anchors. The ot
 
 ![](images/arp_install/room_diagram.png){ loading=lazy, width=45% }
 
-# Assemble gripper and marker box
+## Unpacking
+
+### Assemble gripper and marker box
 
 The gripper and marker box with attached pole are separated during shipping in order to use a smaller box and must be assembled before use.
 
@@ -58,7 +60,9 @@ Reinstall the back cover of the gripper using the two previously removed screws.
 
 ![](images/arp_install/PXL_20260412_004803982.png){ loading=lazy, width=45% }
 
-# Mounting Anchors
+## Mounting
+
+### Mounting Anchors
 
 Mark 5 inches (13cm) below the ceiling on the wall in a corner where an anchor will be mounted. (Or mark the height of the blades of the ceiling fan)
 Place the `stud_mount` (butteryfly shaped) part against the wall and drive in two 3-inch wood screws. In a drywall finished home there is always at least one stud behind a wall corner. Hitting a stud on one side is sufficient. If you feel that you didn't hit any studs, the location may be unsuitable and require a backer board.
@@ -76,7 +80,7 @@ Pull both lines out of the anchor down to a level where you can reach them witho
 
 Repeat with the other anchor in the opposite corner.
 
-# Mounting Eyelets
+### Mounting Eyelets
 
 In the two remaining corners of the room, With a single wood screw, screw an eyelet into a stud with the small pointer pointing up.
 It should be on the right wall when facing the corner, unless this corner of the work area is flat, then you just mount it however you can manage, as long as it's in a stud.
@@ -86,7 +90,7 @@ It should be on the right wall when facing the corner, unless this corner of the
 
 When facing the eyelet, look to anchor to your right. Take the carabiner from it's left line and pull it to you, put it through the eyelet from back to front, then pull it down to a level you can reach without a ladder.
 
-# Mounting the parking hook
+### Mounting the parking hook
 
 The parking hook is a place where the marker box and gripper can hang when the robot is powered off. It can be placed on any wall that is reachable in the robot's work area.
 
@@ -101,11 +105,11 @@ After selecting a suitable location, screw the parking hook to the stud in the w
 
 The other parking component (The printed apriltag on a narrow shelf) is meant to aid in parking localization and should be mounted two inches below the gripper's fingers when it's in the parked position. It is used during self parking. If you are not going to use self parking, you don't need it.
 
-## Other parking options
+#### Other parking options
 
 You can also disconnect the gripper from the lines using the cabiners and run the debug command "stow" to reel in all the lines until some tension is felt. Before doing this mark which hook was the power line hook so you can re-attach everythign the same way it was during calibration.
 
-# Pre-tie-up connection test
+## Pre-tie-up connection test
 
 Before hanging up the gripper, connect all components to wifi and confirm everything is ready.
 
@@ -126,7 +130,7 @@ Following the instructions in the [Usage Guide](usage_guide.md) start up the Str
 
 Without having tied any of the lines to the gantry, power on all components using the outlet remote. Within about 30 seconds of booting, stringman components begin looking for a wifi share QR code using their cameras.
 
-## Connect all components to wifi
+### Connect all components to wifi
 
 Go to [qifi.org](https://qifi.org) on your phone and enter your wifi SSID and password. It will not be saved or sent anywhere. Press Generate to create a QR code that contains this information. You can also try your phone's share wifi feature, but due to the fancy decorative QR codes produced by android, it usually doesn't work. whereas, qifi.org generates traditional blocky QR codes.
 
@@ -142,12 +146,12 @@ If you have connection issues at this step, your anchors and host machine might 
 
 Wifi creds can be cleared from a gripper by rapidly squeezing the finger pad five times.
 
-### Firmware update and timezone sync
+#### Firmware update and timezone sync
 
 With all components connected to the motion controller, select "Calibration and Maintenence" > "Update Firmware On Components" from the run menu.
 Wait for confirmation of completion from all components. Updates are not pushed automatically, they are always done at your discretion.
 
-# Tie up
+## Tie up
 
 Power off the whole system.
 
@@ -164,7 +168,7 @@ Select "Quick Calibration". this should tighten all four lines.
 
 Hold `E` for a second or two to move up off the ground. More complex motion requires full calibration.
 
-# Full Calibration
+## Full Calibration
 
 ??? example "Changing the camera tilt angle"
 
