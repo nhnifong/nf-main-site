@@ -21,6 +21,8 @@ The exceptions to the support default are the **regular bearing block**, the **s
 
 Covers, faces, fingers, geared levers, linkage, and parking hooks are all visible on the finished build, so pick their colors with the look of the finished robot in mind. Color is irrelevant for everything else.
 
+Do not use PET for any gears. It squeaks.
+
 ## Anchor
 
 ### Cover top (2x) and Cover bottom (2x)
@@ -31,7 +33,7 @@ Covers, faces, fingers, geared levers, linkage, and parking hooks are all visibl
 
 ### Frame (2x)
 
- - Print in **PCTG or PETG-CF**, not PLA — this part needs strength and heat tolerance.
+ - Print in **PCTG or PETG-CF**. Not PLA - this part needs strength and heat tolerance.
  - 2 walls, 22% adaptive cubic
  - Tree supports, build plate only, critical regions only, 0.5mm XY distance to part
  - Bambu super cool tack plate reccomended

@@ -245,38 +245,6 @@ Press a size 20 Alconite ring into the ring slot. Put a drop of superglue into t
 ![](images/anc_arp/PXL_20260407_020438208.png){ loading=lazy, width=45% } 
 ![](images/anc_arp/PXL_20260407_020629830.png){ loading=lazy, width=45% } 
 
-## Mount on the wall
+Complete!
 
-Pick two opposing corners to be where the anchors are mounted. they should be the corners with the best view of the floor.
-
-### prepare
-Print the wood/stud mount bracket at 100% infill. (2x)
-Start two 3in self tapping wood screws in the holes of the peices.
-Plug in the power supply and barrel jack extension cable into an outlet near the corner where you are mounting.
-
-### on the step ladder
-
-Bring up the ladder
-
- * drill
- * bracket peice
- * the anchor you assembled
- * the end of the power plug
- * the decorative cover
-
-Screw the bracket into the wall corner. Don't overtighten if the piece appears to bend. it must be straight to function. Slide the anchor down onto the bracket from the top. plug in the power.
-
-Snap on the decorative cover.
-
-Grab the end of both lines and bring them down with you enough that you can reach them without the ladder. leave them hanging.
-
-repeat in the opposite corner.
-
-### eyelets
-
-In the two other corners of the room, mount ceramic eyelets with a single wood screw into a stud in the wall corner.
-
-From each anchor, pull it's leftmost line over to the adjacent wall corner on the same side, thread it through the eyelet, and let it hang there.
-
-
-
+Refer to the [Unboxing and Installation](arp_install_guide.md) page when you are ready to mount it in a room.
