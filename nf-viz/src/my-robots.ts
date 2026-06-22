@@ -116,15 +116,23 @@ function buildNicknameCell(bot: AuthManager.RobotInfo): HTMLTableCellElement {
     return cell;
 }
 
-// Owner-only controls. Guests get no actions (just a dash) since they can
-// neither force-disconnect nor unbind someone else's robot.
+// Row actions. "Control" opens the playroom for this robot and is available to
+// owners and guests alike (both can drive a robot they have access to). Kick
+// and unbind are owner-only.
 function buildActionsCell(bot: AuthManager.RobotInfo): HTMLTableCellElement {
     const cell = document.createElement('td');
     cell.className = 'actions';
-    if (bot.role !== 'owner') {
-        cell.textContent = '—';
-        return cell;
-    }
+
+    const controlBtn = document.createElement('button');
+    controlBtn.className = 'action-btn';
+    controlBtn.textContent = 'Control';
+    controlBtn.title = 'Open this robot in the playroom';
+    controlBtn.addEventListener('click', () => {
+        window.location.href = `/playroom?robotid=${encodeURIComponent(bot.robotid)}`;
+    });
+    cell.appendChild(controlBtn);
+
+    if (bot.role !== 'owner') return cell;
 
     const kickBtn = document.createElement('button');
     kickBtn.className = 'action-btn';
