@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <title>Neufangled - My Robots</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        a:link { color: #7cdbfb; text-decoration: none; }
+
+        .navbar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px 40px;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.3s;
+        }
+
+        .navbar a:hover { opacity: 0.7; text-decoration: underline; }
+
+        /* --- Header: account + logout --- */
+        .robots-hero {
+            background-color: #111;
+            color: white;
+            padding: 64px 24px 32px;
+            text-align: center;
+        }
+        .robots-hero h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .account-bar {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            min-height: 38px;
+        }
+        .account-bar .signed-in-as {
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+        .account-bar .signed-in-as b { color: #7cdbfb; font-weight: 600; }
+        .logout-btn {
+            padding: 8px 18px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: transparent;
+            color: #eee;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.08); border-color: #888; }
+        .logout-btn:disabled { opacity: 0.5; cursor: default; }
+
+        /* --- Robots table --- */
+        .robots-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+        .status-line {
+            color: #777;
+            font-size: 0.95rem;
+            padding: 8px 0 20px;
+        }
+        .robots-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .robots-table th, .robots-table td {
+            text-align: left;
+            padding: 14px 18px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        .robots-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            border-bottom: 2px solid #e6e6e6;
+        }
+        .robots-table .nickname { font-weight: 600; font-size: 1.05rem; }
+        .nickname-text { margin-right: 8px; }
+        .edit-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            color: #999;
+            padding: 3px 5px;
+            border-radius: 5px;
+            vertical-align: middle;
+        }
+        .edit-btn:hover:not(:disabled) { color: #222; background: #f0f0f0; }
+        .edit-btn:disabled { opacity: 0.5; cursor: default; }
+        .nickname-input {
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border: 1px solid #7cdbfb;
+            border-radius: 6px;
+            width: 60%;
+            min-width: 140px;
+        }
+        .robots-table .robot-id { font-family: monospace; font-size: 0.85rem; color: #888; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.online { background: #e3f9e5; color: #1b873f; }
+        .status-badge.offline { background: #f1f1f1; color: #999; }
+
+        .robots-table td.actions { white-space: nowrap; }
+        .action-btn {
+            padding: 6px 12px;
+            margin-right: 8px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            background: #fff;
+            color: #333;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .action-btn:last-child { margin-right: 0; }
+        .action-btn:hover:not(:disabled) { background: #f5f5f5; border-color: #aaa; }
+        .action-btn:disabled { opacity: 0.45; cursor: default; }
+        .action-btn.danger { color: #c0392b; border-color: #e3b6b1; }
+        .action-btn.danger:hover:not(:disabled) { background: #fdecea; border-color: #c0392b; }
+
+        /* --- Sign-in overlay (consumed by src/auth.ts) --- */
+        .hidden { display: none !important; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .popup-box {
+            position: relative;
+            background: #fff;
+            border-radius: 14px;
+            padding: 32px 28px;
+            min-width: 320px;
+            max-width: 90vw;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+        }
+        .popup-box .overlay-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            text-align: center;
+            color: #222;
+        }
+        .cd-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            line-height: 1;
+            color: #999;
+            cursor: pointer;
+        }
+        .cd-close-btn:hover { color: #333; }
+
+        @media (max-width: 700px) {
+            .navbar { justify-content: center; }
+            .robots-hero h1 { font-size: 1.8rem; }
+            .robots-table .robot-id { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Utility Navbar -->
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/store">Store</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <!-- Header: title, signed-in account, logout -->
+    <header class="robots-hero">
+        <h1>My Robots</h1>
+        <div class="account-bar">
+            <span class="signed-in-as">Signed in as <b id="user-email"></b></span>
+            <button id="logout-btn" class="logout-btn" hidden>Log out</button>
+        </div>
+    </header>
+
+    <main class="robots-wrap">
+        <p id="status" class="status-line">Checking your sign-in&hellip;</p>
+
+        <div id="table-wrap" hidden>
+            <table class="robots-table">
+                <thead>
+                    <tr>
+                        <th>Nickname</th>
+                        <th>Robot ID</th>
+                        <th>Your Access</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="robot-rows"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Sign-In Overlay (markup expected by src/auth.ts) -->
+    <div id="signin-overlay" class="overlay hidden">
+        <div class="popup-box">
+            <button id="btn-signin-back" class="cd-close-btn">&times;</button>
+            <h3 class="overlay-title">Sign In</h3>
+            <div id="firebaseui-auth-container"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/my-robots.ts"></script>
+
+</body>
+</html>

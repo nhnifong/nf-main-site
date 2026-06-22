@@ -80,6 +80,57 @@
             max-width: 520px;
         }
 
+        /* --- Info marker + hover tooltip --- */
+        .info-marker {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 6px;
+            border-radius: 50%;
+            border: 1px solid #888;
+            color: #888;
+            font-size: 0.62rem;
+            font-weight: 700;
+            font-style: normal;
+            line-height: 1;
+            vertical-align: super;
+            cursor: help;
+            user-select: none;
+        }
+
+        .info-marker .info-tooltip {
+            position: absolute;
+            bottom: 140%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            background: #222;
+            color: #ddd;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.5;
+            text-align: left;
+            letter-spacing: normal;
+            text-transform: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.18s;
+            z-index: 20;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        .info-marker:hover .info-tooltip,
+        .info-marker:focus .info-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* --- METRIC SECTIONS --- */
         .metrics-wrap {
             max-width: 1100px;
@@ -218,7 +269,7 @@
     <header class="scoreboard-hero">
         <div class="eyebrow">Success Metrics</div>
         <div class="hero-number" id="deployed-count">4</div>
-        <div class="hero-label">Stringman robots deployed</div>
+        <div class="hero-label">Stringman robots deployed<span class="info-marker" tabindex="0" role="note" aria-label="About this number">i<span class="info-tooltip">This is the number of robots that have registered with Neufangled.com and been active in the last three months. It does not count bots that operate exclusively in LAN mode, so it is an underestimate.</span></span></div>
         <div class="eyebrow" id="as-of" style="margin-top:18px;"></div>
     </header>
 
@@ -326,117 +377,7 @@
         <img class="nc-seal" src="assets/nc_dogwood.png" alt="North Carolina Seal">
     </footer>
 
-    <script type="module">
-        import Chart from 'chart.js/auto';
-
-        // The scoreboard fetches the entire measurement history (plus metric
-        // metadata) in one call. From it we fill each card's latest value and draw
-        // one combined trend chart. Entered at /employee/metrics.
-        const fmt = (v) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 3 });
-
-        // Distinct, readable line colors (one per metric, assigned by order).
-        const PALETTE = ['#e6194B', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#469990', '#9A6324'];
-
-        // Deployed fleet size = distinct robots seen online in the last 3 months.
-        (async function loadFleetCount() {
-            try {
-                const res = await fetch('/api/fleet/active_count');
-                if (!res.ok) return;
-                const { active_count } = await res.json();
-                document.getElementById('deployed-count').textContent = active_count;
-            } catch (e) {
-                console.error('Failed to load fleet count', e);
-            }
-        })();
-
-        (async function loadMetrics() {
-            let data;
-            try {
-                const res = await fetch('/api/metrics');
-                if (!res.ok) return;
-                data = await res.json();
-            } catch (e) {
-                console.error('Failed to load metrics', e);
-                return;
-            }
-
-            const meta = data.metrics || [];
-            const measurements = data.measurements || [];
-
-            // Group into per-metric series and collect the shared date axis.
-            const series = {};
-            const dateSet = new Set();
-            for (const m of measurements) {
-                if (m.value === null || m.value === undefined) continue;
-                (series[m.metric_key] ||= []).push(m);
-                dateSet.add(m.measured_on);
-            }
-            const labels = [...dateSet].sort();
-
-            // Fill each card's latest value.
-            let newest = null;
-            document.querySelectorAll('[data-metric]').forEach((el) => {
-                const points = series[el.dataset.metric];
-                if (!points || points.length === 0) return;
-                const last = points[points.length - 1];
-                el.textContent = fmt(last.value);
-                el.classList.remove('pending');
-                if (!newest || last.measured_on > newest) newest = last.measured_on;
-            });
-            if (newest) document.getElementById('as-of').textContent = `As of ${newest}`;
-
-            const host = document.getElementById('trend-chart');
-            if (labels.length === 0) {
-                host.closest('.trends-chart').innerHTML =
-                    '<div class="trends-empty">No measurements yet — enter some at /employee/metrics.</div>';
-                return;
-            }
-
-            // One dataset per metric, aligned to the shared date labels (null = no
-            // measurement that day). Points plot the raw measured value directly.
-            const datasets = meta.map((mt, idx) => {
-                const byDate = new Map((series[mt.key] || []).map((p) => [p.measured_on, p.value]));
-                const color = PALETTE[idx % PALETTE.length];
-                return {
-                    label: mt.unit,
-                    metricTitle: mt.title,
-                    borderColor: color,
-                    backgroundColor: color,
-                    spanGaps: true,
-                    tension: 0.2,
-                    data: labels.map((d) => {
-                        if (!byDate.has(d)) return null;
-                        return { x: d, y: byDate.get(d), unit: mt.unit };
-                    }),
-                };
-            });
-
-            new Chart(host, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'nearest', intersect: false },
-                    scales: {
-                        y: { title: { display: true, text: 'measured value' } },
-                    },
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                // Show the metric's title with the measured value and unit.
-                                label: (ctx) => {
-                                    const unit = ctx.raw?.unit ?? '';
-                                    return `${ctx.dataset.metricTitle}: ${fmt(ctx.parsed.y)} ${unit}`;
-                                },
-                            },
-                        },
-                    },
-                },
-            });
-        })();
-    </script>
+    <script type="module" src="/src/scoreboard.ts"></script>
 
 </body>
 </html>

@@ -69,6 +69,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
       },
+      '/kick': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
+      },
       '/share': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true
@@ -105,6 +109,7 @@ export default defineConfig({
         company: resolve(__dirname, 'company.html'),
         future: resolve(__dirname, 'future.html'),
         scoreboard: resolve(__dirname, 'scoreboard.html'),
+        "my-robots": resolve(__dirname, 'my-robots.html'),
         payment_options: resolve(__dirname, 'payment_options.html'),
         "hf-redirect": resolve(__dirname, 'hf-redirect.html'),
       }

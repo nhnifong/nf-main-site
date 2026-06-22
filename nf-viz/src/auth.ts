@@ -77,6 +77,14 @@ function showSignInUI(onSignedIn: (token: string) => void, onError: (e: unknown)
 }
 
 /**
+ * Signs the current user out. Any onUserChange listener registered with
+ * initAuth fires with null once sign-out completes.
+ */
+export async function signOut(): Promise<void> {
+  await auth?.signOut();
+}
+
+/**
  * Retrieves a valid ID token for the current user.
  * Shows the FirebaseUI sign-in panel if the user is not currently authenticated.
  */
@@ -144,4 +152,15 @@ export async function apiUnbindRobot(robotId: string, token: string): Promise<vo
     headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!response.ok) throw new Error("Unbind failed");
+}
+
+/**
+ * API: Force a robot offline (owner only) by clearing its cloud uplink state.
+ */
+export async function apiKickRobot(robotId: string, token: string): Promise<void> {
+  const response = await fetch(`/kick/${robotId}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error("Kick failed");
 }

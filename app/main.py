@@ -25,6 +25,9 @@ from .auth import (
     require_employee,
     require_admin,
     get_user_roles,
+    list_user_roles,
+    emails_for_uids,
+    resolve_email_to_user,
     grant_role,
     revoke_role,
 )
@@ -400,6 +403,38 @@ async def unbind_robot(
     await db.commit()
     return {"status": "unbound", "robot_id": robot_id}
 
+
+@app.post("/kick/{robot_id}")
+async def kick_robot_offline(
+    robot_id: str,
+    creds: Annotated[HTTPAuthorizationCredentials, Depends(token_auth_scheme)],
+):
+    """Force a robot to appear offline. Owner-only.
+
+    The robot's control-plane websocket is often stale (or held by a different
+    server instance), so the reliable action is clearing its uplink_state in
+    Redis — mark_robot_online also publishes an offline update to any connected
+    UIs. If this instance happens to hold the live socket, we close it too so a
+    genuinely-connected robot is actually disconnected rather than just hidden.
+    """
+    user_token = await verify_google_token(creds.credentials)
+    user_id = user_token["uid"]
+
+    if not await check_robot_ownership(user_id, robot_id):
+        raise HTTPException(status_code=403, detail="Thats not your robot")
+
+    await telemetry_manager.mark_robot_online(robot_id, False)
+
+    # Best-effort: drop a live connection served by this instance.
+    ws = telemetry_manager.active_robot_connections.get(robot_id)
+    if ws is not None:
+        try:
+            await ws.close()
+        except Exception as e:
+            logger.warning(f"Could not close live socket for robot {robot_id}: {e}")
+
+    return {"status": "offline", "robot_id": robot_id}
+
 # --- Sharing Endpoints ---
 
 @app.post("/share/{robot_id}")
@@ -660,18 +695,19 @@ async def get_huggingface_status(
 
 @app.get("/employee")
 async def employee_home(request: Request):
-    """Serves the employee hello-world page shell.
+    """Serves the employee landing page shell.
 
     The page itself is a thin shell — it signs in via Firebase client-side and
     then calls /employee/hello, which is what actually enforces the employee
     gate. Non-employees who load this page see an access-denied message.
     """
-    return templates.TemplateResponse(request, "employee_hello.html", {})
+    return templates.TemplateResponse(request, "employee_landing.html", {})
 
 
 @app.get("/employee/hello")
 async def employee_hello(user: Annotated[dict, Depends(require_employee)]):
-    """Employee-only data, used by the hello-world page. 403 for everyone else."""
+    """Employee-only data, used by the landing page as its access gate. 403 for
+    everyone else."""
     return {
         "message": "Hello, world! Welcome to the employee area.",
         "email": user.get("email"),
@@ -776,6 +812,48 @@ async def submit_metrics(
 
 
 # --- Role administration (employee_admin only) ---
+
+@app.get("/employee/admin")
+async def employee_admin_page(request: Request):
+    """Serves the role-administration page shell (employee_admin only).
+
+    Like the other employee pages, this is a thin shell: it signs in via
+    Firebase client-side, and the employee_admin gate is enforced by the
+    /admin/* APIs it calls — not by serving this HTML.
+    """
+    return templates.TemplateResponse(request, "employee_admin.html", {
+        "valid_roles": sorted(VALID_ROLES),
+    })
+
+
+@app.get("/admin/users")
+async def admin_list_users(admin: Annotated[dict, Depends(require_admin)]):
+    """Every user that holds at least one role, with emails resolved for display.
+    Sorted by email so the roster reads naturally in the admin table."""
+    roles_by_user = await list_user_roles()
+    emails = emails_for_uids(list(roles_by_user.keys()))
+    users = [
+        {"user_id": uid, "email": emails.get(uid), "roles": sorted(roles)}
+        for uid, roles in roles_by_user.items()
+    ]
+    users.sort(key=lambda u: (u["email"] or "￿").lower())
+    return {"users": users}
+
+
+@app.get("/admin/users/lookup")
+async def admin_lookup_user(
+    email: str,
+    admin: Annotated[dict, Depends(require_admin)],
+):
+    """Resolve an email to its Firebase user so an admin can grant a first role.
+    Returns the user's current roles (empty if none). 404 if no such user."""
+    resolved = resolve_email_to_user(email)
+    if not resolved:
+        raise HTTPException(status_code=404, detail="No Firebase user with that email.")
+    uid, resolved_email = resolved
+    roles = await get_user_roles(uid)
+    return {"user_id": uid, "email": resolved_email, "roles": sorted(roles)}
+
 
 @app.get("/admin/roles/{target_user_id}")
 async def admin_get_roles(

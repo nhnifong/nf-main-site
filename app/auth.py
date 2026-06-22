@@ -71,6 +71,50 @@ async def get_user_roles(user_id: str) -> set[str]:
         return set(result.scalars().all())
 
 
+async def list_user_roles() -> dict[str, set[str]]:
+    """Every user that holds at least one role, mapped Firebase UID -> roles.
+
+    Used by the admin role-management page to render the full roster in one
+    query (users with no roles at all never appear in user_roles, so they're
+    reached via resolve_email_to_user instead).
+    """
+    async with async_session() as session:
+        result = await session.execute(select(UserRole.user_id, UserRole.role))
+        roles_by_user: dict[str, set[str]] = {}
+        for user_id, role in result.all():
+            roles_by_user.setdefault(user_id, set()).add(role)
+        return roles_by_user
+
+
+def emails_for_uids(uids: list[str]) -> dict[str, Optional[str]]:
+    """Best-effort map of Firebase UID -> email, for display in the admin UI.
+
+    One lookup per UID — fine for the small set of users who hold roles. A UID
+    Firebase can't resolve (e.g. a deleted account) is simply absent from the
+    result rather than failing the whole listing.
+    """
+    emails: dict[str, Optional[str]] = {}
+    for uid in uids:
+        try:
+            emails[uid] = firebase_auth.get_user(uid).email
+        except firebase_auth.UserNotFoundError:
+            continue
+    return emails
+
+
+def resolve_email_to_user(email: str) -> Optional[tuple[str, str]]:
+    """Resolve an email to (uid, email) via Firebase, or None if no such user.
+
+    Lets an admin grant a role to someone who holds none yet — the only way to
+    learn their UID, since the database keys everything by UID.
+    """
+    try:
+        record = firebase_auth.get_user_by_email(email)
+        return record.uid, record.email
+    except firebase_auth.UserNotFoundError:
+        return None
+
+
 async def resolve_user_roles(user_id: str, email: Optional[str]) -> set[str]:
     """Returns the user's roles, granting bootstrap admins their role on first sight.
 

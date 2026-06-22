@@ -8,19 +8,36 @@
     <link rel="stylesheet" href="/static/detail-page-styles.css" />
     <style>
         .employee-panel {
-            max-width: 640px;
+            max-width: 720px;
             margin: 4rem auto;
             padding: 2rem;
+        }
+        .employee-panel h1 { text-align: center; }
+        .employee-status { text-align: center; margin-top: 1rem; opacity: 0.8; }
+        .employee-account {
             text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
         }
-        .employee-panel pre {
+        .pages-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+        .pages-table th, .pages-table td {
             text-align: left;
-            background: rgba(127, 127, 127, 0.12);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(127, 127, 127, 0.25);
         }
-        .employee-status { margin-top: 1rem; opacity: 0.8; }
+        .pages-table th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+        .pages-table td a { font-weight: 600; text-decoration: none; }
+        .pages-table td a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -37,7 +54,27 @@
     <section class="employee-panel">
         <h1 id="heading">Employee Area</h1>
         <p id="status" class="employee-status">Checking your access&hellip;</p>
-        <pre id="details" hidden></pre>
+        <p id="account" class="employee-account" hidden></p>
+
+        <table id="pages" class="pages-table" hidden>
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="/employee/metrics">Metrics</a></td>
+                    <td>Enter this month's success-metric scores.</td>
+                </tr>
+                <!-- Admin-only; revealed in JS when the user holds employee_admin. -->
+                <tr id="row-admin" hidden>
+                    <td><a href="/employee/admin">Role Administration</a></td>
+                    <td>Grant and revoke roles for other users.</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <!-- Firebase (compat build, loaded from CDN). Config matches nf-viz/src/auth.ts. -->
@@ -55,8 +92,11 @@
         firebase.initializeApp(firebaseConfig);
 
         const statusEl = document.getElementById('status');
-        const detailsEl = document.getElementById('details');
+        const accountEl = document.getElementById('account');
+        const pagesEl = document.getElementById('pages');
 
+        // Verify employee access (the /employee/hello gate returns the user's
+        // email) and, on success, reveal the directory of internal pages.
         async function loadEmployeeContent(user) {
             if (!user) {
                 statusEl.textContent = 'Please sign in to view this page.';
@@ -76,10 +116,14 @@
                     return;
                 }
                 const data = await res.json();
-                statusEl.textContent = data.message;
-                detailsEl.textContent =
-                    `Signed in as: ${data.email}\nRoles: ${data.roles.join(', ')}`;
-                detailsEl.hidden = false;
+                statusEl.textContent = 'Internal employee pages';
+                accountEl.textContent = `Logged in as ${data.email}`;
+                accountEl.hidden = false;
+                pagesEl.hidden = false;
+                // Reveal admin-only pages when the user holds employee_admin.
+                if ((data.roles || []).includes('employee_admin')) {
+                    document.getElementById('row-admin').hidden = false;
+                }
             } catch (e) {
                 statusEl.textContent = 'Could not verify access. Please try again.';
                 console.error(e);

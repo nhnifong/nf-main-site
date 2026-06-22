@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Role Administration | Neufangled Robotics</title>
+    <link rel="stylesheet" href="/static/detail-page-styles.css" />
+    <style>
+        .admin-panel {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
+        .admin-panel h1 { text-align: center; }
+        .admin-status { text-align: center; margin-top: 1rem; opacity: 0.8; }
+        .admin-account {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .add-user {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 2rem 0 1rem;
+            flex-wrap: wrap;
+        }
+        .add-user input {
+            flex: 1;
+            min-width: 220px;
+            max-width: 340px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgba(127, 127, 127, 0.4);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .add-user button {
+            padding: 0.5rem 1.1rem;
+            border: none;
+            border-radius: 6px;
+            background: #7cdbfb;
+            color: #06222b;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .add-user button:disabled { opacity: 0.5; cursor: default; }
+        .add-user-error { text-align: center; color: #dc2626; min-height: 1.2em; font-size: 0.9rem; }
+
+        .roles-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .roles-table th, .roles-table td {
+            text-align: left;
+            padding: 0.6rem 0.9rem;
+            border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+            vertical-align: middle;
+        }
+        .roles-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+        .roles-table th.role-col, .roles-table td.role-col { text-align: center; }
+        .roles-table .email { font-weight: 600; }
+        .roles-table .uid { font-size: 0.75rem; opacity: 0.55; font-family: monospace; }
+        .roles-table input[type="checkbox"] { width: 1.1rem; height: 1.1rem; cursor: pointer; }
+        .roles-table input:disabled { cursor: wait; opacity: 0.5; }
+        .row-empty { text-align: center; opacity: 0.6; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/">Home</a>
+        <a href="/employee">Employee</a>
+        <a href="/docs/">Docs</a>
+        <a href="/playroom">Playroom</a>
+        <a href="/company">Company</a>
+        <a href="/future">Future</a>
+    </nav>
+
+    <section class="admin-panel">
+        <h1>Role Administration</h1>
+        <p id="status" class="admin-status">Checking your access&hellip;</p>
+        <p id="account" class="admin-account" hidden></p>
+
+        <div id="tool" hidden>
+            <div class="add-user">
+                <input id="add-email" type="email" placeholder="Add a user by email…"
+                       autocomplete="off" />
+                <button id="add-btn" type="button">Look up</button>
+            </div>
+            <p id="add-error" class="add-user-error"></p>
+
+            <table class="roles-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <!-- Role columns injected here -->
+                    </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Firebase (compat build, loaded from CDN). Config matches nf-viz/src/auth.ts. -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbPMdrWfinNR6at8YDvZJaXP8vdJbkmOI",
+            authDomain: "nf-web-480214.firebaseapp.com",
+            projectId: "nf-web-480214",
+            storageBucket: "nf-web-480214.firebasestorage.app",
+            messagingSenderId: "690802609278",
+            appId: "1:690802609278:web:8165450202df8179029c2f"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // The full set of grantable roles, rendered by the backend so the page
+        // stays in sync with VALID_ROLES.
+        const VALID_ROLES = {{ valid_roles | tojson }};
+
+        const statusEl = document.getElementById('status');
+        const accountEl = document.getElementById('account');
+        const toolEl = document.getElementById('tool');
+        const rowsEl = document.getElementById('rows');
+        const addEmailEl = document.getElementById('add-email');
+        const addBtnEl = document.getElementById('add-btn');
+        const addErrorEl = document.getElementById('add-error');
+
+        let currentUser = null;       // Firebase user (the signed-in admin)
+        const rowsByUid = new Map();  // uid -> <tr>, so lookups update in place
+
+        // Always fetch a fresh token; the SDK caches and refreshes as needed.
+        async function authedFetch(url, options = {}) {
+            const token = await currentUser.getIdToken();
+            const headers = Object.assign({}, options.headers, {
+                'Authorization': `Bearer ${token}`,
+            });
+            return fetch(url, Object.assign({}, options, { headers }));
+        }
+
+        // Build (or rebuild) one table row for a user and their current roles.
+        function renderRow(user) {
+            let tr = rowsByUid.get(user.user_id);
+            if (!tr) {
+                tr = document.createElement('tr');
+                rowsByUid.set(user.user_id, tr);
+                rowsEl.appendChild(tr);
+            }
+            tr.innerHTML = '';
+
+            const who = document.createElement('td');
+            who.innerHTML =
+                `<div class="email">${user.email ?? '(unknown email)'}</div>` +
+                `<div class="uid">${user.user_id}</div>`;
+            tr.appendChild(who);
+
+            const held = new Set(user.roles);
+            for (const role of VALID_ROLES) {
+                const cell = document.createElement('td');
+                cell.className = 'role-col';
+                const box = document.createElement('input');
+                box.type = 'checkbox';
+                box.checked = held.has(role);
+                box.addEventListener('change', () => toggleRole(user, role, box));
+                cell.appendChild(box);
+                tr.appendChild(cell);
+            }
+        }
+
+        // Grant (check) or revoke (uncheck) a single role via the admin API.
+        async function toggleRole(user, role, box) {
+            const grant = box.checked;
+            // Guard against an admin removing their own admin rights by accident.
+            if (!grant && role === 'employee_admin' && user.user_id === currentUser.uid) {
+                if (!confirm('Remove employee_admin from your own account? You may lose access to this page.')) {
+                    box.checked = true;
+                    return;
+                }
+            }
+            box.disabled = true;
+            try {
+                const res = await authedFetch('/admin/roles', {
+                    method: grant ? 'POST' : 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.user_id, role }),
+                });
+                if (!res.ok) {
+                    box.checked = !grant; // revert on failure
+                    const body = await res.json().catch(() => ({}));
+                    alert(`Failed to ${grant ? 'grant' : 'revoke'} ${role}: ${body.detail ?? res.status}`);
+                    return;
+                }
+                // Keep our local copy in sync for subsequent toggles.
+                const set = new Set(user.roles);
+                grant ? set.add(role) : set.delete(role);
+                user.roles = [...set];
+            } catch (e) {
+                box.checked = !grant;
+                console.error(e);
+                alert('Network error — please try again.');
+            } finally {
+                box.disabled = false;
+            }
+        }
+
+        // Render the role-column headers once, matching VALID_ROLES order.
+        function renderRoleHeaders() {
+            const headRow = document.querySelector('.roles-table thead tr');
+            for (const role of VALID_ROLES) {
+                const th = document.createElement('th');
+                th.className = 'role-col';
+                th.textContent = role;
+                headRow.appendChild(th);
+            }
+        }
+
+        async function loadUsers() {
+            const res = await authedFetch('/admin/users');
+            if (res.status === 403) {
+                statusEl.textContent = 'Access denied — role administration is for admins only.';
+                return false;
+            }
+            if (!res.ok) {
+                statusEl.textContent = `Something went wrong (HTTP ${res.status}).`;
+                return false;
+            }
+            const { users } = await res.json();
+            rowsEl.innerHTML = '';
+            rowsByUid.clear();
+            if (users.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="row-empty" colspan="${VALID_ROLES.length + 1}">No users have roles yet.</td>`;
+                rowsEl.appendChild(tr);
+            } else {
+                users.forEach(renderRow);
+            }
+            return true;
+        }
+
+        // Look up a user by email and add their (editable) row to the table.
+        async function addUser() {
+            const email = addEmailEl.value.trim();
+            addErrorEl.textContent = '';
+            if (!email) return;
+            addBtnEl.disabled = true;
+            try {
+                const res = await authedFetch(`/admin/users/lookup?email=${encodeURIComponent(email)}`);
+                if (res.status === 404) {
+                    addErrorEl.textContent = 'No Firebase user with that email (they must sign in once first).';
+                    return;
+                }
+                if (!res.ok) {
+                    addErrorEl.textContent = `Lookup failed (HTTP ${res.status}).`;
+                    return;
+                }
+                const user = await res.json();
+                // Drop the "no users yet" placeholder if it's showing.
+                if (rowsByUid.size === 0) rowsEl.innerHTML = '';
+                renderRow(user);
+                rowsByUid.get(user.user_id).scrollIntoView({ block: 'center', behavior: 'smooth' });
+                addEmailEl.value = '';
+            } finally {
+                addBtnEl.disabled = false;
+            }
+        }
+
+        addBtnEl.addEventListener('click', addUser);
+        addEmailEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') addUser(); });
+
+        async function start(user) {
+            currentUser = user;
+            renderRoleHeaders();
+            const ok = await loadUsers();
+            if (!ok) return;
+            statusEl.textContent = 'Grant or revoke roles by checking the boxes below.';
+            accountEl.textContent = `Logged in as ${user.email}`;
+            accountEl.hidden = false;
+            toolEl.hidden = false;
+        }
+
+        // Sign in with Google if not already authenticated, then load the tool.
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                start(user).catch((e) => {
+                    statusEl.textContent = 'Could not load the admin tool. Please try again.';
+                    console.error(e);
+                });
+            } else {
+                statusEl.textContent = 'Signing you in…';
+                firebase.auth()
+                    .signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                    .catch((e) => {
+                        statusEl.textContent = 'Sign-in was cancelled. Reload to try again.';
+                        console.error(e);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
