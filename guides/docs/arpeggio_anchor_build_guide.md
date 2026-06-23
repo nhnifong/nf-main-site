@@ -151,7 +151,7 @@ Power on the anchor.
 
 ![](images/anc_arp/PXL_20260621_205141146.webp){ loading=lazy, width=45% } 
 
-Begin by logging into the anchor. You can connect it to the internet either by [wifi](arp_install_guide/#connect-all-components-to-wifi) or ethernet using an [adapter](https://www.amazon.com/dp/B00L32UUJK). Power on the device and ssh into it with 
+Begin by logging into the anchor. You can connect it to the internet either by [wifi](arp_install_guide.md/#connect-all-components-to-wifi) or ethernet using an [adapter](https://www.amazon.com/dp/B00L32UUJK). Power on the device and ssh into it with 
 
     ssh pi@<hostname or ip>
 
@@ -163,8 +163,6 @@ Password `Fo0bar!!`. Then run
 Follow the prompts. It will ask you to plug in one motor at a time and power cycle them which can be done by pulling and replugging the barrel jack. If you are connected via a powered eithernet adapter, the pi won't turn off. But if you do have to lose your connection at this step, just log back in and run the script again, it will pick up where it left off.
 
 Once motor ids are set, it prompts you to wind the spools. If you are not ready to wind a particular spool or need to skip it, answer no (n) at the prompt for that spool.
-
-![](images/anc_arp/foo.jpg){ loading=lazy, width=45% } 
 
 !!! tip "Tip"
 

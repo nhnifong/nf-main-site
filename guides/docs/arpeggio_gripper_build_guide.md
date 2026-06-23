@@ -250,7 +250,7 @@ It was previously called the gantry and so you may find it referred to by that n
 
 ### 50 cm pole
 
-The marker display box is connected to the gripper by a [50cm ABS tube with a diameter of 10mm](https://www.aliexpress.us/item/3256804916904509.html). If you purchasded a kit from Neufangled, in order to use less expensive packaging, the pole is cut in two. It needs to be recombined using a printed coupler. If you have the full pole, skip this step. This joint is the same type as that used at the ends of the pole. It's good up to about 5kg. Put a ring of cyanoacrylate glue around the inside of the coupler on one side and jam a pole section into it in one quick motion. Super glue sets fast when the fit is tight. Repeat with the other side.
+The marker display box is connected to the gripper by a [50cm ABS tube with a diameter of 10mm](https://www.aliexpress.us/item/3256804916904509.html). If you purchased a kit from Neufangled, in order to use a smaller box, the pole is cut in two. It needs to be recombined using a printed coupler. If you have the full pole, skip this step. This joint is the same type as that used at the ends of the pole. It's good up to about 5kg. Put a ring of cyanoacrylate glue around the inside of the coupler on one side and jam a pole section into it in one quick motion. Super glue sets fast when the fit is tight. Repeat with the other side.
 
 ![](images/grip_arp/PXL_20260405_151008393.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260405_151027084.webp){ loading=lazy, width=45% } 
@@ -263,8 +263,9 @@ Make a mark 6.5mm from the end of the tube with a sharpie pen.
 
 Put a few drops of cyanoacrylate glue where the gear and tube touch, followed by another washer and press it firmly to glue it there.
 
-![](images/grip_arp/PXL_20260203_024931510.webp){ loading=lazy, width=45% }
-![](images/grip_arp/tube.webp){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260623_141739201.png){ loading=lazy, width=45% }
+![](images/grip_arp/glue.png){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260623_142036295.png){ loading=lazy, width=45% }
 
 !!! tip "Multicolor print or stickers"
 
@@ -275,13 +276,13 @@ Put a few drops of cyanoacrylate glue where the gear and tube touch, followed by
 
 Locate or print the gantry marker tags.
 If you are printing them, This is the [sticker paper on amazon](https://www.amazon.com/dp/B092444Z49) and the [document with the marker images is here](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing). It must be printed without margins.
-Cut the stickers apart into squares. 
+Cut the sticker sheet along the two grey lines to form two rectangular stickers of two tags each.
 
 ![](images/grip_arp/PXL_20260205_164916211.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260205_165341642.webp){ loading=lazy, width=45% } 
 
 Score a triangle in a corner on the back of each one. This makes it easier to remove the backing.
-Put stickers on all four sides of the marker box. Note the orientation, the "stem" of the tree is at the bottom.
+Pleace a sticker onto the box so it straddles one corner and a marker ends up on each face. Note the orientation, the "stem" of the tree is at the bottom.
 
 ![](images/grip_arp/PXL_20260205_165401639.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260205_165456666.webp){ loading=lazy, width=45% } 
@@ -289,7 +290,7 @@ Put stickers on all four sides of the marker box. Note the orientation, the "ste
 ![](images/grip_arp/PXL_20260205_165608693.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260205_165947320.webp){ loading=lazy, width=45% } 
 
-Forcefully twist the other end (with no bearing) of the ABS rod into it until it bottoms out. Again, it's intentionally a very tight fit. Put a drop of cyanoacrylate glue on it from the bottom.
+Forcefully twist the other end (with no bearing) of the ABS rod into it until it bottoms out. Again, it's intentionally a very tight fit. Put a drop of cyanoacrylate glue on it from the bottom. The 6.5mm mark should be at the edge of the plastic gear, not the washer.
 
 ![](images/grip_arp/PXL_20260205_170008890.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260205_170030767.webp){ loading=lazy, width=45% } 
@@ -301,45 +302,9 @@ Put another steel washer on the bottom of the tube under the bearing, and holdin
 ![](images/grip_arp/PXL_20260205_170329058.webp){ loading=lazy, width=45% } 
 ![](images/grip_arp/PXL_20260205_170451870.webp){ loading=lazy, width=45% } 
 
-Find (or create yourself) the 75cm cable with male JST ZH plugs at both ends. Thread it into the top of the display box, down the tube, into the gripper, and out the hole on the side of the gripper. Plug the cable into the gripper hat. (this photo is inaccurate and will be replaced)
+Unpack the 64cm cable with male JST ZH plugs at both ends. Thread it through the tube. and set it aside.
 
-![](images/grip_arp/PXL_20260205_205501032.webp){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260205_205556987.webp){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260623_152534718.png){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260623_170326288.png){ loading=lazy, width=45% } 
 
-## Check out tests and calibration
-
-Find (or create yourself) the barrel jack to Female JST ZH adapter. Plug this into the wire at the top of the display box, and use one of the anchor power supplies (24V) to power on the gripper.
-
-![](images/grip_arp/PXL_20260205_210000179.webp){ loading=lazy, width=45% } 
-
-When the component boots it will look for wifi credentials using it's camera. Hold up a wifi share QR code to it and it should appear on your network and be detected by the control panel in under a minute.
-
-You can generate a valid wifi share code with [qifi.org](http://qifi.org)
-
-
-Find the IP or hostname of the device using your router and SSH into the pi with user `pi` and password `Fo0bar!!`
-
-    ssh pi@<address>
-
-Once in, stop the cranebot service and run the checkout script
-
-    sudo systemctl stop cranebot.service
-    /opt/robot/env/bin/qa-gripper-arp
-
-This will prompt you to plug in the other motor.
-
-At the end it prompts you to run ffplay on your host machine to verify the camera looks ok. closing the window on your host machine ends the script.
-you can then run on the pi
-
-    sudo shutdown now
-
-and pull power when the green light goes out.
-
-Screw on the front and back face plates with two M2.5x6 screws on each side. One at the top near the pole, one at the botttom near the sensors.
-
-![](images/grip_arp/PXL_20260207_193350888.webp){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260207_193526006.webp){ loading=lazy, width=45% } 
-
-Complete! you are now in possession of one complete gripper - the most complex part of Stringman.
-
-Now you can move on to [Tie up](installation_guide.md).
+The attachment of the pole and marker box to the gripper are covered in the next section, [Physical Installation](arp_install_guide.md).
