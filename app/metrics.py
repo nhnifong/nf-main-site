@@ -17,8 +17,8 @@ METRIC_DEFINITIONS = [
         "title": "problems during install",
         "prompt": (
             "Starting from a fresh image, install the Stringman software, set up "
-            "the robot, and run it following the same instructions a customer "
-            "would. Count how many problems came up during install."
+            "the robot, and run it according to the <a href='/docs/arp_install_guide/'>user guide</a>."
+            "Count how many problems came up during install."
         ),
         "unit": "problems during install",
         "input_kind": "int",
@@ -28,10 +28,10 @@ METRIC_DEFINITIONS = [
         "section": SECTION_ROBOT,
         "title": "Positioning Accuracy",
         "prompt": (
-            "Freshly calibrate the robot. Pick ten random starting locations in "
-            "the work area and command a move to a known location — e.g. placing "
-            "the fingers around a marble on a stick exactly one meter above the "
-            "origin. Enter the average distance to target after the move, in centimeters."
+            "Place a route card on the floor face up and set that card as the route source.",
+            "Run the debug command \"goalseek\". Watch the test and record the result."
+            "If any collision, interruption, or error occurs, restart the test."
+            "Report the RMS deviation from the console log in centimeters."
         ),
         "unit": "cm avg distance to target",
         "input_kind": "float",
@@ -41,12 +41,10 @@ METRIC_DEFINITIONS = [
         "section": SECTION_ROBOT,
         "title": "Move Linearity",
         "prompt": (
-            "Command the robot to move in a horizontal line at constant speed "
-            "across the work area, in a clear area with nothing on the floor. "
-            "Using the laser rangefinder, enter the average deviation from the "
-            "target altitude, in centimeters."
+            "In a clear area with nothing on the floor, run the debug command \"linear\"."
+            "And report the RMS deviation from the console log in centimeters."
         ),
-        "unit": "cm avg altitude deviation",
+        "unit": "RMS deviation in cm",
         "input_kind": "float",
     },
     {
