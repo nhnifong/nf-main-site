@@ -52,8 +52,8 @@ DEFAULT_SHIPPING_SIZE = "small"
 
 SHIPPING_REGIONS = {
     "us_ca": {
-        "label": "USA / North America",
-        "allowed_countries": ["US", "CA", "MX"],
+        "label": "USA / Mexico",
+        "allowed_countries": ["US", "MX"],
         "shipping_rates": {
             "small": {
                 "shipping_rate": "shr_1T9mMwCIW3Ilocb5ZGx7fAl6",
@@ -61,6 +61,23 @@ SHIPPING_REGIONS = {
             },
             "large": {
                 "shipping_rate": "shr_1Sw5wpCIW3Ilocb5YgYedbGN",
+                "shipping_rate_test": "shr_1Tg61JCIW3Ilocb57St9vBHl",
+            },
+            "free": {
+                "shipping_rate": "shr_1TPMi1CIW3Ilocb5E3SmNgq4",
+            },
+        },
+    },
+    "ca": {
+        "label": "Canada",
+        "allowed_countries": ["CA"],
+        "shipping_rates": {
+            "small": {
+                "shipping_rate": "shr_1TlzkxCIW3Ilocb5xXOHMzqD",
+                "shipping_rate_test": "shr_1TiIWvCIW3Ilocb5b0ZqrQSg",
+            },
+            "large": {
+                "shipping_rate": "shr_1TlzlSCIW3Ilocb5kymrKxb1",
                 "shipping_rate_test": "shr_1Tg61JCIW3Ilocb57St9vBHl",
             },
             "free": {
@@ -100,6 +117,7 @@ SHIPPING_REGIONS = {
             },
         },
     },
+
 }
 
 
