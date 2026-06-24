@@ -7,6 +7,13 @@ logger = logging.getLogger(__name__)
 _TICKET_PREFIX = "ticket:"
 _USER_ROBOT_TICKETS_PREFIX = "user_robot_tickets:"
 
+# Stream tickets are redeemed within seconds of being issued (the client fetches
+# one immediately before opening a WHEP/control connection). A short TTL caps the
+# damage window if a ticket leaks (e.g. via proxy/CDN access logs, since it rides
+# in the URL query string) and guarantees expiry even if the session-disconnect
+# cleanup in delete_user_robot_tickets never runs (worker crash, Redis failover).
+_TICKET_TTL_SECONDS = 60
+
 
 async def create_ticket(redis_conn, user_id: str, user_email: str, robot_id: str) -> str:
     ticket_id = secrets.token_urlsafe(32)
@@ -16,10 +23,10 @@ async def create_ticket(redis_conn, user_id: str, user_email: str, robot_id: str
         "robot_id": robot_id,
     })
     pipe = redis_conn.pipeline()
-    pipe.set(f"{_TICKET_PREFIX}{ticket_id}", ticket_data)
+    pipe.set(f"{_TICKET_PREFIX}{ticket_id}", ticket_data, ex=_TICKET_TTL_SECONDS)
     pipe.sadd(f"{_USER_ROBOT_TICKETS_PREFIX}{user_id}:{robot_id}", ticket_id)
     await pipe.execute()
-    logger.info(f"Created stream ticket for user {user_id} on robot {robot_id}")
+    logger.info(f"Created stream ticket for user {user_id} on robot {robot_id} (TTL={_TICKET_TTL_SECONDS}s)")
     return ticket_id
 
 
