@@ -165,7 +165,8 @@ steps:
     GCP_PROJECT_ID=nf-web-480214,\
     GCP_REGION=us-east1,\
     BATCH_IMAGE_URI=us-east1-docker.pkg.dev/nf-web-480214/record-session-containers/stringman-lerobot:latest,\
-    WS_SERVER_URL=wss://nf-site-monolith-staging-690802609278.us-east1.run.app"
+    WS_SERVER_URL=wss://nf-site-monolith-staging-690802609278.us-east1.run.app,\
+    BOOTSTRAP_ADMIN_EMAILS=naavox@gmail.com"
   - '--set-secrets'
   - 'DATABASE_URL=STAGING_DATABASE_URL:latest,HF_CLIENT_SECRET=HF_CLIENT_SECRET_STAGING:latest,STRIPE_PUBLISHABLE_KEY=SANDBOX_STRIPE_PUBLISHABLE_KEY:latest,STRIPE_SECRET_KEY=SANDBOX_STRIPE_SECRET_KEY:latest'
   - '--service-account'
