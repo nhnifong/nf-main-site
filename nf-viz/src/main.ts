@@ -1324,7 +1324,12 @@ async function handleVideoReady(data: nf.telemetry.IVideoReady) {
   }
 
   const videoManager = [gripperVideo, firstOverheadVideo, secondOverheadVideo][feedNumber];
-  
+
+  if (!videoManager) {
+    console.warn(`handleVideoReady: no video manager for feed number ${feedNumber}, ignoring`);
+    return;
+  }
+
   if (isLanMode && data.localUri) {
     // Connect to the video streams at the local UDP address for this camera. example udp:127.0.0.1:1234
     videoManager.connectLocal(data.localUri);

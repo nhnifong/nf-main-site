@@ -16,6 +16,9 @@ export class VideoFeed {
     
     // WebRTC
     private peerConnection: RTCPeerConnection | null = null;
+    // Incremented on every (re)connect or setOffline so an in-flight retry loop
+    // for a stale stream can detect it has been superseded and bail out.
+    private connectEpoch: number = 0;
 
     // State
     private lastTargets: nf.telemetry.IOneTarget[] = [];
@@ -301,45 +304,81 @@ export class VideoFeed {
             whepUrl += `${whepUrl.includes('?') ? '&' : '?'}staging=1`;
         }
 
-        try {
-            console.log('Connecting to: ' + streamPath);
+        // A 404 from MediaMTX means the path has no publisher yet. When a robot is
+        // powered on after the UI is already open, its VideoReady telemetry can
+        // arrive before the camera has actually started pushing RTMP to the media
+        // server (the gripper Pi Zero is the slowest to come up), so the first WHEP
+        // request races ahead of the publisher. Retry on 404 until the stream
+        // appears instead of giving up until a manual page refresh.
+        const RETRY_DELAY_MS = 2000;
+        const MAX_ATTEMPTS = 10; // ~20s, comfortably within the stream ticket's 60s TTL
+        const epoch = ++this.connectEpoch;
 
-            this.peerConnection = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-            });
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                console.log('Connecting to: ' + streamPath);
 
-            this.peerConnection.ontrack = (event) => {
-                if (event.track.kind === 'video') {
-                    this.video.srcObject = event.streams[0];
+                // Tear down any peer connection left over from a previous failed attempt.
+                if (this.peerConnection) {
+                    this.peerConnection.close();
+                    this.peerConnection = null;
                 }
-            };
 
-            this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
+                this.peerConnection = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
 
-            const offer = await this.peerConnection.createOffer();
-            await this.peerConnection.setLocalDescription(offer);
+                this.peerConnection.ontrack = (event) => {
+                    if (event.track.kind === 'video') {
+                        this.video.srcObject = event.streams[0];
+                    }
+                };
 
-            // Note: No custom Authorization header here to avoid CORS preflight rejection
-            const response = await fetch(whepUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/sdp' },
-                body: offer.sdp
-            });
+                this.peerConnection.addTransceiver('video', { direction: 'recvonly' });
 
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+                const offer = await this.peerConnection.createOffer();
+                await this.peerConnection.setLocalDescription(offer);
+
+                // Note: No custom Authorization header here to avoid CORS preflight rejection
+                const response = await fetch(whepUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/sdp' },
+                    body: offer.sdp
+                });
+
+                // A newer connect() or setOffline() ran while we were awaiting; abandon this attempt.
+                if (epoch !== this.connectEpoch) {
+                    return;
+                }
+
+                if (response.status === 404 && attempt < MAX_ATTEMPTS) {
+                    console.warn(`WHEP 404 for ${streamPath} (publisher not ready yet), retrying ${attempt}/${MAX_ATTEMPTS}...`);
+                    this.peerConnection.close();
+                    this.peerConnection = null;
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                    if (epoch !== this.connectEpoch) {
+                        return;
+                    }
+                    continue;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status} ${response.statusText}`);
+                }
+
+                const answerSdp = await response.text();
+                await this.peerConnection.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answerSdp
+                });
+
+                console.log('Connected! Stream should start shortly.');
+                return;
+
+            } catch (err) {
+                console.error(err);
+                return;
             }
-
-            const answerSdp = await response.text();
-            await this.peerConnection.setRemoteDescription({
-                type: 'answer',
-                sdp: answerSdp
-            });
-
-            console.log('Connected! Stream should start shortly.');
-
-        } catch (err) {
-            console.error(err);
         }
     }
 
@@ -373,6 +412,8 @@ export class VideoFeed {
 
     public setOffline() {
         console.log('resetting video element');
+        // Cancel any in-flight WHEP retry loop so it does not reconnect after going offline.
+        this.connectEpoch++;
         if (this.peerConnection) {
             this.peerConnection.close();
         }
