@@ -60,7 +60,7 @@ Run stringman's motion controller from the virtualenv you set up during install
 
 With no args, it runs in LAN mode, meaning it will listen for a UI connection on port 4245. Open the [Control Panel](http://neufangled.com/control_panel) and select LAN mode to connect to the `stringman-headless` process your local machine.
 
-![](images/usage/lanmode.png){ loading=lazy, width=45% } 
+![](images/usage/lanmode.webp){ loading=lazy, width=45% } 
 
 If no configuration file is specified with `--config=<filename.json>` one will be created at `configuration.json` this will be where your specific robot's calibration parameters are stored and where your randomly generated robot id will be stored. if it is deleted, the id will change.
 
@@ -72,7 +72,7 @@ Whether starting the motion controller first, or powering on the robot component
 
 After making the initial connection to a component, the motion controller will attempt to connect to the video stream as well. The status of all component connections is indicated in the bottom left. It is possible that a component may be connected, but it's video connection is only established a few seconds later. This is normal.
 
-![](images/usage/connections.png){ loading=lazy, width=45% } 
+![](images/usage/connections.webp){ loading=lazy, width=45% } 
 
 If some components don't connect, please refer to the [Troubleshooting](quality_assurance.md) page.
 Or ask for help on our [Discord](https://discord.gg/T5HEvxVgbA).
@@ -83,7 +83,7 @@ The first thing you need to do after hanging up stringman and connecting to it, 
 
 First tension all lines. In the **RUN** menu, select **Tension all lines** or press `1`
 
-![](images/usage/tension.png){ loading=lazy, width=45% } 
+![](images/usage/tension.webp){ loading=lazy, width=45% } 
 
 Then briefly tap the `E` key to move upwards. Briefly hold it enough to raise the gripper to a unobtrusive height.
 
@@ -93,12 +93,12 @@ Any complex motion beyond this requires calibration, which is the next step.
 
 Print out the [full-page "origin" marker](https://docs.google.com/document/d/1B41dnssHsm1Db0LiHVgLatEv6H1jt0amIagw2v5_7dU/edit?usp=sharing) as well as calibration helper 1 thru 3 at 100% scale with no margins. Tape the pages to something completely flat such as a large book, a pane of glass, or an un-damaged peice of cardboard. Lay the origin marker in the center of the room, and place the helper markers around it as spread out as possible while still being visible to all the cameras. The origin card must be on the floor, the the others can be anywhere.
 
-![](images/usage/calibration_cards.png){ loading=lazy, width=45% }
+![](images/usage/calibration_cards.webp){ loading=lazy, width=45% }
 
 Select the **Calibration and Maintenence** submenu followed by **Full Calibration**
 
-![](images/usage/maintenence_menu.png){ loading=lazy, width=45% } 
-![](images/usage/fullcal.png){ loading=lazy, width=45% } 
+![](images/usage/maintenence_menu.webp){ loading=lazy, width=45% } 
+![](images/usage/fullcal.webp){ loading=lazy, width=45% } 
 
 The robot should move to a position over the origin and make some other small motions. When this is finished, the shape of the room in the UI should update. If anything looks drastically wrong try repeating the calibration with better lighting, or with the helper cards in different places.
 
@@ -135,7 +135,7 @@ Gamepad control is highly reccommended over keyboard as it gives you analog spee
     Doesn't work in Linux/Firefox but does work in Linux/Chrome
     [https://hardwaretester.com/gamepad](https://hardwaretester.com/gamepad) is really helpful in debugging this
 
-![](images/usage/gamepad.png){ loading=lazy, width=45% }
+![](images/usage/gamepad.webp){ loading=lazy, width=45% }
 
 #### Perspective
 
@@ -147,13 +147,13 @@ You can set the viewpoint to be any camera, the 3D viewport, or the seat tag, wh
 
 In gripper persepctive, forward is always in the direction the gripper is facing, which is up in the gripper camera view.
 
-![](images/usage/perspective.png){ loading=lazy, width=45% }
+![](images/usage/perspective.webp){ loading=lazy, width=45% }
 
 #### Stop motion tasks
 
 The STOP button can be pressed at any time to cause a soft stop. This means any task which is generating motion commands will be cancelled and all motors will be commanded to stop. After a soft stop the robot can continue to move again as soon as any task or control input is given.
 
-![](images/usage/stop.png){ loading=lazy, width=45% }
+![](images/usage/stop.webp){ loading=lazy, width=45% }
 
 #### Targets
 
@@ -204,9 +204,9 @@ You can connect your stringman robot to your account at Neufangled.com in order 
 
 While connected in LAN mode, from the RUN menu, select `Bind to Account`. You will be asked to log in with Google or Github. Give the robot a nickname, and click bind.
 
-![](images/usage/bind_action.png){ loading=lazy, width=45% } 
-![](images/usage/bind_dialog.png){ loading=lazy, width=45% } 
-![](images/usage/myrobots.png){ loading=lazy, width=45% } 
+![](images/usage/bind_action.webp){ loading=lazy, width=45% } 
+![](images/usage/bind_dialog.webp){ loading=lazy, width=45% } 
+![](images/usage/myrobots.webp){ loading=lazy, width=45% } 
 
 ## AI Control
 
@@ -230,7 +230,7 @@ This small model is used as part of an auto grasp routine in which a vector is p
 The more advanced form of autonomous control available for Stringman is end-to-end control by a Lerobot-based model.
 This is access by the `Connect Lerobot` button at the top of the interface. This panel is used to start a lerobot model eval script as a subprocess of stringman-headless by specifying a compatible huggingface repo id.
 
-![](images/learn/start_session.png){ loading=lazy, width=45% }
+![](images/learn/start_session.webp){ loading=lazy, width=45% }
 
 The lerobot script connects to the robot's local telemetry stream and consumes video and produces movements as long as an "episode" is active.
 `multitask-dit-8` is a model trained on the task of grasping household objects. The default behavior of pick and place is to try to start an episode in the connected lerobot session, assuming it is runnign a model which grasps objects. It's not yet wired up to automatically start the correct model since it's such an unfinished feature.

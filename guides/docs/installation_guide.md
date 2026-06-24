@@ -27,12 +27,12 @@ Remove the anchor's white cover by unscrewing the silver screw on the bottom if 
 
 The cover would be prevented from falling because the line or wire is threaded through the face hole with a fishing swivel tied on the other side, however letting in hang by the clicky switch might bend it's metal arm, so instead of doing that, pull out enough slack that you can place the cover on your step ladder without any pressure on the switch.
 
-![](images/install/image15.png){ loading=lazy, width=45% }
+![](images/install/image15.webp){ loading=lazy, width=45% }
 
 There are three screw holes in each anchor for mouting it to the wall. Use only the two indicated in the following image.
 Partially install the wood screws into the holes in every anchor until the point just protrudes from the back.
 
-![](images/install/image5.png){ loading=lazy, width=45% }
+![](images/install/image5.webp){ loading=lazy, width=45% }
 
 
 !!! note "Skip the third hole"
@@ -40,13 +40,13 @@ Partially install the wood screws into the holes in every anchor until the point
 
 Safely place your ladder in the corner of the room so you can reach the ceiling.
 
-![](images/install/image16.png){ loading=lazy, width=45% }
+![](images/install/image16.webp){ loading=lazy, width=45% }
 
 === "Corner"
 
     Hold the anchor securely in the corner with about 2cm of clearance to the ceiling, or to the moulding. Don't push it right up against the moulding as you need space above the top for the cover. Drive in every screw.
     
-    ![](images/install/image6.png){ loading=lazy, width=45% }
+    ![](images/install/image6.webp){ loading=lazy, width=45% }
     
 	!!! note "Note"
 	    The corners of walls in typical "stick framed" american houses will have at least one 2x4 in the corner on one side or the other. However, there are cases when two interior walls meet in a cross where the corner may be hollow. If you believe there is no stud in the corner, you either need to install a backer board connected to the nearest studs, or select a flat anchor variant for that corner and pick a nearby stud.
@@ -54,11 +54,11 @@ Safely place your ladder in the corner of the room so you can reach the ceiling.
 	    If you think you are in a building with steel or aluminum framing, please consult a professional. it is probably possible to bolt the anchor to the stud with the right hardware.
     
     
-	![](images/install/image7.png){ loading=lazy, width=45% }
+	![](images/install/image7.webp){ loading=lazy, width=45% }
     
 	While holding the line tight so it can't get pinched in the body somewhere, Snap on the cover. Push it straight on hard so both tabs at the top click into place. Secure it at the bottom with an M2.5x6 screw.
     
-	![](images/install/image8.png){ loading=lazy, width=45% }
+	![](images/install/image8.webp){ loading=lazy, width=45% }
 
 === "Flat"	
     
@@ -67,28 +67,28 @@ Safely place your ladder in the corner of the room so you can reach the ceiling.
     
     Hold the anchor securely onto the wall with the screw holes aligned to the stud and about 2cm of clearance to the ceiling, or to the moulding. Don't push it right up against the moulding as you need space for the cover. Drive in every screw.
     
-    ![](images/install/image1.png){ loading=lazy, width=45% }
-	![](images/install/image2.png){ loading=lazy, width=45% }
+    ![](images/install/image1.webp){ loading=lazy, width=45% }
+	![](images/install/image2.webp){ loading=lazy, width=45% }
     
 	While holding the line tight so it can't get pinched in the body somewhere, Snap on the cover. Push it straight on hard so both tabs at the top click into place. Secure it at the bottom with an M2.5x6 screw.
     
-	![](images/install/image3.png){ loading=lazy, width=45% }
-	![](images/install/image4.png){ loading=lazy, width=45% }
+	![](images/install/image3.webp){ loading=lazy, width=45% }
+	![](images/install/image4.webp){ loading=lazy, width=45% }
 
 
 Pull out enough of the line that you can reach it from the ground. If you feel bumping while pulling out line, this is normal. It is an electrical phenomenon involving the stepper driver, and it is harmless. When pulling line, confirm that the switch clicks when it's tight, and unclicks when it's loose. If you don't hear the click, especially with the power line, you may have to open the cover an slightly bend the lever arm of the switch up or down by small increments.
 
-![](images/install/image9.png){ loading=lazy, width=45% }
+![](images/install/image9.webp){ loading=lazy, width=45% }
 
 Plug the DC barrel jack extension cord into the bottom of the anchor, and the power supply into that. You can make it look nicer by taping it into the corner of the wall. 
 
-![](images/install/image19.png){ loading=lazy, width=45% }
-![](images/install/image20.png){ loading=lazy, width=45% }
+![](images/install/image19.webp){ loading=lazy, width=45% }
+![](images/install/image20.webp){ loading=lazy, width=45% }
 
 Plug in the anchor via one of the provided outlet remotes. The outlet remote serves as a low tech kill switch that's immune to software bugs, and serves as your main power on/off switch since the Pilot version has no global sleep mode.
 
-![](images/install/image17.png){ loading=lazy, width=45% }
-![](images/install/image18.png){ loading=lazy, width=45% }
+![](images/install/image17.webp){ loading=lazy, width=45% }
+![](images/install/image18.webp){ loading=lazy, width=45% }
 
 You can now move the ladder to the next corner.
 
@@ -98,11 +98,11 @@ Unpack the gripper and gantry, which are attached, and place them somewhere near
 
 === "Pilot Gripper"
 
-    ![](images/install/image21.png){ loading=lazy, width=45% }
+    ![](images/install/image21.webp){ loading=lazy, width=45% }
 
 === "Arpeggio Gripper"
 
-    ![](images/install/image21.png){ loading=lazy, width=45% }
+    ![](images/install/image21.webp){ loading=lazy, width=45% }
 
 ## Pre Tie-up Connection Test
 
@@ -129,7 +129,7 @@ Confirm that the control panel has discovered all 5 components (four anchors and
 
 If this method is not working for you, wifi credentials can also be added to the SD cards with the [add_wifi_config.sh](https://github.com/nhnifong/cranebot3-firmware/blob/main/add_wifi_config.sh) script.
 
-![](images/install/image23.png){ loading=lazy, width=45% }
+![](images/install/image23.webp){ loading=lazy, width=45% }
 
 If you have connection issues at this step, your anchors and host machine might not be on the same network. Please refer to the [Troubleshooting Page](quality_assurance.md) or contact me on Discord to resolve the issue before tie up.
 
@@ -139,14 +139,14 @@ Close the Stringman controller and power off all components for this step.
 
 Place the gripper and gantry on the floor in the center of the room. Pull all four lines slowly out of the anchors until their ends reach the gantry. 
 
-![](images/install/image11.png){ loading=lazy, width=45% }
+![](images/install/image11.webp){ loading=lazy, width=45% }
 
 === "Pilot Gripper"
 
 	Thread each eyelet into the closest hole in the side of the gantry and clip it onto one of the speed clips. Do not cross lines, and select the right speed clip for each line so that they form a clean cross in the center.
 
-	![](images/install/image12.png){ loading=lazy, width=45% }
-	![](images/install/image13.png){ loading=lazy, width=45% }
+	![](images/install/image12.webp){ loading=lazy, width=45% }
+	![](images/install/image13.webp){ loading=lazy, width=45% }
 
 	When you get to the power line, pass the JST connector through the hole as well. Attach the swivel to the corresponding clip, and plug the gripper's JST connector into the socket on the end of the power line. the conductors are longer than the fishing line, making them slack so the fishing line should bear all the weight. If for some reason the conductor is bearing any weight, retie the power line's swivel back 10 cm.
 
@@ -170,11 +170,11 @@ The gantry cube must be in view of the cameras for calibration to work. ensure y
 
 Select the "Run Full Calibration" option from the main menu.
 
-![](images/install/image22.png){ loading=lazy, width=45% }
+![](images/install/image22.webp){ loading=lazy, width=45% }
 
 After calibration, you can move the robot around with a gamepad or the keyboard.
 
-![](images/install/gamepad_diagram.png){ loading=lazy, width=45% }
+![](images/install/gamepad_diagram.webp){ loading=lazy, width=45% }
 
 
 ## Park and Unpark
@@ -186,11 +186,11 @@ While holding the gripper in one hand, turn off all power to the anchors. the li
 
 === "Pilot Gripper"
 
-	![](images/install/image24.png){ loading=lazy, width=45% }
+	![](images/install/image24.webp){ loading=lazy, width=45% }
 
 === "Arpeggio Gripper"
 
-	![](images/install/image24.png){ loading=lazy, width=45% }
+	![](images/install/image24.webp){ loading=lazy, width=45% }
 
 ### Learn when to use the kill switch
 
@@ -198,7 +198,7 @@ The "all off" button on the outlet remote serves as a low tech kill switch that 
 Usually, without power the gripper slowly falls until it touches the floor.
 It is best to keep the outlet remote in the same place at all times, and circle the "all off" button with red sharpie or nail polish. You could mount it to the wall or the desk for example. That way you don't have to think too hard in the event that you need to hit that button.
 
-![](images/install/image14.png){ loading=lazy, width=45% }
+![](images/install/image14.webp){ loading=lazy, width=45% }
 
 "Auto tension" reels in each line until some tension is detected. If a line gets tight but doesn't stop reeling gently tug on it. If that doesn't stop it, hit the "STOP" button in the control panel. The stop button in software commands the motors to keep their current length but doesn't turn anything off. **If for some reason motors are still moving** after this, hit the "all off" button on the outlet remote. You may need to repeat the tension calibration steps for the misbehaving motor.
 

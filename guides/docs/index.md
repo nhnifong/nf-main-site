@@ -4,7 +4,7 @@
 
 These guides serve to explain how to install and use Stringman, as well as how to build each hardware revision from scratch.
 
-![](images/index/parts.png){ loading=lazy, width=65% }
+![](images/index/parts.webp){ loading=lazy, width=65% }
 
 ## Installing an Assembled Stringman
 

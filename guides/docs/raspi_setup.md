@@ -16,16 +16,16 @@ Download the [Raspiberry Pi Imager](https://www.raspberrypi.com/software/)
 Insert a MicroSD card and open the imager.  
 
 For device, select `Raspberry Pi Zero 2 W`  
-![](images/raspi/image1.png){ loading=lazy, width=45% }
+![](images/raspi/image1.webp){ loading=lazy, width=45% }
 
 Download the [Stringman Raspberry Pi Image](https://storage.googleapis.com/stringman-models/stringman-zero2w.img) (1.6 GB)
 For operating system, select custom image and use the downloaded file.
-![](images/raspi/image2.png){ loading=lazy, width=45% }
-![](images/raspi/image3.png){ loading=lazy, width=45% }
+![](images/raspi/image2.webp){ loading=lazy, width=45% }
+![](images/raspi/image3.webp){ loading=lazy, width=45% }
 
 Click `Next` and then select the SD card you would like to flash.
 
-![](images/raspi/image4.png){ loading=lazy, width=45% }
+![](images/raspi/image4.webp){ loading=lazy, width=45% }
 
 Click `Write` and confirm. When the image is finished, insert it into the raspberry pi of the stringman component and boot.
 

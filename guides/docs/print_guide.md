@@ -17,7 +17,7 @@ Print four anchors total, you can select either the corner, flat-left, or flat-r
 
 For example, the following room would require two corner variants, a flat left variant, and a flat right variant.
 
-![](images/print/image9.png){ loading=lazy, width=45% }
+![](images/print/image9.webp){ loading=lazy, width=45% }
 
 The Anchor folder contains the common parts for all anchor variants, and then the variant specific parts in subfolders.
 
@@ -29,7 +29,7 @@ The Anchor folder contains the common parts for all anchor variants, and then th
  - Color irrelevant  
 
 There is built in support bridge near the top for the U-shaped slot for the DC barrel jack to print on. You should trim away the bridge from the DC barrel jack slot after printing.  
-![](images/print/image2.png){ loading=lazy, width=45% }
+![](images/print/image2.webp){ loading=lazy, width=45% }
 
 ### Cover Top (1x)  
 
@@ -51,17 +51,17 @@ The matching bottom plate of the cover variant you are printing.
  - Print on the widest face.
  - White or beige color
 
-![](images/print/image8.png){ loading=lazy, width=45% }
+![](images/print/image8.webp){ loading=lazy, width=45% }
 
 
 === "Corner variant cover glue-up"
 
-	![](images/print/image4.png){ loading=lazy, width=45% }
+	![](images/print/image4.webp){ loading=lazy, width=45% }
     
    
 === "Flat variant cover glue-up"
    
-    ![](images/print/image5.png){ loading=lazy, width=45% }
+    ![](images/print/image5.webp){ loading=lazy, width=45% }
 
 ### Retainer (1x)  
 
@@ -82,7 +82,7 @@ A small retainer to hold the spool bearing in.
 
  - No brim
 
-![](images/print/image1.png){ loading=lazy, width=45% }
+![](images/print/image1.webp){ loading=lazy, width=45% }
 
 ## Gripper Assembly (1x)
 
@@ -105,7 +105,7 @@ There are sacrificial objects on the sides that support a 1 layer bridge.
 You should remove them and trim away the bridge after printing  
 A brim is not necessary, and would be hard to remove from the narrow areas of this part, except for around those sacrificial supports. Because they are small and isolated and could become detached.
 
-![](images/print/image3.png){ loading=lazy, width=45% }
+![](images/print/image3.webp){ loading=lazy, width=45% }
 
 ### Spool A (1x)  
 
@@ -210,7 +210,7 @@ This is not a mirror image of the other finger, it’s a different shape.
  - print on the face above the forehead shown in image
  - Use the color you want your gripper to show on the exterior
 
-![](images/print/image6.png){ loading=lazy, width=45% }
+![](images/print/image6.webp){ loading=lazy, width=45% }
 
 ### Shell back (1x)  
 
@@ -220,7 +220,7 @@ This is not a mirror image of the other finger, it’s a different shape.
  - print on the upper back face shown in the image
  - Use the color you want your gripper to show on the exterior
 
-![](images/print/image7.png){ loading=lazy, width=45% }
+![](images/print/image7.webp){ loading=lazy, width=45% }
 
 ## Gantry  
 

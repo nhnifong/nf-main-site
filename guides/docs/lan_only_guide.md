@@ -25,7 +25,7 @@ Although the web UI is served from [**neufangled.com/control_panel**](http://neu
 
 Just select LAN mode and it will make a connection to `localhost:4254`
 
-![](images/usage/lanmode.png){ loading=lazy, width=45% }
+![](images/usage/lanmode.webp){ loading=lazy, width=45% }
 
 It doesn't matter whether you start the UI first or `stringman-headless` first.
 

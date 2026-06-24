@@ -21,7 +21,7 @@ Hanging the robot in the room where it will operate involves installing anchors 
 
 Choose two opposing corners to be the mounting locations for the anchors. The other two corners will be where you mount eyelets. The four-walled volume defined by these points is the robot's work area. If the room has a ceiling fan, you can mount the anchors and eyelets at the blade height or lower and they won't be able to touch. If the room has a bunk bed, it is OK to let it be in the work area but intelligent obstacle avoidances is not implemented so you might have to manually intervene sometimes.
 
-![](images/arp_install/room_diagram.png){ loading=lazy, width=45% }
+![](images/arp_install/room_diagram.webp){ loading=lazy, width=45% }
 
 ## Unpacking
 
@@ -29,36 +29,36 @@ Choose two opposing corners to be the mounting locations for the anchors. The ot
 
 The gripper and marker box with attached pole are separated during shipping in order to use a smaller box and must be assembled before use.
 
-![](images/arp_install/PXL_20260412_004041496.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004041496.webp){ loading=lazy, width=45% }
 
 Using the provided 1.5mm mini screwdriver bit, remove the back cover of the gripper with two screws. one on top and one on the bottom.
 
-![](images/arp_install/PXL_20260412_004056062.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004123246.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004056062.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004123246.webp){ loading=lazy, width=45% }
 
 The block at the top of the back of the gripper with the rectangular hole is the `wrist removal block`. It securely holds the wrist joint. Color may vary on internal parts such as this. In these photo's it's lime green.
 Unscrew the three screws holding it in and pull it out. It's intentionally a tight fit.
 
-![](images/arp_install/PXL_20260412_004142298.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004213285.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004221794.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004231543.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004142298.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004213285.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004221794.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004231543.webp){ loading=lazy, width=45% }
 
 Feed the power supply plug from the gripper up through the pole of the marker box until it comes out the top.
 
-![](images/arp_install/PXL_20260412_004242189.MP.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004242189.MP.webp){ loading=lazy, width=45% }
 
 Seat the gear and bearing into the wrist socket. The rotation doesn't matter it will be determined later during calibration.
 Press the gear in until the teeth mesh and the bearing is fully seated, then press the wrist block down into the cavity and secure with the three screws.
 
-![](images/arp_install/PXL_20260412_004300038.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004636298.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004646373.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_004724816.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004300038.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004636298.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004646373.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004724816.webp){ loading=lazy, width=45% }
 
 Reinstall the back cover of the gripper using the two previously removed screws. Set the gripper aside.
 
-![](images/arp_install/PXL_20260412_004803982.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004803982.webp){ loading=lazy, width=45% }
 
 ## Mounting
 
@@ -67,16 +67,16 @@ Reinstall the back cover of the gripper using the two previously removed screws.
 Mark 5 inches (13cm) below the ceiling on the wall in a corner where an anchor will be mounted. (Or mark the height of the blades of the ceiling fan)
 Place the `stud_mount` (butteryfly shaped) part against the wall and drive in two 3-inch wood screws. In a drywall finished home there is always at least one stud behind a wall corner. Hitting a stud on one side is sufficient. If you feel that you didn't hit any studs, the location may be unsuitable and require a backer board.
 
-![](images/arp_install/PXL_20260527_214408186.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260527_214538867.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260527_214611964.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260527_214408186.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260527_214538867.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260527_214611964.webp){ loading=lazy, width=45% }
 
 Hold the anchor up to the wall, near the ceiling. Slide it straight down in the corner so it engages with the mount and locks in.
 
 While the ladder is still in place in this corner, plug in one of the white barrel jack extension cords and leave it hanging.
 Pull both lines out of the anchor down to a level where you can reach them without the ladder.
 
-![](images/arp_install/PXL_20260417_224940434.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260417_224940434.webp){ loading=lazy, width=45% }
 
 Repeat with the other anchor in the opposite corner.
 
@@ -85,8 +85,8 @@ Repeat with the other anchor in the opposite corner.
 In the two remaining corners of the room, With a single wood screw, screw an eyelet into a stud with the small pointer pointing up.
 It should be on the right wall when facing the corner, unless this corner of the work area is flat, then you just mount it however you can manage, as long as it's in a stud.
 
-![](images/arp_install/PXL_20260527_122818135.png){ loading=lazy, width=45% }
-![](images/arp_install/image_2.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260527_122818135.webp){ loading=lazy, width=45% }
+![](images/arp_install/image_2.webp){ loading=lazy, width=45% }
 
 When facing the eyelet, look to anchor to your right. Take the carabiner from it's left line and pull it to you, put it through the eyelet from back to front, then pull it down to a level you can reach without a ladder.
 
@@ -119,7 +119,7 @@ Connect the 5A 24V powers supplies to the anchors and plug into the walls using 
 
 Ensure the control panel can run on your host machine and connect to the robot components.
 
-![](images/arp_install/image_1.png){ loading=lazy, width=45% }
+![](images/arp_install/image_1.webp){ loading=lazy, width=45% }
 
 The temporary powerup of the gripper can also be done before attaching the marker box.
 
@@ -157,8 +157,8 @@ Power off the whole system.
 
 Place the gripper in the center of the room. Pull out each of the four lines to the center. clip the carabiner onto the corresponding loop in the white marker box. No lines should cross. Plug in the power to the gripper from the end of the gray line if not already plugged in.
 
-![](images/arp_install/PXL_20260412_004820302.png){ loading=lazy, width=45% }
-![](images/arp_install/PXL_20260412_005103906.png){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_004820302.webp){ loading=lazy, width=45% }
+![](images/arp_install/PXL_20260412_005103906.webp){ loading=lazy, width=45% }
 
 Power the system back on.
 
@@ -182,29 +182,29 @@ Hold `E` for a second or two to move up off the ground. More complex motion requ
 
     Ground yourself to prevent static discharge and Unscrew the camera mount from the side.
 
-    ![](images/arp_install/PXL_20260527_162458033.png){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162458033.webp){ loading=lazy, width=45% }
 
     Flip the camera up, and remove the two screws that attach it to the mount.
 
-    ![](images/arp_install/PXL_20260527_162516907.png){ loading=lazy, width=45% }
-    ![](images/arp_install/PXL_20260527_162545638.png){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162516907.webp){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162545638.webp){ loading=lazy, width=45% }
 
     Swap in the mount that has a better angle for your room. 30° for tall skinny rooms, 22° for wider rooms or short ceilings.
 
-    ![](images/arp_install/PXL_20260527_162551217.MP.png){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162551217.MP.webp){ loading=lazy, width=45% }
 
     Screw the new mount to the camera with the same screws
 
-    ![](images/arp_install/PXL_20260527_162604065.png){ loading=lazy, width=45% }
-    ![](images/arp_install/PXL_20260527_162650265.png){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162604065.webp){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162650265.webp){ loading=lazy, width=45% }
 
     press it into the notch on the frame and screw it back in from the side. The screw should be fully seated and the mount tight against the frame or it may end up in an indeterminate orientation.
 
-    ![](images/arp_install/PXL_20260527_162722427.png){ loading=lazy, width=45% }
+    ![](images/arp_install/PXL_20260527_162722427.webp){ loading=lazy, width=45% }
 
 Prepare for calibration by placing the four large paper cards on the floor. The one labelled "origin" should be in the center, with the others around it anywhere. The small plastic cards are not part of calibration, they are for labelling drop points during normal operation.
 
-![](images/arp_install/cards_on_floor.png){ loading=lazy, width=45% }
+![](images/arp_install/cards_on_floor.webp){ loading=lazy, width=45% }
 
 With the gripper near the center of the room, touching the floor, select "Calibration and Maintenence" > "Full Calibration" from the run menu.
 It is normal for some lines to be slack during calibration, this is a necessary step to determine the location of the eyelets.

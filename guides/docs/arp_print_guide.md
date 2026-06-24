@@ -4,7 +4,7 @@ Hardware version: Arpeegio
 
 Total print time about 80h
 
-![](images/print/image10.png){ loading=lazy, width=45% } 
+![](images/print/image10.webp){ loading=lazy, width=45% } 
 
 The whole print is available as a [Bambu 3MF file here](assets/stringman_bambu.zip)
 

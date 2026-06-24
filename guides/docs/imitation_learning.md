@@ -27,7 +27,7 @@ Establish a connection to your robot and confirm basic functionality. Confirm al
 
 The click the `Start Lerobot` button in the top bar. A panel will open. To record a dataset you must specify a repo id with the format `huggingface_username/dataset_name` You can choose any dataset name you like. If it is new, we will create it. If it exists and is the exact same format, we will append episodes to it.
 
-![](images/learn/start_session.png){ loading=lazy, width=45% }
+![](images/learn/start_session.webp){ loading=lazy, width=45% }
 
 Click start and in a moment, you will hear 'ready' spoken by the browser. Auditory feedback is used to make it easier to record episodes while keeping your eyes on the robot.
 
@@ -57,7 +57,7 @@ You can discard an episode during recording and it will be ended and not include
 
 To save the episodes and upload to huggingface, click the  button to bring up the Lerobot Session dialog. Click Finalize. The session will process any remaining data and upload to huggingface.
 
-![](images/learn/active_session.png){ loading=lazy, width=45% }
+![](images/learn/active_session.webp){ loading=lazy, width=45% }
 
 There is a [dataset viewer](https://huggingface.co/spaces/lerobot/visualize_dataset) where you can review the recorded episodes.
 
