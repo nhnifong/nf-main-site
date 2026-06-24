@@ -52,8 +52,8 @@ DEFAULT_SHIPPING_SIZE = "small"
 
 SHIPPING_REGIONS = {
     "us_ca": {
-        "label": "USA / Mexico",
-        "allowed_countries": ["US", "MX"],
+        "label": "USA",
+        "allowed_countries": ["US"],
         "shipping_rates": {
             "small": {
                 "shipping_rate": "shr_1T9mMwCIW3Ilocb5ZGx7fAl6",
