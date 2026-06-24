@@ -15,16 +15,16 @@ badge: In Stock
 store_description: >
   Fully assembled room-scale CDPR system. Includes 4 pilot (V1) anchors and
   the Arpeggio (V2) gripper.
-store_image: pilot-arp-main-white.jpg
+store_image: pilot-arp-main-white.webp
 image_folder: ""
 images:
-  - pilot-arp-main-white.jpg
-  - pilot-arp-laid-out-white.jpg
-  - arp-gripper-panda-white.jpg
-  - pilot-corner-anchor.jpg
-  - pilot-corner-anchor-nocover.jpg
-  - arp-gripper-white.jpg
-  - arp-gripper-nocover.jpg
+  - pilot-arp-main-white.webp
+  - pilot-arp-laid-out-white.webp
+  - arp-gripper-panda-white.webp
+  - pilot-corner-anchor.webp
+  - pilot-corner-anchor-nocover.webp
+  - arp-gripper-white.webp
+  - arp-gripper-nocover.webp
 show_in_store: false
 store_order: 2
 ---

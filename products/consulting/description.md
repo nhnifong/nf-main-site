@@ -10,10 +10,10 @@ badge:
 store_description: >
   Three one-hour sessions to solve your software, hardware, or integration
   problems.
-store_image: portrait.jpg
+store_image: portrait.webp
 image_folder: ""
 images:
-  - portrait.jpg
+  - portrait.webp
 show_in_store: false
 store_order: 5
 ---

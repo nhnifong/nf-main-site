@@ -7,18 +7,18 @@ shipping_size: small
 badge:
 store_description: >
   This is the DIY version containing all parts from the BOM. Print the structural components and assemble it according to our guide.
-store_image: arp_anchor_kit_top_down.jpg
+store_image: arp_anchor_kit_top_down.webp
 image_folder: ""
 images:
-  - arp_anchor_kit_angle.jpg
-  - arp_anchor_kit_top_down.jpg
-  - arp-anchor-face.jpg
-  - arp-anchor-bottom.jpg
-  - arp-gripper-kit-laid-out.jpg
-  - arp-gripper-kit-box.jpg
-  - arp-gripper-nocover.jpg
-  - arp-gripper-panda-copper.jpg
-  - arp-gripper-copper.jpg
+  - arp_anchor_kit_angle.webp
+  - arp_anchor_kit_top_down.webp
+  - arp-anchor-face.webp
+  - arp-anchor-bottom.webp
+  - arp-gripper-kit-laid-out.webp
+  - arp-gripper-kit-box.webp
+  - arp-gripper-nocover.webp
+  - arp-gripper-panda-copper.webp
+  - arp-gripper-copper.webp
 show_in_store: true
 store_order: 3
 ---

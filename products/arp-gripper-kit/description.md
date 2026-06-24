@@ -9,14 +9,14 @@ badge: In Stock
 store_description: >
   This kit includes the PCBs, motors, fasteners, and sensors needed to build the
   Arpeggio Gripper. You just provide the 3D printed parts.
-store_image: arp-gripper-kit-laid-out.jpg
+store_image: arp-gripper-kit-laid-out.webp
 image_folder: ""
 images:
-  - arp-gripper-kit-laid-out.jpg
-  - arp-gripper-kit-box.jpg
-  - arp-gripper-nocover.jpg
-  - arp-gripper-panda-copper.jpg
-  - arp-gripper-copper.jpg
+  - arp-gripper-kit-laid-out.webp
+  - arp-gripper-kit-box.webp
+  - arp-gripper-nocover.webp
+  - arp-gripper-panda-copper.webp
+  - arp-gripper-copper.webp
 show_in_store: false
 store_order: 3
 ---

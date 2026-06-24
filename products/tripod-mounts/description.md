@@ -7,10 +7,10 @@ shipping_size: small
 badge:
 store_description: >
   Adapters to mount a Stringman Robot on four tripods
-store_image: tripod-mounts.png
+store_image: tripod-mounts.webp
 image_folder: ""
 images:
-  - tripod-mounts.png
+  - tripod-mounts.webp
 show_in_store: true
 store_order: 6
 ---

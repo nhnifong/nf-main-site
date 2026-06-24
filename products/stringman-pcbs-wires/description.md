@@ -10,10 +10,10 @@ badge:
 store_description: >
   Just the custom PCBs and specialty wire from the Stringman BOM.
   For when you can source the other parts yourself.
-store_image: pcb_kit.png
+store_image: pcb_kit.webp
 image_folder: ""
 images:
-  - pcb_kit.png
+  - pcb_kit.webp
 show_in_store: true
 store_order: 5
 ---

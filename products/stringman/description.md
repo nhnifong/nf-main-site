@@ -7,25 +7,25 @@ intro: >
 variants:
   - label: White
     price_id: "price_1TRv2hCIW3Ilocb51Jm8aVWH"
-    image: stringman_white.jpg
+    image: stringman_white.webp
   - label: Copper
     price_id: "price_1TRv3LCIW3Ilocb5xHW3WC8w"
-    image: stringman_copper.jpg
+    image: stringman_copper.webp
 shipping_size: large
 badge: 
 store_description: >
   The complete system, fully assembled. Ready for installation and calibration in your room. Choose either this or the hardware kit, you don't need both.
-store_image: stringman_white.jpg
+store_image: stringman_white.webp
 image_folder: ""
 images:
-  - stringman_white.jpg
-  - everything_white.jpg
-  - arp-anchor-face.jpg
-  - arp-anchor-bottom.jpg
-  - arp-gripper-white.jpg
-  - arp-gripper-nocover.jpg
-  - arp-gripper-panda-copper.jpg
-  - stringman_copper.jpg
+  - stringman_white.webp
+  - everything_white.webp
+  - arp-anchor-face.webp
+  - arp-anchor-bottom.webp
+  - arp-gripper-white.webp
+  - arp-gripper-nocover.webp
+  - arp-gripper-panda-copper.webp
+  - stringman_copper.webp
 show_in_store: true
 store_order: 1
 ---

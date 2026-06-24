@@ -1302,8 +1302,16 @@ function initTargetRoutePickers() {
 }
 initTargetRoutePickers();
 
+// VideoReady.feed_number identifies which stream this is. Note that it is NOT the
+// anchor num in stringman pilot. The feeds are:
+//   0: gripper camera
+//   1: first preferred anchor camera
+//   2: second preferred anchor camera
+//   3: reprojected floor image (handled by floorProjection below)
+//   4: heatmap overlay, transmitted only in debug builds and unused by the UI
+//      (falls through to the unknown-feed guard and is ignored)
 async function handleVideoReady(data: nf.telemetry.IVideoReady) {
-  const feedNumber = data.feedNumber!; // Note that this is not anchor num in stringman pilot.
+  const feedNumber = data.feedNumber!;
 
   if (feedNumber === 3) {
     if (isLanMode && data.localUri) {

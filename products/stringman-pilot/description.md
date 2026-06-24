@@ -10,16 +10,16 @@ badge: In Stock
 store_description: >
   The original Stringman system, fully assembled with 4 Pilot anchors and the
   first-generation gripper.
-store_image: product_pilot.png
+store_image: product_pilot.webp
 image_folder: ""
 images:
-  - hangtoy.png
-  - topview.png
-  - product_pilot.png
-  - outside_anchor.png
-  - inside_anchor.png
-  - inside_gripper.png
-  - gripper_palm.png
+  - hangtoy.webp
+  - topview.webp
+  - product_pilot.webp
+  - outside_anchor.webp
+  - inside_anchor.webp
+  - inside_gripper.webp
+  - gripper_palm.webp
 show_in_store: false
 store_order: 99
 ---

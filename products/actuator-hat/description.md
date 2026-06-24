@@ -8,12 +8,12 @@ shipping_size: small
 badge:
 store_description: >
   Raspberry Pi Zero hat for controlling two Damiao actuators
-store_image: actuator-hat-1.png
+store_image: actuator-hat-1.webp
 image_folder: ""
 images:
-  - actuator-hat-1.png
-  - actuator-hat-2.png
-  - actuator-hat-3.png
+  - actuator-hat-1.webp
+  - actuator-hat-2.webp
+  - actuator-hat-3.webp
 show_in_store: true
 store_order: 5
 ---

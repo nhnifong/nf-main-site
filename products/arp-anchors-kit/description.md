@@ -9,13 +9,13 @@ badge: In Stock
 store_description: >
   Build your own Arpeggio anchors with this complete hardware kit featuring
   powerful and quiet Damiao hub motors.
-store_image: arp_anchor_kit_top_down.jpg
+store_image: arp_anchor_kit_top_down.webp
 image_folder: ""
 images:
-  - arp_anchor_kit_angle.jpg
-  - arp_anchor_kit_top_down.jpg
-  - arp-anchor-face.jpg
-  - arp-anchor-bottom.jpg
+  - arp_anchor_kit_angle.webp
+  - arp_anchor_kit_top_down.webp
+  - arp-anchor-face.webp
+  - arp-anchor-bottom.webp
 show_in_store: false
 store_order: 4
 ---
