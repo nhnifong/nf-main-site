@@ -59,7 +59,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   { // turn on the robot and detect the components
     id: 'connect-components',
     highlightId: 'component-status',
-    message: 'Great job!<br><br>Now power on the robot and check here for Anchors and Gripper to be detected on the same wifi network',
+    message: 'Great job!<br><br>Now power on the robot. Show a <a href="/docs/arp_install_guide/#connect-all-components-to-wifi" target="_blank" rel="noopener">wifi share code</a> to each component\'s camera to connect it to your network. Check here for Anchors and Gripper to be detected by the motion controller.',
     dismissWhen: () => isFullyConnected(),
   },
 

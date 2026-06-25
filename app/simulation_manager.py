@@ -98,35 +98,48 @@ class SimulatedRobot:
 
     def _get_anchor_poses(self):
         """
-        Define 4 anchors in corners of a 5m square room, 2.5m high.
-        Origin is center of room (0,0).
-        Rotated along Z to look outwards (previous inward angle + 180).
-        """
-        poses = []
-        
-        # Corner definitions: (x, y) -> facing angle (degrees)
-        # Forward is +Y (0 deg).
-        # Previous angles: -45, 45, 135, 225.
-        # New angles: +180 to each.
-        
-        corners = [
-            (-2.5, -2.5, -45 + 180), # Anchor 0: Bottom-Left
-            (2.5, -2.5, 45 + 180),   # Anchor 1: Bottom-Right
-            (2.5, 2.5, 135 + 180),   # Anchor 2: Top-Right
-            (-2.5, 2.5, 225 + 180)   # Anchor 3: Top-Left
-        ]
+        Arpeggio layout: two active anchors in opposite (diagonal) corners and two
+        passive eyelets in the other two opposite corners. Each anchor drives two
+        lines — one straight to the gripper and one routed through the eyelet on its
+        own wall — so the gripper still hangs from four lines at the four corners.
 
-        for x, y, deg in corners:
+        Origin is the center of the room, 2.5m high. Anchors occupy UI slots 0 and
+        1; eyelets occupy slots 2 and 3, paired with the anchors as 0->2 and 1->3
+        (matching the wall-cable routing in main.ts). The playroom treats a robot as
+        Arpeggio whenever AnchorPoses carries eyelet positions. Rotated along Z to
+        look outwards (inward angle + 180). Forward is +Y (0 deg).
+        """
+        # Anchor corners (slots 0, 1): (x, y) -> outward facing angle (degrees).
+        # Diagonally opposite each other.
+        anchor_corners = [
+            (2.5, -2.5, 45 + 180),    # Anchor 0: bottom-right
+            (-2.5, 2.5, 225 + 180),   # Anchor 1: top-left (opposite corner)
+        ]
+        poses = []
+        for x, y, deg in anchor_corners:
             # Assuming Z-up coordinate system where rotation is around Z
             rotation = euler_to_rodrigues(0, 0, deg)
-            
-            pos = common.Vec3(x=x, y=y, z=ANCHOR_HEIGHT)
             poses.append(common.Pose(
-                position=pos, 
+                position=common.Vec3(x=x, y=y, z=ANCHOR_HEIGHT),
                 rotation=common.Vec3(x=rotation[0], y=rotation[1], z=rotation[2])
             ))
-            
-        return telemetry.AnchorPoses(poses=poses)
+
+        # Eyelet corners (slots 2, 3): passive, position only. Diagonally opposite
+        # each other, in the two corners the anchors don't occupy. Each receives the
+        # routed second line from the anchor at the same list index (0->2, 1->3),
+        # i.e. the eyelet sharing that anchor's wall.
+        eyelet_corners = [
+            (2.5, 2.5),     # Eyelet 0 (routes from Anchor 0, shares the +x wall)
+            (-2.5, -2.5),   # Eyelet 1 (routes from Anchor 1, shares the -x wall)
+        ]
+        eyelets = [common.Vec3(x=x, y=y, z=ANCHOR_HEIGHT) for x, y in eyelet_corners]
+
+        return telemetry.AnchorPoses(
+            poses=poses,
+            eyelets=eyelets,
+            tilt=[26.0, 26.0],   # installed camera tilt adapter angle per anchor (degrees)
+            swing_latency=0.3,   # pre-populates the UI's swing-cancellation slider
+        )
 
     async def _simulate_component_connection(self, is_gripper, anchor_num=0):
         """
@@ -140,7 +153,7 @@ class SimulatedRobot:
             websocket_status=telemetry.ConnStatus.CONNECTING,
             video_status=telemetry.ConnStatus.NOT_DETECTED,
             ip_address="192.168.1.10" + str(anchor_num if not is_gripper else 9),
-            gripper_model=telemetry.GripperModel.PILOT if is_gripper else None
+            gripper_model=telemetry.GripperModel.ARPEGGIO if is_gripper else None
         )
         
         update = telemetry.TelemetryBatchUpdate(
@@ -378,8 +391,8 @@ class SimulatedRobot:
         logger.debug("Sent initial AnchorPoses.")
 
         # Start Connection Simulation Tasks (Background)
-        # 4 Anchors
-        for i in range(4):
+        # 2 Anchors (Arpeggio); the other two corners hold passive eyelets, not components.
+        for i in range(2):
             # Stagger startup slightly
             await asyncio.sleep(0.25)
             self.tasks.append(asyncio.create_task(self._simulate_component_connection(is_gripper=False, anchor_num=i)))
