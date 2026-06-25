@@ -40,11 +40,10 @@ hooks:
   - url_replacer.py
 nav:
     - index.md
-    - Stringman Arpeggio (Latest):
-        - arpeggio_anchor_build_guide.md
-        - arpeggio_gripper_build_guide.md
-        - arp_install_guide.md
-        - arp_print_guide.md
+    - arp_print_guide.md
+    - arp_install_guide.md
+    - arpeggio_anchor_build_guide.md
+    - arpeggio_gripper_build_guide.md
     - Earlier Versions:
         - gripper_build_guide.md
         - anchor_build_guide.md
