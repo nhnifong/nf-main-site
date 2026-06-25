@@ -263,9 +263,9 @@ Make a mark 6.5mm from the end of the tube with a sharpie pen.
 
 Put a few drops of cyanoacrylate glue where the gear and tube touch, followed by another washer and press it firmly to glue it there.
 
-![](images/grip_arp/PXL_20260623_141739201.png){ loading=lazy, width=45% }
-![](images/grip_arp/glue.png){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260623_142036295.png){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260623_141739201.webp){ loading=lazy, width=45% }
+![](images/grip_arp/glue.webp){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260623_142036295.webp){ loading=lazy, width=45% }
 
 !!! tip "Multicolor print or stickers"
 
@@ -304,7 +304,7 @@ Put another steel washer on the bottom of the tube under the bearing, and holdin
 
 Unpack the 64cm cable with male JST ZH plugs at both ends. Thread it through the tube. and set it aside.
 
-![](images/grip_arp/PXL_20260623_152534718.png){ loading=lazy, width=45% } 
-![](images/grip_arp/PXL_20260623_170326288.png){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260623_152534718.webp){ loading=lazy, width=45% } 
+![](images/grip_arp/PXL_20260623_170326288.webp){ loading=lazy, width=45% } 
 
 The attachment of the pole and marker box to the gripper are covered in the next section, [Physical Installation](arp_install_guide.md).
