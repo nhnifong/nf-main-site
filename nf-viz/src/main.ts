@@ -756,7 +756,7 @@ function handleOperationProgress(data: nf.telemetry.IOperationProgress) {
     if (data.name) completedOperations[data.name] = true;
     container.classList.add('hidden');
     // Use data.name and data.currentAction for the popup
-    showPopup({ message: `${data.name ?? 'Operation'} Complete\n${data.currentAction ?? ''}` });
+    showPopup({ message: `${data.name ?? 'Operation'} \n${data.currentAction ?? ''}` });
     return;
   }
 
