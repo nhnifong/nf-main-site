@@ -72,6 +72,11 @@
                     </select>
                 </div>
 
+                <!-- Shown only when the Canada region ("ca") is selected. -->
+                <p id="canada-tariff-note" class="shipping-note" hidden>
+                    Unfortunately Canada charges a 25% retaliatory tariff that applies to US-made robots. This is included in the shipping price shown at checkout.
+                </p>
+
                 <div class="purchase-actions">
                     <button id="add-to-cart-button" class="purchase-btn" type="button">Add to Cart</button>
                     <button id="buy-button" class="purchase-btn" type="button">Buy Now</button>
@@ -86,7 +91,15 @@
                     const variantSelect = document.getElementById('variant-select');
                     const regionSelect = document.getElementById('region-select');
                     const priceEl = document.getElementById('product-price');
+                    const tariffNote = document.getElementById('canada-tariff-note');
                     const slug = {{ product.slug | tojson }};
+
+                    // Reveal the tariff note only while Canada is the chosen destination.
+                    function updateTariffNote() {
+                        if (tariffNote) tariffNote.hidden = regionSelect.value !== 'ca';
+                    }
+                    regionSelect.addEventListener('change', updateTariffNote);
+                    updateTariffNote();
 
                     if (variantSelect && priceEl) {
                         variantSelect.addEventListener('change', function () {
