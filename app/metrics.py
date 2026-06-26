@@ -28,8 +28,11 @@ METRIC_DEFINITIONS = [
         "section": SECTION_ROBOT,
         "title": "Positioning Accuracy",
         "prompt": (
-            "Place a route card on the floor face up and set that card as the route source.",
-            "Run the debug command \"goalseek\". Watch the test and record the result."
+            "Place all four route card tags on the floor name side up. ",
+            "Run the debug command \"goalseek\". The robot will visit each of the "
+            "four tags in turn until it has visited each one three times. After it "
+            "leaves a tag, move that tag to a new place in order to more thoroughly "
+            "cover the work area. Tags may be on beds or furniture as well as the floor. "
             "If any collision, interruption, or error occurs, restart the test."
             "Report the RMS deviation from the console log in centimeters."
         ),
