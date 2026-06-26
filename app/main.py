@@ -772,6 +772,8 @@ async def fleet_active_count():
     """Public: number of distinct robots seen online in the last 3 months — the
     'deployed' fleet size shown on the scoreboard hero."""
     count = await count_recently_active_robots(months=3)
+    # plus additional robots which are known to be deployed in lan mode by testers
+    count += 4
     return {"active_count": count, "window_months": 3}
 
 
