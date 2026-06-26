@@ -412,7 +412,7 @@ export class GamepadController {
             vy /= mag;
             vz /= mag;
             // Scale speed (max 0.35 m/s)
-            speed = 0.35 * mag;
+            speed = 0.45 * mag;
         }
 
         // Finger Control A/B

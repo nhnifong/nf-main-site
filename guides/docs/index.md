@@ -20,11 +20,12 @@ Stringman will likely work for you if:
  - A **power outlets** reachable near two opposite room corners.
  - The robot parts and your computer can all be on the **same Wi-Fi network** — an ordinary home network, *not* a guest network (guest networks stop devices from discovering each other).
  - You have a **host computer** (laptop or desktop) on that network to run the motion controller. For manual motion, a laptop with a typical 8 core cpu will suffice. For local AI model use, An RTX 3090 or better is required. Linux is reccomended, but all OS's are supported.
+ - There is no object blocking the floor in the center of the room such as a table or bed. Both cameras need to be able to see a common spot on the floor for successful calibration. 
 
 These are fine:
 
  - **Ceiling fans** — mount the anchors and eyelets at or below the blade height and the lines cannot reach the blades.
- - **Furniture or a bunk bed in the work area** — allowed. There is no automatic obstacle avoidance yet, so you may occasionally need to steer around obstacles by hand.
+ - **Furniture or a bunk bed in the work area** — allowed only against the walls. There is no automatic obstacle avoidance yet, so you may occasionally need to steer around obstacles by hand.
 
 **How much work is it?** Installation takes about an hour with no interruptions — roughly like hanging a curtain rod, plus about 30 minutes of additional setup and calibration. Full step-by-step detail is in the [Installation Guide](arp_install_guide.md).
 
