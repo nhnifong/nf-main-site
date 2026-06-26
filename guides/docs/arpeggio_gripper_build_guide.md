@@ -13,14 +13,16 @@ Hardware Version: Arpeggio
 
 ## Tool list
 
- - [Mini screwdriver with a bit set](https://www.amazon.com/dp/B01KB02F9C)
+ - Mini screwdriver with a bit set. [Manual](https://www.amazon.com/dp/B01KB02F9C) or [Electric](https://www.amazon.com/dp/B09MR5HFPB)
  - [Cross locking tweezers](https://www.amazon.com/dp/B001BU9MLG)
  - Super glue ([loctite super glue “professional liquid”](https://www.amazon.com/dp/B07VL6MP94?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1&th=1) recommended)
  - exacto/hobby knife
  - flush cut wire clippers
 
-Please excuse the changing colors of the parts in this guide. It it is a better use of my time to only update sections which have changed as I develop stringman.
-I will make a final pass when the hardware is stable.
+### Soldering
+
+[Kits](/stringman-hardware-kit) purchased from neufangled.com after Jun 26 2026 do no require any soldering.
+Kits earlier than that, or parts sourced yourself may require soldering.
 
 ## Fingers
 
