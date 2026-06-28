@@ -81,7 +81,7 @@ Now fully seat the slip ring against the side of the spool by gently pulling the
 ## Electronics
 
 Assemble a Raspberry Pi Zero 2W with a Stringman imaged SD card and heat sink.
-If the pi does not have header pins, solder on a full set.
+If the pi does not have header pins, solder on a full set. You may find [this jig](https://makerworld.com/en/models/947851-raspberry-pi-zero-header-soldering-tool#profileId-915061) useful if you are soldering the header
 
 ![](images/anc_arp/PXL_20260407_003331054.webp){ loading=lazy, width=45% } 
 

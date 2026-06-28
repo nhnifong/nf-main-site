@@ -201,15 +201,19 @@ Image an SD card according to the instructions in [Raspi Setup](raspi_setup.md) 
 
 ![](images/grip_arp/PXL_20260203_003359996.webp){ loading=lazy, width=45% }
 
-Solder the straight header onto the rangefinder. You can solder all six or just the four lablelld VIN, GND, SCL, and SCA.
-Feed the 4p rectangular dupont plug out of the horizontal slot near the fan and plug it into the rangefinder. note that in this case white is on the VIN plug. I didn't have control of the colors in these wires.
+Locate the laser rangefinder and the four wire cable pictured below
 
-Attach the rangefinder to the frame with two M2x4 screws.  
-Feed the other connector through the frame and connect the rangefinder to the gripper hat's stemma socket.
+!!! tip "If you sourced it yourself, you may need to solder the header"
+
+    Solder the straight header onto the laser rangefinder. You can solder all six or just the four lablelld VIN, GND, SCL, and SCA.
 
 ![](images/grip_arp/PXL_20260203_003557749.webp){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260307_003643671.webp){ loading=lazy, width=45% }
-![](images/grip_arp/PXL_20260203_004822533.webp){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260627_193422264.webp){ loading=lazy, width=45% }
+
+Plug the 4p rectangular dupont plug into the rangefinder. Red should be on the outer edge as pictured below. Feed the wire into the hole below the fan, and out the left side, and then through a hole on the side of the device to reach the front. Plug the JST-SH connector into the gripper hat board.
+
+![](images/grip_arp/PXL_20260627_193443117.MP.webp){ loading=lazy, width=45% }
+![](images/grip_arp/PXL_20260627_193514268.webp){ loading=lazy, width=45% }
 
 
 ## Wrist motor

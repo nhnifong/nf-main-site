@@ -60,3 +60,59 @@ If that doesn't work in your scenario, insert the Micro SD card from a robot com
 run the following command from the cranebot3-firmware repo
 
     sudo ./add_wifi_config.sh "SSID" "password"
+
+### Locking down the pi's
+
+By default the password for th `pi` user on the Stringman image is `Fo0bar!!` which makes it easy to troubleshoot new devices.
+
+For greater security you can disable password authentication and change all three components to accept only private key authentication
+
+#### Automated method
+
+from cranebot3-firmware with venv active
+
+    python experiments/deploy_ssh_keys.py mr_robot.conf
+
+Supply the configuration file for a robot you want to deploy keys to.
+Components password auth with only be disabled after verifying your key auth works so it won't lock you out.
+
+Alternatively, here's the manual methods.
+
+#### Change the password
+
+ssh into the component and run
+
+    passwd
+
+Enter the current password (`Fo0bar!!`) once, then your new password twice.
+
+#### Set up key-based authentication
+
+If you don't already have an SSH key pair, generate one on your own computer
+
+    ssh-keygen -t ed25519
+
+Copy your public key to the component so it will recognize you without a password
+
+    ssh-copy-id pi@<component-address>
+
+Confirm you can log in without being prompted for a password before continuing
+
+    ssh pi@<component-address>
+
+#### Disable password authentication
+
+Once key authentication works, ssh into the component and edit the ssh server config
+
+    sudo nano /etc/ssh/sshd_config
+
+Set the following options
+
+    PasswordAuthentication no
+    ChallengeResponseAuthentication no
+
+Save, then restart the ssh service to apply
+
+    sudo systemctl restart ssh
+
+Repeat for each component. From now on these devices will only accept logins from machines holding your private key.
