@@ -393,6 +393,7 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
         "return_url": return_url,
         "allow_promotion_codes": True,
         "automatic_tax": {"enabled": True},
+            "phone_number_collection": {"enabled": True},
         "shipping_address_collection": {
             "allowed_countries": region["allowed_countries"],
         },
