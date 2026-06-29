@@ -11,6 +11,17 @@ In order for stringman to record episodes or make use of trained policies, the [
 
     pip install --upgrade "nf-robot[host,dev]"
 
+After that, specific lerobot extras must be installed if particular model types are bring used for eval. If using a DiT model such as `naavox/dit-grasp-3`
+
+    pip install lerobot[multi_task_dit]
+
+If using a DiT model that contains DinoV3 encoders and extra cross attention layers such as `naavox/`dit-dino-3`, you need to run a custom fork of lerobot
+
+    pip install "lerobot[training,multi_task_dit] @ git+https://github.com/nhnifong/lerobot.git@022fe150"
+
+
+Other model types may require other extra dependencies of Lerobot. If they are missing you will be prompted for them.
+
 Additionally, you need an account on Huggingface (a repository for open source datasets) It is free, and your recorded data will be stored there, and will be visible to the public unless you pay for a private account. Unfortunately lerobot makes it pretty inconvenient to completely avoid uploading the data to huggingface, but it is possible in theory and it is a planned feature, but as of now, stringman only records the gripper camera so it's not much of an issue.
 
 After making your account, run the following from the terminal where your virtualenv is active.
@@ -25,11 +36,53 @@ A session runs as a subprocess of stringman-headless and is cleaned up automatic
 
 Establish a connection to your robot and confirm basic functionality. Confirm all components are connected. Make some small movements with your gamepad to confirm it is responsive. Perform a quick cal to make sure the position estimate is not way off.
 
-The click the `Start Lerobot` button in the top bar. A panel will open. To record a dataset you must specify a repo id with the format `huggingface_username/dataset_name` You can choose any dataset name you like. If it is new, we will create it. If it exists and is the exact same format, we will append episodes to it.
+### Running the recording session
 
-![](images/learn/start_session.webp){ loading=lazy, width=45% }
+The recording session runs as a seperate process. You have two ways to run it:
 
-Click start and in a moment, you will hear 'ready' spoken by the browser. Auditory feedback is used to make it easier to record episodes while keeping your eyes on the robot.
+=== "local subprocess of stringman-headless"
+
+    Click the `Start Lerobot` button in the top bar. A panel will open. To record a dataset you must specify a repo id with the format `huggingface_username/dataset_name` You can choose any dataset name you like. If it is new, we will create it. If it exists and is the exact same format, we will append episodes to it.
+
+    ![](images/learn/start_session.webp){ loading=lazy, width=45% }
+
+    Click start and in a moment, you will hear 'ready' spoken by the browser. Auditory feedback is used to make it easier to record episodes while keeping your eyes on the robot.
+
+=== "Session on a remote machine"
+
+    The session can run directly from any machine with the `nf-robot` package installed, connecting to your robot over the network.
+    
+    The robot must be bound to an account on neufangled.com using the "Bind" action in the run menu, and must be running with `--telemetry_env=production`
+    
+    You'll need your robot id and a remote stream token (ticket). The robot id can be obtained from the config file or the URL when viewing the control panel.
+
+    The stream ticket can be obtained in the run meny from **Calibration and Maintenence -> Get Stream Ticket**
+
+    To record a dataset:
+
+        python -m nf_robot.ml.stringman_lerobot record \
+          --robot_id=YOUR_ROBOT_ID \
+          --server_address=wss://neufangled.com \
+          --remote_stream_token=YOUR_STREAM_TICKET \
+          --repo_id=naavox/grasping_dataset
+
+    To evaluate a trained policy, use `eval` and pass the policy's repo id with `--policy_id`:
+
+        python -m nf_robot.ml.stringman_lerobot eval \
+          --robot_id=YOUR_ROBOT_ID \
+          --server_address=wss://neufangled.com \
+          --remote_stream_token=YOUR_STREAM_TICKET \
+          --policy_id=naavox/grasping_act_policy
+
+You can confirm there is a connected session in the UI when the **Record** button is replaced with **Session Connected**
+
+#### Resource requirements
+
+Either way the machine running the lerobot session needs signifigant resources. if you are running it on a laptop, the a remote session is the only practical option.
+
+For recording, 16 cores or more are reccomended. If CPU use reaches 100%, the data will likely contain time distortion and will degrade the quality of the trained model.
+
+For evaluation, it depends on the policy being evaluated. Generally a few cores will become occupied during eval, and you need something that can accelerate pytorch, such as an RTX 3090 or better. Some models, such as Pi0.5 are huge and require much more vram and system ram. 
 
 ### Considering the dataset scope
 

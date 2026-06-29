@@ -1815,7 +1815,7 @@ async function handleGetTicket() {
 
     try {
       await navigator.clipboard.writeText(ticket);
-      msgEl.textContent = `Stream ticket (copied to clipboard):\n\n${ticket}`;
+      msgEl.textContent = `Stream ticket (copied to clipboard):\n\n${ticket}\n\nMust be used with stringman_lerobot.py within 60 seconds.`;
     } catch {
       msgEl.textContent = `Stream ticket:\n\n${ticket}`;
     }
