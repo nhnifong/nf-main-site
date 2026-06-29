@@ -23,6 +23,13 @@ Choose two opposing corners to be the mounting locations for the anchors. The ot
 
 ![](images/arp_install/room_diagram.webp){ loading=lazy, width=45% }
 
+!!! warning "You must be able to mount anchors to the studs in the walls"
+
+    The only viable method of mouting stringman at this time is directly to the wooden studs behind the wall. If the walls of the room do not contain studs you can screw into, then you will have to install a backer-board that adapts to the room or ceiling's structural elements.
+
+    * Do not mount the anchors or eyelets with adhesive or magnets. Although there are command strips made for 10lb loads, this is straight down. Stringman anchors will exert signifigant lateral loads in multiple directions.
+    * Do not mount the anchors to the T-bars of a drop ceiling, they aren't strong enough. The mount may not fail, but it may bend the T-bars out of shape and the changing orientaiton of the anchor would negatively impact calibration and swing cancellation.
+
 ## Unpacking
 
 ### Assemble gripper and marker box
