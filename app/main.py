@@ -46,7 +46,7 @@ from .database import (
     count_recently_active_robots,
 )
 from .metrics import METRIC_DEFINITIONS, METRIC_KEYS
-from .product_loader import load_product
+from .product_loader import load_product, SLUG_REDIRECTS
 from .store import (
     router as store_router,
     templates,
@@ -108,12 +108,9 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     logger.warning(f"Could not load page-routes.json, page aliases disabled: {e}")
     PAGE_ROUTES = {}
 
-# Permanent redirects for retired slugs -> their current path. Lets old links
-# keep working after a product folder is renamed (e.g. the "arpeggio" codename
-# was dropped from the public-facing slug).
-SLUG_REDIRECTS = {
-    "stringman-arpeggio": "stringman",
-}
+# Retired-slug redirects (SLUG_REDIRECTS) live in product_loader so load_product
+# and the checkout/cart paths resolve them too; here we 301 browser page views
+# of an old slug to its canonical path.
 
 # Redirect /docs → /docs/ so both paths work (StaticFiles needs the trailing slash).
 @app.get("/docs")

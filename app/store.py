@@ -69,8 +69,29 @@ SHIPPING_REGIONS = {
         },
     },
     "intl_asia": {
-        "label": "Japan, Korea, Taiwan, Australia, Vietnam",
-        "allowed_countries": ["JP", "KR", "TW", "AU", "VN"],
+        "label": "Japan, Korea, Australia, Vietnam",
+        "allowed_countries": ["JP", "KR", "AU", "VN"],
+        "shipping_rates": {
+            "small": {
+                "shipping_rate": "shr_1TixQiCIW3Ilocb5ZPVS9ndz",
+                "shipping_rate_test": "shr_1Tg60eCIW3Ilocb5ICRBVyDo",
+            },
+            "large": {
+                "shipping_rate": "shr_1TegN0CIW3Ilocb5EZz5ZW71",
+            },
+            "free": {
+                "shipping_rate": "shr_1TPMi1CIW3Ilocb5E3SmNgq4",
+            },
+        },
+    },
+    # Taiwan is split out from intl_asia because cross-border parcels require
+    # the recipient's Real-Name Authentication ID (national ID or ARC number)
+    # for customs. `requires_customs_id` makes Checkout collect it (see
+    # CUSTOMS_ID_CUSTOM_FIELD); shipping rates mirror intl_asia.
+    "taiwan": {
+        "label": "Taiwan",
+        "allowed_countries": ["TW"],
+        "requires_customs_id": True,
         "shipping_rates": {
             "small": {
                 "shipping_rate": "shr_1TixQiCIW3Ilocb5ZPVS9ndz",
@@ -101,6 +122,24 @@ SHIPPING_REGIONS = {
         },
     },
 
+}
+
+
+# Collected at Checkout for regions with `requires_customs_id` (Taiwan). The
+# value (national ID or ARC number) is read back in session_status and shows on
+# the payment in the Stripe Dashboard for supplying to customs. Text, not
+# numeric: both ID formats start with a letter (e.g. "A123456789").
+CUSTOMS_ID_FIELD_KEY = "tw_real_name_auth"
+CUSTOMS_ID_CUSTOM_FIELD = {
+    "key": CUSTOMS_ID_FIELD_KEY,
+    # Stripe caps label.custom at 50 chars; the fuller EZ WAY explanation lives
+    # on the checkout page / confirmation email, not here.
+    "label": {
+        "type": "custom",
+        "custom": "Taiwan RMA # (national ID or ARC) for EZ WAY",
+    },
+    "type": "text",
+    "text": {"minimum_length": 8, "maximum_length": 12},
 }
 
 
@@ -347,21 +386,25 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
     cart_flag = "true" if payload.cart_mode else "false"
     return_url = f"{str(request.base_url).rstrip('/')}/checkout-return?session_id={{CHECKOUT_SESSION_ID}}&cart={cart_flag}"
 
+    session_params = {
+        "ui_mode": "embedded_page",
+        "line_items": line_items,
+        "mode": "payment",
+        "return_url": return_url,
+        "allow_promotion_codes": True,
+        "automatic_tax": {"enabled": True},
+        "shipping_address_collection": {
+            "allowed_countries": region["allowed_countries"],
+        },
+        "shipping_options": [
+            {"shipping_rate": _shipping_rate_for(region, shipping_size)},
+        ],
+    }
+    if region.get("requires_customs_id"):
+        session_params["custom_fields"] = [CUSTOMS_ID_CUSTOM_FIELD]
+
     try:
-        session = stripe_client.v1.checkout.sessions.create(params={
-            "ui_mode": "embedded_page",
-            "line_items": line_items,
-            "mode": "payment",
-            "return_url": return_url,
-            "allow_promotion_codes": True,
-            "automatic_tax": {"enabled": True},
-            "shipping_address_collection": {
-                "allowed_countries": region["allowed_countries"],
-            },
-            "shipping_options": [
-                {"shipping_rate": _shipping_rate_for(region, shipping_size)},
-            ],
-        })
+        session = stripe_client.v1.checkout.sessions.create(params=session_params)
     except stripe.StripeError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -372,6 +415,18 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
 # In-memory is fine for a low-volume store — worst case is one extra receipt on
 # server restart, which is harmless.
 _receipt_email_sent: set[str] = set()
+
+# Session IDs whose collected Taiwan customs ID we've already logged, so polling
+# session_status repeatedly doesn't spam the log once the session completes.
+_customs_id_logged: set[str] = set()
+
+
+def _customs_id_from_session(session) -> str | None:
+    """Return the Taiwan Real-Name Authentication value collected at Checkout, if any."""
+    for field in session.custom_fields or []:
+        if field.key == CUSTOMS_ID_FIELD_KEY and field.text:
+            return field.text.value
+    return None
 
 
 @router.get("/session-status")
@@ -400,6 +455,15 @@ async def session_status(session_id: str):
             _receipt_email_sent.add(session_id)
         except stripe.StripeError as e:
             logger.warning(f"Could not set receipt_email on {session.payment_intent}: {e}")
+
+    # Surface the Taiwan customs ID (national ID / ARC number) once the session
+    # completes. It also shows on the payment in the Stripe Dashboard; logging
+    # it gives a server-side record for the customs paperwork.
+    if session.status == "complete" and session_id not in _customs_id_logged:
+        customs_id = _customs_id_from_session(session)
+        if customs_id:
+            logger.info(f"Taiwan customs ID for session {session_id}: {customs_id}")
+        _customs_id_logged.add(session_id)
 
     return {"status": session.status, "customer_email": customer_email}
 

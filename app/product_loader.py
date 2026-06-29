@@ -64,6 +64,11 @@ PRODUCTS_DIR = Path("products")
 ASSETS_DIR = Path("nf-viz/public/assets")
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"}
 
+# Retired slugs (renamed product folders) mapped to their current slug.
+SLUG_REDIRECTS = {
+    "stringman-arpeggio": "stringman",
+}
+
 
 def _image_url(asset_bucket_url: str, image_folder: str, filename: str) -> str:
     if image_folder:
@@ -96,7 +101,12 @@ def _resolve_price_id(fields: dict, test_mode: bool) -> str:
 
 
 def load_product(slug: str, asset_bucket_url: str, test_mode: bool = False) -> dict | None:
-    """Load and return a single product dict, or None if not found."""
+    """Load and return a single product dict, or None if not found.
+
+    Retired slugs (see SLUG_REDIRECTS) resolve to their current slug, so old
+    links and stale carts still load the right product.
+    """
+    slug = SLUG_REDIRECTS.get(slug, slug)
     product_dir = PRODUCTS_DIR / slug
     desc_path = product_dir / "description.md"
 
