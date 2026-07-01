@@ -1,7 +1,7 @@
 ---
 title: Stringman Hardware Kit
 intro: >
-  The complete set of hardware you need to build a full Stringman system. This is the DIY version including the pi's, cameras, motors, wires, and screws from the BOM. Print the structural components and assemble it according to our guide.
+  The hardware you need to build a full Stringman system using your own 3D printer. This is the DIY version including the pi's, cameras, motors, wires, and screws from the BOM. Print the structural components and assemble it according to our guide.
 price_id: "price_1TiI5OCIW3Ilocb5Her9YhWT"
 shipping_size: small
 badge:
@@ -23,13 +23,17 @@ show_in_store: true
 store_order: 3
 ---
 
-## Build it Yourself
+## Print and Build it Yourself
 
 This bundle includes everything in the [Stringman BOM](https://docs.google.com/spreadsheets/d/1bZy7uijzaD2q74BN9S1-xETvV-d4Wz9Zg1J2bpjwM2k/edit?gid=204754068#gid=204754068)
 
 The anchors feature four powerful and silent Damiao hub motors. They can position a 4 kg payload anywhere in a room up to 7 meters from ceiling corner to opposite floor corner. Two anchors are mounted in opposing corners and in the other two corners ceramic eyelets are mounted. Three tethers are composed of 40 lb test braided fishing line, with one being a FEP-jacketed wire to supply power to the gripper, or whatever end effector you come up with.
 
 The gripper features a Raspberry Pi Zero 2W streaming video from a wide angle camera, a custom PCB for power distribution and inertial sensing, a pressure sensor in the finger, laser rangefinder, ST3215 servos to control the grip and wrist, and ABS tube rigidly linking it to the display box above.
+
+### Difficulty
+
+Warning: This is a multi-day build, and is fairly difficult. If you have never assembled a 3D printed  mechanism or used a raspberry pi, It could be overwhelming. Hands on support is always available in our [discord channel](https://discord.gg/T5HEvxVgbA). And [Stringman is also available fully assembled](/stringman)
 
 ## What's Included
 
@@ -90,9 +94,9 @@ In order to avoid shipping a much larger box, the gripper's ABS tube is supplied
 **[Anchors Build Guide](/docs/arpeggio_anchor_build_guide/)**
 **[Gripper Build Guide](/docs/arpeggio_gripper_build_guide/)**
 
-Assembly takes roughly 2–4 hours total. Please refer to the online build guides for detailed information on the required tools and steps.
+Assembly takes roughly 4–8 hours. Please refer to the online build guides for detailed information on the required tools and steps.
 
-Soldering is necessary only to solder 2.54-pitch headers onto the Pi and rangefinder for the gripper. The anchors do not require soldering, but you do need to use a heat gun to splice wires with solder seal connectors.
+Soldering is not necessary, but you do need to use a heat gun to splice wires with solder seal connectors.
 
 Hands on support for the whole build process is available in our [discord channel](https://discord.gg/T5HEvxVgbA).
 

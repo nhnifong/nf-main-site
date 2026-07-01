@@ -264,7 +264,7 @@ The marker display box is connected to the gripper by a [50cm ABS tube with a di
 
 Put a 10x15x4 bearing onto the ABS tube followed by a 3/8" x 7/8" steel washer. 
 
-Make a mark 6.5mm from the end of the tube with a sharpie pen.
+Make a mark *5mm* from the end of the tube with a sharpie pen.
 *Forcefully twist* the helical gear onto the tube until the marked 6mm of tube protrude past the gear.
 
 Put a few drops of cyanoacrylate glue where the gear and tube touch, followed by another washer and press it firmly to glue it there.

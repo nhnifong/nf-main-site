@@ -94,11 +94,20 @@
                     const tariffNote = document.getElementById('canada-tariff-note');
                     const slug = {{ product.slug | tojson }};
 
+                    // Restore a previously chosen region so it persists across pages.
+                    const savedRegion = getRegion();
+                    if (savedRegion && [...regionSelect.options].some(o => o.value === savedRegion)) {
+                        regionSelect.value = savedRegion;
+                    }
+
                     // Reveal the tariff note only while Canada is the chosen destination.
                     function updateTariffNote() {
                         if (tariffNote) tariffNote.hidden = regionSelect.value !== 'ca';
                     }
-                    regionSelect.addEventListener('change', updateTariffNote);
+                    regionSelect.addEventListener('change', function () {
+                        saveRegion(regionSelect.value);
+                        updateTariffNote();
+                    });
                     updateTariffNote();
 
                     if (variantSelect && priceEl) {
@@ -111,11 +120,13 @@
 
                     addToCartButton.addEventListener('click', function () {
                         const variant = variantSelect ? parseInt(variantSelect.value, 10) : 0;
+                        saveRegion(regionSelect.value);
                         addToCart(slug, variant, 1);
                         window.location.href = '/cart';
                     });
 
                     buyButton.addEventListener('click', function () {
+                        saveRegion(regionSelect.value);
                         const params = new URLSearchParams({
                             region: regionSelect.value,
                             variant: variantSelect ? variantSelect.value : '0',

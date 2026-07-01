@@ -1,4 +1,4 @@
-nf_robot==4.0.4
+nf_robot==4.1.1
 fastapi>=0.100.0
 uvicorn[standard]>=0.20.0
 redis>=8.0.0

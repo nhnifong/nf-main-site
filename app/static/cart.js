@@ -1,4 +1,19 @@
 const CART_STORAGE_KEY = 'nf_cart';
+const REGION_STORAGE_KEY = 'nf_region';
+
+// Remembers the shopper's last chosen shipping region so it carries across
+// pages (e.g. product detail -> cart). Returns null if none is stored.
+function getRegion() {
+    try {
+        return localStorage.getItem(REGION_STORAGE_KEY) || null;
+    } catch {
+        return null;
+    }
+}
+
+function saveRegion(region) {
+    if (region) localStorage.setItem(REGION_STORAGE_KEY, region);
+}
 
 function getCart() {
     try {

@@ -1,6 +1,6 @@
 # Stringman
 
-Stringman is a room-scale robot that hangs from the corners of a room on four thin lines. Two **anchors** mount high in opposite corners and control two lines each, a **gripper** hangs in the middle from the four total lines, and cameras watch printed markers to track where everything is. You drive it from a web browser — move around the room, pick things up and drop them off, or record demonstrations to train and use AI policies to do tasks on its own.
+Stringman is a room-scale robot that hangs from the corners of a room on four thin lines. Two **anchors** mount high in opposite corners and control two lines each, a **gripper** hangs in the middle from the four total lines, and cameras watch printed markers to track where everything is. You drive it from a [Web UI](/playroom) — move around the room, pick things up and drop them off, or record demonstrations to train and use AI policies to do tasks on its own.
 
 It is currently a public prototype. [Is is launched](/stringman), can self-calibrate in a new room and run policies, but is not yet reliable enough to be called a home appliance.
 

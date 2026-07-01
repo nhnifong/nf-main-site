@@ -52,6 +52,13 @@
         const regionSelect = document.getElementById('region-select');
         const checkoutButton = document.getElementById('checkout-button');
 
+        // Restore the region chosen on the product page (or a prior visit).
+        const savedRegion = getRegion();
+        if (savedRegion && [...regionSelect.options].some(o => o.value === savedRegion)) {
+            regionSelect.value = savedRegion;
+        }
+        regionSelect.addEventListener('change', () => saveRegion(regionSelect.value));
+
         function formatAmount(unitAmount, currency) {
             const amount = unitAmount / 100;
             const symbol = currency === 'usd' ? '$' : currency.toUpperCase() + ' ';
